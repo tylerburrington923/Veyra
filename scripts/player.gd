@@ -52,11 +52,7 @@ func _physics_process(delta: float) -> void:
     if direction.length_squared() > 0.001:
         direction = direction.normalized()
         velocity.x = move_toward(velocity.x, direction.x * speed, acceleration * delta)
-        velocity.z = move_toward(velocity.z, direction.z * speed, acceleration * delta)
-
-        # Turn the character toward travel direction without snapping.
-        var target_angle := atan2(-direction.x, -direction.z)
-        rotation.y = lerp_angle(rotation.y, target_angle, min(1.0, 10.0 * delta))
+        velocity.z = move_toward(velocity.z, direction.z * speed, acceleration * delta) 
     else:
         velocity.x = move_toward(velocity.x, 0.0, braking * delta)
         velocity.z = move_toward(velocity.z, 0.0, braking * delta)
