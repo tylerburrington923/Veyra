@@ -55,6 +55,13 @@ corner_radius_top_right = 28
 corner_radius_bottom_right = 28
 corner_radius_bottom_left = 28
 
+[sub_resource type="StyleBoxFlat" id="JumpStyle"]
+bg_color = Color(0.16, 0.42, 0.48, 0.88)
+corner_radius_top_left = 28
+corner_radius_top_right = 28
+corner_radius_bottom_right = 28
+corner_radius_bottom_left = 28
+
 [sub_resource type="StyleBoxFlat" id="KnobStyle"]
 bg_color = Color(0.25, 0.65, 0.72, 0.9)
 corner_radius_top_left = 45
@@ -152,6 +159,21 @@ offset_bottom = 100.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("KnobStyle")
 visible = false
+
+[node name="JumpButton" type="Button" parent="MobileControls"]
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -350.0
+offset_top = -125.0
+offset_right = -200.0
+offset_bottom = -35.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "JUMP"
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("JumpStyle")
 
 [node name="InteractButton" type="Button" parent="MobileControls"]
 anchor_left = 1.0
