@@ -91,7 +91,9 @@ func _spawn_resources() -> void:
         if Vector2(x, z).length() < 10.0:
             continue
 
-        var y := noise.get_noise_2d(x / cell_size, z / cell_size) * height_scale + 0.7
+        var sample_x := x / cell_size + grid_size * 0.5
+        var sample_z := z / cell_size + grid_size * 0.5
+        var y := noise.get_noise_2d(sample_x, sample_z) * height_scale + 0.7
         add_child(_make_resource_node(i, Vector3(x, y, z)))
 
 func _make_resource_node(index: int, spawn_position: Vector3) -> StaticBody3D:
