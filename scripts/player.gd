@@ -16,6 +16,7 @@ var joystick_center := Vector2.ZERO
 @onready var joystick_knob := get_node_or_null("MobileControls/JoystickBase/JoystickKnob")
 
 func _ready() -> void:
+    add_to_group("local_player")
     if joystick_base:
         joystick_base.visible = false
     if joystick_knob:
@@ -96,3 +97,9 @@ func _hide_joystick() -> void:
         joystick_base.visible = false
     if joystick_knob:
         joystick_knob.visible = false
+
+
+func add_resource(resource_type: String, amount: int) -> void:
+    var inventory_node := get_node_or_null("Inventory")
+    if inventory_node and inventory_node.has_method("add_resource"):
+        inventory_node.add_resource(resource_type, amount)
