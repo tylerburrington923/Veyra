@@ -7,8 +7,11 @@ extends Node3D
 @export var rock_count := 55
 @export var mineral_count := 18
 
+var terrain: Node
+
 func _ready() -> void:
-    _generate()
+    terrain = get_parent().get_node_or_null("WorldGenerator")
+    call_deferred("_generate")
 
 func _generate() -> void:
     var rng := RandomNumberGenerator.new()
@@ -28,11 +31,9 @@ func _generate() -> void:
         var rock := MeshInstance3D.new()
         rock.mesh = rock_mesh
         rock.material_override = rock_material
-        rock.position = Vector3(
-            rng.randf_range(-85.0, 85.0),
-            rng.randf_range(0.15, 0.45),
-            rng.randf_range(-85.0, 85.0)
-        )
+        var x := rng.randf_range(-85.0, 85.0)
+        var z := rng.randf_range(-85.0, 85.0)
+        rock.position = Vector3(x, _ground_height(x, z) + 0.25, z)
         rock.scale = Vector3(
             rng.randf_range(0.6, 1.8),
             rng.randf_range(0.45, 1.0),
@@ -53,16 +54,19 @@ func _generate() -> void:
         var crystal := MeshInstance3D.new()
         crystal.mesh = crystal_mesh
         crystal.material_override = crystal_material
-        crystal.position = Vector3(
-            rng.randf_range(-70.0, 70.0),
-            rng.randf_range(0.6, 1.2),
-            rng.randf_range(-70.0, 70.0)
-        )
+        var x := rng.randf_range(-70.0, 70.0)
+        var z := rng.randf_range(-70.0, 70.0)
+        crystal.position = Vector3(x, _ground_height(x, z) + 0.8, z)
         crystal.rotation_degrees.y = rng.randf_range(0.0, 360.0)
         crystal.scale = Vector3.ONE * rng.randf_range(0.5, 1.2)
         add_child(crystal)
 
     _make_water()
+
+func _ground_height(x: float, z: float) -> float:
+    if terrain and terrain.has_method("get_height_at_world"):
+        return terrain.get_height_at_world(x, z)
+    return 0.0
 
 func _make_water() -> void:
     var water := MeshInstance3D.new()
@@ -71,7 +75,7 @@ func _make_water() -> void:
     mesh.subdivide_width = 2
     mesh.subdivide_depth = 2
     water.mesh = mesh
-    water.position = Vector3(28, -0.4, 18)
+    water.position = Vector3(28.0, _ground_height(28.0, 18.0) - 0.25, 18.0)
 
     var material := StandardMaterial3D.new()
     material.albedo_color = Color(0.10, 0.25, 0.29, 0.72)
