@@ -11,6 +11,9 @@ extends CharacterBody3D
 @export var braking: float = 28.0
 @export var gravity: float = 18.0
 @export var jump_velocity: float = 7.0
+@export var floor_snap_length: float = 0.35
+@export var max_floor_angle_degrees: float = 48.0
+@export var safe_spawn_height: float = 12.0
 
 @export_category("Look")
 @export var mouse_sensitivity: float = 0.003
@@ -49,6 +52,10 @@ var walk_time: float = 0.0
 
 func _ready() -> void:
 	add_to_group("local_player")
+	up_direction = Vector3.UP
+	floor_snap_length = floor_snap_length
+	floor_max_angle = deg_to_rad(max_floor_angle_degrees)
+	call_deferred("_stabilize_spawn")
 
 	if interact_button and not interact_button.pressed.is_connected(_on_interact_pressed):
 		interact_button.pressed.connect(_on_interact_pressed)
@@ -72,15 +79,22 @@ func _configure_camera() -> void:
 	camera.rotation.x = look_pitch
 
 
+func _stabilize_spawn() -> void:
+	var world_generator := get_parent().get_node_or_null("WorldGenerator")
+	if world_generator and world_generator.has_method("is_generated") and world_generator.is_generated():
+		var terrain_y: float = world_generator.get_height_at_world(global_position.x, global_position.z)
+		if global_position.y < terrain_y + safe_spawn_height * 0.5:
+			global_position.y = terrain_y + safe_spawn_height
+		velocity = Vector3.ZERO
+
+
 func _physics_process(delta: float) -> void:
-	var input_vector := move_input
+	var input_vector: Vector2 = move_input
 
 	if input_vector.length_squared() < 0.0001:
-		input_vector = Input.get_vector(
-			"move_left",
-			"move_right",
-			"move_forward",
-			"move_back"
+		input_vector = Vector2(
+			Input.get_axis("move_left", "move_right"),
+			Input.get_axis("move_back", "move_forward")
 		)
 
 	if input_vector.length() > 1.0:
@@ -179,6 +193,8 @@ func _input(event: InputEvent) -> void:
 
 func _handle_screen_touch(event: InputEventScreenTouch) -> void:
 	if interact_button and interact_button.get_global_rect().has_point(event.position):
+		return
+	if jump_button and jump_button.get_global_rect().has_point(event.position):
 		return
 
 	if event.pressed and event.is_canceled():
