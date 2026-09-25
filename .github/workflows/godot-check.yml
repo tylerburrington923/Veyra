@@ -19,6 +19,9 @@ jobs:
           include-templates: false
       - name: Validate project
         run: godot --headless --path . --editor --quit
+      - name: Headless runtime smoke test
+        run: timeout 12s godot --headless --path . --quit-after 4
+
       - name: Package source for testing
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: zip -r Veyra-source.zip . -x ".git/*" ".godot/*"
