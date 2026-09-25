@@ -88,6 +88,7 @@ func _stabilize_spawn() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_recover_from_fall()
 	var input_vector: Vector2 = move_input
 
 	if input_vector.length_squared() < 0.0001:
@@ -146,7 +147,23 @@ func _update_player_visuals(delta: float, direction: Vector3) -> void:
 func _update_debug_hud(input_vector: Vector2) -> void:
 	if not debug_hud:
 		return
-	debug_hud.text = "MOVE: %.2f, %.2f | GROUND: %s" % [input_vector.x, input_vector.y, "YES" if is_on_floor() else "NO"]
+	debug_hud.text = "MOVE: %.2f, %.2f | GROUND: %s | Y: %.1f | VY: %.1f" % [
+		input_vector.x,
+		input_vector.y,
+		"YES" if is_on_floor() else "NO",
+		global_position.y,
+		velocity.y
+	]
+
+
+func _recover_from_fall() -> void:
+	var world_generator := get_parent().get_node_or_null("WorldGenerator")
+	if not world_generator or not world_generator.has_method("get_height_at_world"):
+		return
+	var terrain_y: float = world_generator.get_height_at_world(global_position.x, global_position.z)
+	if global_position.y < terrain_y - 6.0:
+		global_position.y = terrain_y + 1.5
+		velocity = Vector3.ZERO
 
 
 func _camera_relative_direction(input_vector: Vector2) -> Vector3:
