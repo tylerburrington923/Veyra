@@ -9,6 +9,7 @@ extends Node3D
 @export var world_radius: float = 85.0
 
 var terrain: Node
+var collision_body: StaticBody3D
 
 
 func _ready() -> void:
@@ -56,6 +57,7 @@ func _generate() -> void:
 		)
 
 	_create_multimesh("Rocks", rock_mesh, rock_material, rock_transforms)
+	_create_rock_collision(rock_transforms)
 
 	var crystal_mesh := PrismMesh.new()
 	crystal_mesh.size = Vector3(0.65, 1.6, 0.65)
@@ -150,3 +152,36 @@ func _make_water() -> void:
 	water.material_override = material
 
 	add_child(water)
+
+
+func _create_rock_collision(transforms: Array[Transform3D]) -> void:
+	if transforms.is_empty():
+		return
+	collision_body = StaticBody3D.new()
+	collision_body.name = "RockCollision"
+	collision_body.collision_layer = 1
+	collision_body.collision_mask = 1
+	add_child(collision_body)
+	for transform in transforms:
+		var collision := CollisionShape3D.new()
+		var shape := SphereShape3D.new()
+		shape.radius = 0.48
+		collision.shape = shape
+		collision.transform = transform
+		collision_body.add_child(collision)
+
+func _create_crystal_collision(transforms: Array[Transform3D]) -> void:
+	if transforms.is_empty():
+		return
+	var body := StaticBody3D.new()
+	body.name = "MineralCollision"
+	body.collision_layer = 1
+	body.collision_mask = 1
+	add_child(body)
+	for transform in transforms:
+		var collision := CollisionShape3D.new()
+		var shape := BoxShape3D.new()
+		shape.size = Vector3(0.65, 1.6, 0.65)
+		collision.shape = shape
+		collision.transform = transform
+		body.add_child(collision)
