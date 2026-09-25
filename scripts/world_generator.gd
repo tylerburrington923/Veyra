@@ -12,6 +12,7 @@ extends Node3D
 var noise := FastNoiseLite.new()
 var detail_noise := FastNoiseLite.new()
 var generated := false
+var terrain_collision: StaticBody3D
 var resource_textures: Dictionary = {}
 
 func _ready() -> void:
@@ -82,9 +83,14 @@ func generate() -> void:
     collision.shape = shape
     body.add_child(collision)
     add_child(body)
+    terrain_collision = body
 
     _spawn_resources()
     _spawn_landmark()
+
+func is_generated() -> bool:
+    return generated and is_instance_valid(terrain_collision)
+
 
 func get_height_at_world(x: float, z: float) -> float:
     var sample_x := x / cell_size + grid_size * 0.5
