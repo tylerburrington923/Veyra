@@ -1,6 +1,8 @@
 extends RayCast3D
 
 @export var interact_distance := 4.0
+@export var echo_force := 1.8
+@export var echo_charge_distance := 5.0
 
 func _ready() -> void:
     target_position = Vector3(0, 0, -interact_distance)
@@ -17,6 +19,12 @@ func try_interact() -> void:
         return
 
     var target := get_collider()
+    if target and target.has_method("apply_force"):
+        var direction := -global_transform.basis.z
+        target.apply_force(direction, echo_force)
+        print("Force transferred into ", target.name)
+        return
+
     if target and target.has_method("interact"):
         target.interact()
     else:
