@@ -32,8 +32,6 @@ func generate() -> void:
         for x in range(grid_size + 1):
             var px := (x - grid_size * 0.5) * cell_size
             var pz := (z - grid_size * 0.5) * cell_size
-            var base_h := noise.get_noise_2d(x, z) * height_scale
-            var detail_h := detail_noise.get_noise_2d(x, z) * 1.2
             var h := get_height_at_world(px, pz)
             vertices.append(Vector3(px, h, pz))
             normals.append(_sample_normal(x, z))
@@ -115,7 +113,7 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> StaticBody3D:
     var node := StaticBody3D.new()
     node.name = resource_type + "_" + str(index)
     node.position = spawn_position
-    node.set_script(load("res://scripts/resource_node.gd"))
+    node.set_script(preload("res://scripts/resource_node.gd"))
     node.resource_type = resource_type
     node.amount = 1
 
@@ -185,8 +183,6 @@ func _resource_color(resource_type: String) -> Color:
             return Color(0.34, 0.22, 0.10, 1)
         "Metal":
             return Color(0.35, 0.40, 0.44, 1)
-        "Echo-Stone":
-            return Color(0.32, 0.18, 0.48, 1)
         "Vitreous Lux":
             return Color(0.10, 0.55, 0.60, 1)
     return Color.WHITE
