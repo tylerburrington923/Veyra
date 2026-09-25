@@ -135,8 +135,6 @@ func _physics_process(delta: float) -> void:
 
 func _update_player_visuals(delta: float, direction: Vector3) -> void:
 	if direction.length_squared() > 0.001:
-		var target_yaw := atan2(-direction.x, -direction.z)
-		rotation.y = lerp_angle(rotation.y, target_yaw, minf(1.0, 10.0 * delta))
 		walk_time += delta * 9.0
 	else:
 		walk_time = move_toward(walk_time, 0.0, delta * 8.0)
