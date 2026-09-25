@@ -1,15 +1,31 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/interaction.gd" id="2_interaction"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape"]
-radius = 0.45
+radius = 0.35
 height = 1.8
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh"]
-radius = 0.45
-height = 1.8
+[sub_resource type="CapsuleMesh" id="BodyMesh"]
+radius = 0.34
+height = 1.15
+
+[sub_resource type="SphereMesh" id="HeadMesh"]
+radius = 0.28
+height = 0.56
+
+[sub_resource type="StandardMaterial3D" id="Skin"]
+albedo_color = Color(0.68, 0.45, 0.32, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Clothes"]
+albedo_color = Color(0.12, 0.16, 0.2, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Hair"]
+albedo_color = Color(0.035, 0.025, 0.02, 1)
+roughness = 1.0
 
 [node name="Player" type="CharacterBody3D"]
 script = ExtResource("1_player")
@@ -18,13 +34,25 @@ script = ExtResource("1_player")
 position = Vector3(0, 0.9, 0)
 shape = SubResource("CapsuleShape")
 
-[node name="Mesh" type="MeshInstance3D" parent="."]
-position = Vector3(0, 0.9, 0)
-mesh = SubResource("CapsuleMesh")
+[node name="Body" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.0, 0)
+mesh = SubResource("BodyMesh")
+material_override = SubResource("Clothes")
+
+[node name="Head" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.72, 0)
+mesh = SubResource("HeadMesh")
+material_override = SubResource("Skin")
+
+[node name="Hair" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.94, 0)
+scale = Vector3(1.05, 0.55, 1.05)
+mesh = SubResource("HeadMesh")
+material_override = SubResource("Hair")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-position = Vector3(0, 3.5, 6)
-rotation_degrees = Vector3(-20, 0, 0)
+position = Vector3(0, 3.0, 5.5)
+rotation_degrees = Vector3(-16, 0, 0)
 current = true
 
 [node name="InteractionRay" type="RayCast3D" parent="Camera3D"]
