@@ -50,7 +50,7 @@ func generate() -> void:
             var b := a + 1
             var c := a + row
             var d := c + 1
-            indices.append_array(PackedInt32Array([a, b, c, b, d, c]))
+            indices.append_array(PackedInt32Array([a, c, b, b, c, d]))
 
     var arrays := []
     arrays.resize(Mesh.ARRAY_MAX)
@@ -65,6 +65,7 @@ func generate() -> void:
     var material := StandardMaterial3D.new()
     material.albedo_texture = _make_terrain_texture()
     material.roughness = 1.0
+    material.cull_mode = BaseMaterial3D.CULL_DISABLED
     material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
     mesh.surface_set_material(0, material)
 
