@@ -9,6 +9,7 @@ extends Node3D
 @export var exclusion_radius: float = 12.0
 
 var terrain: Node
+var collision_body: StaticBody3D
 
 
 func _ready() -> void:
@@ -73,6 +74,7 @@ func _generate() -> void:
 
 	_create_multimesh("TreeTrunks", trunk_mesh, trunk_material, trunk_transforms)
 	_create_multimesh("TreeCanopies", leaf_mesh, leaf_material, leaf_transforms)
+	_create_tree_collision(trunk_transforms)
 
 
 func _create_multimesh(
@@ -118,3 +120,21 @@ func _leaf_material() -> StandardMaterial3D:
 	material.albedo_color = Color(0.24, 0.39, 0.26, 1)
 	material.roughness = 1.0
 	return material
+
+
+func _create_tree_collision(transforms: Array[Transform3D]) -> void:
+	if transforms.is_empty():
+		return
+	collision_body = StaticBody3D.new()
+	collision_body.name = "TreeCollision"
+	collision_body.collision_layer = 1
+	collision_body.collision_mask = 1
+	add_child(collision_body)
+	var shape := CylinderShape3D.new()
+	shape.radius = 0.16
+	shape.height = 1.5
+	for transform in transforms:
+		var collision := CollisionShape3D.new()
+		collision.shape = shape
+		collision.transform = transform
+		collision_body.add_child(collision)
