@@ -8,10 +8,11 @@ var look_pitch := 0.0
 
 func _physics_process(delta: float) -> void:
     var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-    var direction := Vector3(input.x, 0.0, input.y)
 
-    if direction.length() > 1.0:
-        direction = direction.normalized()
+    # Movement is relative to the direction the player is facing.
+    var direction := (transform.basis * Vector3(input.x, 0.0, input.y))
+    direction.y = 0.0
+    direction = direction.normalized()
 
     velocity.x = direction.x * speed
     velocity.z = direction.z * speed
@@ -33,3 +34,6 @@ func _unhandled_input(event: InputEvent) -> void:
             camera.rotation.x = look_pitch
     elif event is InputEventMouseMotion:
         rotate_y(-event.relative.x * mouse_sensitivity)
+        var camera := get_node_or_null("Camera3D") as Camera3D
+        if camera:
+            camera.rotation.x = look_pitch
