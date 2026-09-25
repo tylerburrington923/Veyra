@@ -11,7 +11,7 @@ extends CharacterBody3D
 @export var braking: float = 28.0
 @export var gravity: float = 18.0
 @export var jump_velocity: float = 7.0
-@export var floor_snap_length: float = 0.35
+@export var ground_snap_distance: float = 0.35
 @export var max_floor_angle_degrees: float = 48.0
 @export var safe_spawn_height: float = 12.0
 
@@ -53,7 +53,7 @@ var walk_time: float = 0.0
 func _ready() -> void:
 	add_to_group("local_player")
 	up_direction = Vector3.UP
-	floor_snap_length = floor_snap_length
+	floor_snap_length = ground_snap_distance
 	floor_max_angle = deg_to_rad(max_floor_angle_degrees)
 	call_deferred("_stabilize_spawn")
 
