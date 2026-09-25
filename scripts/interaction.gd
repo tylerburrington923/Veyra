@@ -7,9 +7,7 @@ func _ready() -> void:
     enabled = true
 
 func _unhandled_input(event: InputEvent) -> void:
-    if event is InputEventScreenTouch and event.pressed:
-        try_interact()
-    elif event is InputEventKey and event.pressed and event.keycode == KEY_E:
+    if event is InputEventKey and event.pressed and event.keycode == KEY_E:
         try_interact()
 
 func try_interact() -> void:
