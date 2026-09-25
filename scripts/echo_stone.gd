@@ -32,7 +32,7 @@ func _physics_process(delta: float) -> void:
         _refresh_visual()
 
 func interact() -> void:
-    apply_force(Vector3.FORWARD * 1.5, 1.0)
+    apply_force(-global_transform.basis.z, 1.0)
 
 func apply_force(direction: Vector3, magnitude: float) -> void:
     var force := maxf(0.0, magnitude)
