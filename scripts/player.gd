@@ -1,178 +1,267 @@
 extends CharacterBody3D
 
-## Mobile-first third-person controller.
-## Movement is camera-relative, while the right side of the screen controls look.
+## Veyra mobile-first third-person controller.
+## Left side: dynamic movement joystick.
+## Right side: camera look.
+## Desktop: WASD + mouse.
 
-@export var speed := 5.2
-@export var acceleration := 22.0
-@export var braking := 28.0
-@export var gravity := 18.0
-@export var mouse_sensitivity := 0.003
-@export var touch_look_multiplier := 2.0
-@export var joystick_radius := 70.0
-@export var joystick_deadzone := 0.12
-@export var camera_distance := 5.8
-@export var camera_height := 3.1
+@export_category("Movement")
+@export var speed: float = 5.2
+@export var acceleration: float = 22.0
+@export var braking: float = 28.0
+@export var gravity: float = 18.0
 
-var look_pitch := deg_to_rad(-16.0)
-var touch_start := {}
-var move_input := Vector2.ZERO
-var move_touch_id := -1
-var look_touch_id := -1
+@export_category("Look")
+@export var mouse_sensitivity: float = 0.003
+@export var touch_look_multiplier: float = 2.0
+@export var min_pitch_degrees: float = -70.0
+@export var max_pitch_degrees: float = 55.0
 
-@onready var joystick_base := get_node_or_null("MobileControls/JoystickBase")
-@onready var joystick_knob := get_node_or_null("MobileControls/JoystickBase/JoystickKnob")
-@onready var interact_button := get_node_or_null("MobileControls/InteractButton")
-@onready var camera := get_node_or_null("Camera3D") as Camera3D
+@export_category("Camera")
+@export var camera_distance: float = 5.8
+@export var camera_height: float = 3.1
+@export var camera_fov: float = 70.0
+
+@export_category("Mobile Joystick")
+@export var joystick_radius: float = 70.0
+@export_range(0.0, 0.5, 0.01) var joystick_deadzone: float = 0.12
+@export_range(0.1, 1.0, 0.01) var left_screen_ratio: float = 0.48
+
+var look_pitch: float = deg_to_rad(-16.0)
+var move_input: Vector2 = Vector2.ZERO
+var move_touch_id: int = -1
+var look_touch_id: int = -1
+var touch_start: Dictionary = {}
+
+@onready var joystick_base: Control = get_node_or_null("MobileControls/JoystickBase") as Control
+@onready var joystick_knob: Control = get_node_or_null("MobileControls/JoystickBase/JoystickKnob") as Control
+@onready var interact_button: Button = get_node_or_null("MobileControls/InteractButton") as Button
+@onready var camera: Camera3D = get_node_or_null("Camera3D") as Camera3D
+
 
 func _ready() -> void:
-    add_to_group("local_player")
-    if interact_button:
-        interact_button.pressed.connect(_on_interact_pressed)
+	add_to_group("local_player")
 
-    if camera:
-        camera.current = true
-        camera.fov = 70.0
-        camera.position = Vector3(0.0, camera_height, camera_distance)
-        camera.rotation.x = look_pitch
+	if interact_button:
+		interact_button.pressed.connect(_on_interact_pressed)
 
-    _hide_joystick()
+	_configure_camera()
+	_hide_joystick()
+
+
+func _configure_camera() -> void:
+	if not camera:
+		return
+
+	camera.current = true
+	camera.fov = camera_fov
+	camera.position = Vector3(0.0, camera_height, camera_distance)
+	camera.rotation.x = look_pitch
+
 
 func _physics_process(delta: float) -> void:
-    var input := move_input
-    if input.length() < 0.01:
-        input = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var input_vector := move_input
 
-    if input.length() > 1.0:
-        input = input.normalized()
+	# Desktop fallback when there is no active mobile joystick.
+	if input_vector.length_squared() < 0.0001:
+		input_vector = Input.get_vector(
+			"move_left",
+			"move_right",
+			"move_forward",
+			"move_back"
+		)
 
-    var direction := _camera_relative_direction(input)
+	if input_vector.length() > 1.0:
+		input_vector = input_vector.normalized()
 
-    if direction.length_squared() > 0.001:
-        direction = direction.normalized()
-        velocity.x = move_toward(velocity.x, direction.x * speed, acceleration * delta)
-        velocity.z = move_toward(velocity.z, direction.z * speed, acceleration * delta)
-    else:
-        velocity.x = move_toward(velocity.x, 0.0, braking * delta)
-        velocity.z = move_toward(velocity.z, 0.0, braking * delta)
+	var direction := _camera_relative_direction(input_vector)
 
-    if not is_on_floor():
-        velocity.y -= gravity * delta
-    else:
-        velocity.y = 0.0
+	if direction.length_squared() > 0.001:
+		direction = direction.normalized()
+		velocity.x = move_toward(
+			velocity.x,
+			direction.x * speed,
+			acceleration * delta
+		)
+		velocity.z = move_toward(
+			velocity.z,
+			direction.z * speed,
+			acceleration * delta
+		)
+	else:
+		velocity.x = move_toward(velocity.x, 0.0, braking * delta)
+		velocity.z = move_toward(velocity.z, 0.0, braking * delta)
 
-    move_and_slide()
+	if not is_on_floor():
+		velocity.y -= gravity * delta
+	else:
+		velocity.y = 0.0
 
-func _camera_relative_direction(input: Vector2) -> Vector3:
-    if input.length_squared() < 0.0001:
-        return Vector3.ZERO
+	move_and_slide()
 
-    var forward := -global_transform.basis.z
-    forward.y = 0.0
-    forward = forward.normalized()
 
-    var right := global_transform.basis.x
-    right.y = 0.0
-    right = right.normalized()
+func _camera_relative_direction(input_vector: Vector2) -> Vector3:
+	if input_vector.length_squared() < 0.0001:
+		return Vector3.ZERO
 
-    return right * input.x + forward * input.y
+	var forward := -global_transform.basis.z
+
+	if camera:
+		forward = -camera.global_transform.basis.z
+
+	forward.y = 0.0
+
+	if forward.length_squared() < 0.0001:
+		forward = Vector3(0.0, 0.0, -1.0)
+	else:
+		forward = forward.normalized()
+
+	var right := forward.cross(Vector3.UP)
+
+	if right.length_squared() < 0.0001:
+		right = Vector3.RIGHT
+	else:
+		right = right.normalized()
+
+	# The joystick uses +Y for forward.
+	return right * input_vector.x + forward * input_vector.y
+
 
 func _input(event: InputEvent) -> void:
-    if event is InputEventScreenTouch:
-        if event.pressed:
-            if interact_button and interact_button.get_global_rect().has_point(event.position):
-                return
+	if event is InputEventScreenTouch:
+		_handle_screen_touch(event)
+	elif event is InputEventScreenDrag:
+		_handle_screen_drag(event)
+	elif event is InputEventMouseMotion:
+		# Mouse is primarily for desktop testing.
+		_apply_look(event.relative)
 
-            var screen_width := get_viewport().get_visible_rect().size.x
 
-            if event.position.x < screen_width * 0.48 and move_touch_id == -1:
-                move_touch_id = event.index
-                touch_start[event.index] = event.position
-                move_input = Vector2.ZERO
-                _show_joystick(event.position)
+func _handle_screen_touch(event: InputEventScreenTouch) -> void:
+	if interact_button and interact_button.get_global_rect().has_point(event.position):
+		return
 
-            elif event.position.x >= screen_width * 0.48 and look_touch_id == -1:
-                look_touch_id = event.index
-                touch_start[event.index] = event.position
+	if event.pressed:
+		var screen_width := get_viewport().get_visible_rect().size.x
 
-        else:
-            if event.index == move_touch_id:
-                move_touch_id = -1
-                move_input = Vector2.ZERO
-                _hide_joystick()
+		if (
+			event.position.x < screen_width * left_screen_ratio
+			and move_touch_id == -1
+		):
+			move_touch_id = event.index
+			touch_start[event.index] = event.position
+			move_input = Vector2.ZERO
+			_show_joystick(event.position)
 
-            if event.index == look_touch_id:
-                look_touch_id = -1
+		elif (
+			event.position.x >= screen_width * left_screen_ratio
+			and look_touch_id == -1
+		):
+			look_touch_id = event.index
+			touch_start[event.index] = event.position
+	else:
+		if event.index == move_touch_id:
+			move_touch_id = -1
+			move_input = Vector2.ZERO
+			_hide_joystick()
 
-            touch_start.erase(event.index)
+		if event.index == look_touch_id:
+			look_touch_id = -1
 
-    elif event is InputEventScreenDrag:
-        if event.index == move_touch_id:
-            var origin: Vector2 = touch_start.get(event.index, event.position)
-            var delta := event.position - origin
-            var distance := delta.length()
+		touch_start.erase(event.index)
 
-            if distance > joystick_deadzone * joystick_radius:
-                var clamped := delta.limit_length(joystick_radius)
-                move_input = Vector2(
-                    clamped.x / joystick_radius,
-                    -clamped.y / joystick_radius
-                )
-            else:
-                move_input = Vector2.ZERO
 
-            _update_joystick(event.position)
+func _handle_screen_drag(event: InputEventScreenDrag) -> void:
+	if event.index == move_touch_id:
+		var origin: Vector2 = touch_start.get(event.index, event.position)
+		var offset := event.position - origin
 
-        elif event.index == look_touch_id:
-            _apply_look(event.relative * touch_look_multiplier)
+		move_input = _joystick_vector(offset)
+		_update_joystick(event.position)
 
-    elif event is InputEventMouseMotion:
-        _apply_look(event.relative)
+	elif event.index == look_touch_id:
+		_apply_look(event.relative * touch_look_multiplier)
+
+
+func _joystick_vector(offset: Vector2) -> Vector2:
+	var distance := offset.length()
+
+	if distance <= joystick_deadzone * joystick_radius:
+		return Vector2.ZERO
+
+	var clamped := offset.limit_length(joystick_radius)
+
+	# Screen Y increases downward, so invert it for game-space forward.
+	return Vector2(
+		clamped.x / joystick_radius,
+		-clamped.y / joystick_radius
+	)
+
 
 func _apply_look(delta: Vector2) -> void:
-    rotate_y(-delta.x * mouse_sensitivity)
+	rotate_y(-delta.x * mouse_sensitivity)
 
-    look_pitch = clamp(
-        look_pitch - delta.y * mouse_sensitivity,
-        deg_to_rad(-70.0),
-        deg_to_rad(55.0)
-    )
+	look_pitch = clamp(
+		look_pitch - delta.y * mouse_sensitivity,
+		deg_to_rad(min_pitch_degrees),
+		deg_to_rad(max_pitch_degrees)
+	)
 
-    if camera:
-        camera.rotation.x = look_pitch
+	if camera:
+		camera.rotation.x = look_pitch
+
 
 func _show_joystick(pos: Vector2) -> void:
-    if not joystick_base or not joystick_knob:
-        return
+	if not joystick_base or not joystick_knob:
+		return
 
-    var base_size := joystick_base.size
-    joystick_base.position = pos - base_size * 0.5
-    joystick_base.visible = true
-    joystick_knob.position = (base_size - joystick_knob.size) * 0.5
-    joystick_knob.visible = true
+	var viewport_size := get_viewport().get_visible_rect().size
+	var base_size := joystick_base.size
+
+	# Keep the dynamic joystick completely on-screen.
+	var half_size := base_size * 0.5
+	var min_pos := half_size
+	var max_pos := viewport_size - half_size
+	var center := Vector2(
+		clamp(pos.x, min_pos.x, max_pos.x),
+		clamp(pos.y, min_pos.y, max_pos.y)
+	)
+
+	joystick_base.position = center - half_size
+	joystick_base.visible = true
+
+	joystick_knob.position = (base_size - joystick_knob.size) * 0.5
+	joystick_knob.visible = true
+
 
 func _update_joystick(pos: Vector2) -> void:
-    if not joystick_base or not joystick_knob:
-        return
+	if not joystick_base or not joystick_knob:
+		return
 
-    var base_size := joystick_base.size
-    var base_center := joystick_base.position + base_size * 0.5
-    var offset := (pos - base_center).limit_length(joystick_radius)
-    var knob_center := base_size * 0.5 + offset
-    joystick_knob.position = knob_center - joystick_knob.size * 0.5
+	var base_center := joystick_base.position + joystick_base.size * 0.5
+	var offset := (pos - base_center).limit_length(joystick_radius)
+	var knob_center := joystick_base.size * 0.5 + offset
+
+	joystick_knob.position = knob_center - joystick_knob.size * 0.5
+
 
 func _hide_joystick() -> void:
-    if joystick_base:
-        joystick_base.visible = false
-    if joystick_knob:
-        joystick_knob.visible = false
+	if joystick_base:
+		joystick_base.visible = false
+
+	if joystick_knob:
+		joystick_knob.visible = false
+
 
 func add_resource(resource_type: String, amount: int) -> void:
-    var inventory_node := get_node_or_null("Inventory")
-    if inventory_node and inventory_node.has_method("add_resource"):
-        inventory_node.add_resource(resource_type, amount)
+	var inventory_node := get_node_or_null("Inventory")
+
+	if inventory_node and inventory_node.has_method("add_resource"):
+		inventory_node.add_resource(resource_type, amount)
+
 
 func _on_interact_pressed() -> void:
-    var ray := get_node_or_null("Camera3D/InteractionRay")
-    if ray and ray.has_method("try_interact"):
-        ray.try_interact()
+	var ray := get_node_or_null("Camera3D/InteractionRay")
+
+	if ray and ray.has_method("try_interact"):
+		ray.try_interact()
