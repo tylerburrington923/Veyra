@@ -50,7 +50,7 @@ func generate() -> void:
             var b := a + 1
             var c := a + row
             var d := c + 1
-            indices.append_array(PackedInt32Array([a, c, b, b, c, d]))
+            indices.append_array(PackedInt32Array([a, b, c, b, d, c]))
 
     var arrays := []
     arrays.resize(Mesh.ARRAY_MAX)
@@ -198,8 +198,8 @@ func _make_terrain_texture() -> ImageTexture:
             var n := texture_noise.get_noise_2d(float(x), float(y))
             var fine := texture_noise.get_noise_2d(float(x) * 2.7, float(y) * 2.7) * 0.18
             var v := clampf(0.5 + n * 0.42 + fine, 0.0, 1.0)
-            var grass := Color(0.16, 0.23, 0.14, 1)
-            var soil := Color(0.30, 0.25, 0.17, 1)
+            var grass := Color(0.22, 0.36, 0.18, 1)
+            var soil := Color(0.34, 0.28, 0.18, 1)
             var color := grass.lerp(soil, clampf((0.48 - v) * 2.4, 0.0, 1.0))
             image.set_pixel(x, y, color)
 
