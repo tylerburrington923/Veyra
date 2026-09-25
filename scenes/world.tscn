@@ -29,6 +29,15 @@ height = 1.8
 [sub_resource type="StandardMaterial3D" id="EchoStoneMaterial"]
 albedo_color = Color(0.30, 0.25, 0.38, 1)
 roughness = 0.9
+emission_enabled = true
+emission = Color(0.03, 0.01, 0.06, 1)
+emission_energy_multiplier = 0.15
+
+[sub_resource type="BoxMesh" id="ForceTestMesh"]
+size = Vector3(0.9, 0.9, 0.9)
+
+[sub_resource type="BoxShape3D" id="ForceTestShape"]
+size = Vector3(0.9, 0.9, 0.9)
 
 [node name="Veyra" type="Node3D"]
 script = ExtResource("1_world")
@@ -65,6 +74,19 @@ material_override = SubResource("EchoStoneMaterial")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="EchoStone"]
 shape = SubResource("EchoStoneShape")
+
+[node name="ForceTestCube" type="RigidBody3D" parent="."]
+position = Vector3(6, 1.0, -9)
+mass = 1.2
+collision_layer = 1
+collision_mask = 1
+groups = ["echo_reactive"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="ForceTestCube"]
+mesh = SubResource("ForceTestMesh")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ForceTestCube"]
+shape = SubResource("ForceTestShape")
 
 [node name="VeyraArtifact" type="StaticBody3D" parent="."]
 position = Vector3(0, 0.85, -4)
