@@ -10,6 +10,7 @@ extends Node3D
 @export var resource_count := 36
 
 var noise := FastNoiseLite.new()
+var detail_noise := FastNoiseLite.new()
 
 func _ready() -> void:
     generate()
@@ -17,7 +18,10 @@ func _ready() -> void:
 func generate() -> void:
     noise.seed = seed_value
     noise.frequency = 0.018
-    noise.fractal_octaves = 4
+    noise.fractal_octaves = 3
+    detail_noise.seed = seed_value + 41
+    detail_noise.frequency = 0.055
+    detail_noise.fractal_octaves = 2
 
     var vertices := PackedVector3Array()
     var normals := PackedVector3Array()
@@ -28,7 +32,9 @@ func generate() -> void:
         for x in range(grid_size + 1):
             var px := (x - grid_size * 0.5) * cell_size
             var pz := (z - grid_size * 0.5) * cell_size
-            var h := noise.get_noise_2d(x, z) * height_scale
+            var base_h := noise.get_noise_2d(x, z) * height_scale
+            var detail_h := detail_noise.get_noise_2d(x, z) * 1.2
+            var h := base_h + detail_h
             vertices.append(Vector3(px, h, pz))
             normals.append(_sample_normal(x, z))
             uvs.append(Vector2(float(x) / grid_size, float(z) / grid_size))
@@ -53,7 +59,7 @@ func generate() -> void:
     mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 
     var material := StandardMaterial3D.new()
-    material.albedo_color = Color(0.20, 0.24, 0.20, 1)
+    material.albedo_color = Color(0.22, 0.27, 0.21, 1)
     material.roughness = 1.0
     mesh.surface_set_material(0, material)
 
@@ -72,6 +78,7 @@ func generate() -> void:
     add_child(body)
 
     _spawn_resources()
+    _spawn_landmark()
 
 func _sample_normal(x: int, z: int) -> Vector3:
     var left := noise.get_noise_2d(x - 1, z) * height_scale
@@ -133,6 +140,39 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> StaticBody3D:
     node.add_child(collision)
 
     return node
+
+func _spawn_landmark() -> void:
+    var base := MeshInstance3D.new()
+    var mesh := CylinderMesh.new()
+    mesh.top_radius = 1.0
+    mesh.bottom_radius = 1.8
+    mesh.height = 5.5
+    mesh.radial_segments = 8
+    base.mesh = mesh
+    base.position = Vector3(0, 2.75, -18)
+
+    var material := StandardMaterial3D.new()
+    material.albedo_color = Color(0.28, 0.25, 0.22, 1)
+    material.roughness = 0.92
+    base.material_override = material
+    add_child(base)
+
+    var ring := MeshInstance3D.new()
+    var ring_mesh := TorusMesh.new()
+    ring_mesh.inner_radius = 1.25
+    ring_mesh.outer_radius = 1.38
+    ring_mesh.rings = 8
+    ring_mesh.ring_segments = 12
+    ring.mesh = ring_mesh
+    ring.position = Vector3(0, 4.7, -18)
+
+    var lux := StandardMaterial3D.new()
+    lux.albedo_color = Color(0.08, 0.48, 0.52, 1)
+    lux.emission_enabled = true
+    lux.emission = Color(0.02, 0.32, 0.36, 1)
+    lux.emission_energy_multiplier = 1.4
+    ring.material_override = lux
+    add_child(ring)
 
 func _resource_color(resource_type: String) -> Color:
     match resource_type:
