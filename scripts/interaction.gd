@@ -104,7 +104,7 @@ func _classify_target(node: Node) -> String:
 func _find_handler(start: Node, method_name: String) -> Node:
     var current: Node = start
     var depth: int = 0
-    while current and depth < 4:
+    while current and depth < 8:
         if current.has_method(method_name):
             return current
         current = current.get_parent()
