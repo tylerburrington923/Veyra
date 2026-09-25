@@ -116,7 +116,7 @@ func _spawn_resources() -> void:
         if Vector2(x, z).length() < 10.0:
             continue
 
-        var y := get_height_at_world(x, z) + 0.55
+        var y: float = get_height_at_world(x, z) + 0.82
         add_child(_make_resource_node(i, Vector3(x, y, z)))
 
 func _make_resource_node(index: int, spawn_position: Vector3) -> StaticBody3D:
@@ -141,7 +141,7 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> StaticBody3D:
 
     var collision := CollisionShape3D.new()
     var shape := SphereShape3D.new()
-    shape.radius = 0.62
+    shape.radius = 0.58
     collision.shape = shape
     node.add_child(collision)
 
