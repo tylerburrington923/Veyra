@@ -1,22 +1,12 @@
 extends Node
 
-## Device-aware visual settings for Veyra.
-## 4 GB RAM is the baseline. Higher tiers may opt into more distance/detail.
+## Conservative visual profile for Android.
+## Physical RAM is intentionally not inferred from render-memory counters.
+## The profile stays at LOW until a real device benchmark justifies promotion.
 
 enum QualityTier { LOW, MEDIUM, HIGH }
 
-var tier := QualityTier.LOW
-var ram_mb := 4096
-
-func _ready() -> void:
-    _detect_device()
-    apply()
-
-func _detect_device() -> void:
-    ram_mb = int(Performance.get_monitor(Performance.RENDER_TOTAL_MEM_USED))
-    # The renderer cannot reliably expose physical RAM on every Android device.
-    # Start conservatively; quality can be raised later from an options menu.
-    tier = QualityTier.LOW
+@export var tier := QualityTier.LOW
 
 func apply() -> void:
     RenderingServer.set_default_clear_color(Color(0.035, 0.055, 0.08, 1))
