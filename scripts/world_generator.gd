@@ -34,7 +34,7 @@ func generate() -> void:
             var pz := (z - grid_size * 0.5) * cell_size
             var base_h := noise.get_noise_2d(x, z) * height_scale
             var detail_h := detail_noise.get_noise_2d(x, z) * 1.2
-            var h := base_h + detail_h
+            var h := get_height_at_world(px, pz)
             vertices.append(Vector3(px, h, pz))
             normals.append(_sample_normal(x, z))
             uvs.append(Vector2(float(x) / grid_size, float(z) / grid_size))
@@ -80,11 +80,16 @@ func generate() -> void:
     _spawn_resources()
     _spawn_landmark()
 
+func get_height_at_world(x: float, z: float) -> float:
+    var sample_x := x / cell_size + grid_size * 0.5
+    var sample_z := z / cell_size + grid_size * 0.5
+    return noise.get_noise_2d(sample_x, sample_z) * height_scale + detail_noise.get_noise_2d(sample_x, sample_z) * 1.2
+
 func _sample_normal(x: int, z: int) -> Vector3:
-    var left := noise.get_noise_2d(x - 1, z) * height_scale
-    var right := noise.get_noise_2d(x + 1, z) * height_scale
-    var back := noise.get_noise_2d(x, z - 1) * height_scale
-    var front := noise.get_noise_2d(x, z + 1) * height_scale
+    var left := get_height_at_world((x - 1 - grid_size * 0.5) * cell_size, (z - grid_size * 0.5) * cell_size)
+    var right := get_height_at_world((x + 1 - grid_size * 0.5) * cell_size, (z - grid_size * 0.5) * cell_size)
+    var back := get_height_at_world((x - grid_size * 0.5) * cell_size, (z - 1 - grid_size * 0.5) * cell_size)
+    var front := get_height_at_world((x - grid_size * 0.5) * cell_size, (z + 1 - grid_size * 0.5) * cell_size)
     return Vector3(left - right, 2.0, back - front).normalized()
 
 func _spawn_resources() -> void:
@@ -98,9 +103,7 @@ func _spawn_resources() -> void:
         if Vector2(x, z).length() < 10.0:
             continue
 
-        var sample_x := x / cell_size + grid_size * 0.5
-        var sample_z := z / cell_size + grid_size * 0.5
-        var y := noise.get_noise_2d(sample_x, sample_z) * height_scale + 0.7
+        var y := get_height_at_world(x, z) + 0.7
         add_child(_make_resource_node(i, Vector3(x, y, z)))
 
 func _make_resource_node(index: int, spawn_position: Vector3) -> StaticBody3D:
@@ -149,7 +152,7 @@ func _spawn_landmark() -> void:
     mesh.height = 5.5
     mesh.radial_segments = 8
     base.mesh = mesh
-    base.position = Vector3(0, 2.75, -18)
+    base.position = Vector3(0, get_height_at_world(0.0, -18.0) + 2.75, -18)
 
     var material := StandardMaterial3D.new()
     material.albedo_color = Color(0.28, 0.25, 0.22, 1)
@@ -164,7 +167,7 @@ func _spawn_landmark() -> void:
     ring_mesh.rings = 8
     ring_mesh.ring_segments = 12
     ring.mesh = ring_mesh
-    ring.position = Vector3(0, 4.7, -18)
+    ring.position = Vector3(0, get_height_at_world(0.0, -18.0) + 4.7, -18)
 
     var lux := StandardMaterial3D.new()
     lux.albedo_color = Color(0.08, 0.48, 0.52, 1)
