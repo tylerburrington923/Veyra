@@ -1,14 +1,9 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/world.gd" id="1_world"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
 [ext_resource type="Script" path="res://scripts/strange_object.gd" id="3_artifact"]
-
-[sub_resource type="BoxMesh" id="GroundMesh"]
-size = Vector3(60, 0.2, 60)
-
-[sub_resource type="BoxShape3D" id="GroundShape"]
-size = Vector3(60, 0.2, 60)
+[ext_resource type="Script" path="res://scripts/world_generator.gd" id="4_generator"]
 
 [sub_resource type="Environment" id="Environment"]
 background_mode = 1
@@ -17,27 +12,12 @@ ambient_light_source = 3
 ambient_light_color = Color(0.55, 0.62, 0.72, 1)
 ambient_light_energy = 0.7
 
-[sub_resource type="StandardMaterial3D" id="GroundMaterial"]
-albedo_color = Color(0.16, 0.20, 0.18, 1)
-roughness = 1.0
-
 [sub_resource type="SphereMesh" id="ArtifactMesh"]
 radius = 0.75
 height = 1.5
 
 [sub_resource type="SphereShape3D" id="ArtifactShape"]
 radius = 0.75
-
-[sub_resource type="StandardMaterial3D" id="ArtifactMaterial"]
-albedo_color = Color(0.12, 0.3, 0.34, 1)
-metallic = 0.65
-roughness = 0.22
-emission_enabled = true
-emission = Color(0.02, 0.22, 0.25, 1)
-emission_energy_multiplier = 0.8
-
-[sub_resource type="PlaneMesh" id="WorldGridMesh"]
-size = Vector2(60, 60)
 
 [node name="Veyra" type="Node3D"]
 script = ExtResource("1_world")
@@ -50,13 +30,9 @@ rotation_degrees = Vector3(-55, -25, 0)
 light_energy = 1.1
 shadow_enabled = true
 
-[node name="Ground" type="StaticBody3D" parent="."]
-[node name="Mesh" type="MeshInstance3D" parent="Ground"]
-mesh = SubResource("GroundMesh")
-material_override = SubResource("GroundMaterial")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
-shape = SubResource("GroundShape")
+[node name="WorldGenerator" type="Node3D" parent="."]
+script = ExtResource("4_generator")
+seed_value = 47291
 
 [node name="VeyraArtifact" type="StaticBody3D" parent="."]
 position = Vector3(0, 0.85, -4)
@@ -64,16 +40,9 @@ script = ExtResource("3_artifact")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="VeyraArtifact"]
 mesh = SubResource("ArtifactMesh")
-material_override = SubResource("ArtifactMaterial")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="VeyraArtifact"]
 shape = SubResource("ArtifactShape")
 
-[node name="OmniLight3D" type="OmniLight3D" parent="VeyraArtifact"]
-visible = false
-light_color = Color(0.1, 0.85, 0.9, 1)
-light_energy = 2.5
-omni_range = 5.0
-
 [node name="Player" parent="." instance=ExtResource("2_player")]
-position = Vector3(0, 1, 0)
+position = Vector3(0, 4, 0)
