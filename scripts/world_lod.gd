@@ -4,7 +4,6 @@ extends Node3D
 ## Attach to decorative world objects, not gameplay-critical objects.
 
 @export var visible_distance := 70.0
-@export var fade_start := 55.0
 
 var target_camera: Camera3D
 
