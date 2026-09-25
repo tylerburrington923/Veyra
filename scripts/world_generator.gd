@@ -141,7 +141,7 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> StaticBody3D:
 
     var collision := CollisionShape3D.new()
     var shape := SphereShape3D.new()
-    shape.radius = 0.55
+    shape.radius = 0.62
     collision.shape = shape
     node.add_child(collision)
 
