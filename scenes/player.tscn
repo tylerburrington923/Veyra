@@ -141,6 +141,8 @@ position = Vector3(0, 3.1, 5.8)
 rotation_degrees = Vector3(-16, 0, 0)
 current = true
 [node name="InteractionRay" type="RayCast3D" parent="Camera3D"]
+collision_mask = 1
+exclude_parent = true
 script = ExtResource("2_interaction")
 
 [node name="MobileControls" type="CanvasLayer" parent="."]
