@@ -13,7 +13,6 @@ extends CharacterBody3D
 @export var joystick_deadzone := 0.12
 @export var camera_distance := 5.8
 @export var camera_height := 3.1
-@export var camera_smoothing := 12.0
 
 var look_pitch := deg_to_rad(-16.0)
 var touch_start := {}
