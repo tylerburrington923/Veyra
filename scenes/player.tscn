@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/interaction.gd" id="2_interaction"]
@@ -6,130 +6,138 @@
 [sub_resource type="CapsuleShape3D" id="CapsuleShape"]
 radius = 0.34
 height = 1.8
-
 [sub_resource type="CapsuleMesh" id="TorsoMesh"]
 radius = 0.28
 height = 0.75
-
 [sub_resource type="SphereMesh" id="HeadMesh"]
 radius = 0.28
 height = 0.56
-
 [sub_resource type="CapsuleMesh" id="LimbMesh"]
 radius = 0.11
 height = 0.75
-
 [sub_resource type="SphereMesh" id="HandMesh"]
 radius = 0.13
 height = 0.26
-
 [sub_resource type="SphereMesh" id="FootMesh"]
 radius = 0.14
 height = 0.28
-
 [sub_resource type="StandardMaterial3D" id="Skin"]
 albedo_color = Color(0.72, 0.5, 0.36, 1)
 roughness = 0.9
-
 [sub_resource type="StandardMaterial3D" id="Shirt"]
 albedo_color = Color(0.15, 0.42, 0.58, 1)
 roughness = 0.85
-
 [sub_resource type="StandardMaterial3D" id="Pants"]
 albedo_color = Color(0.08, 0.1, 0.13, 1)
 roughness = 0.9
-
 [sub_resource type="StandardMaterial3D" id="Hair"]
 albedo_color = Color(0.025, 0.018, 0.012, 1)
 roughness = 1.0
-
 [sub_resource type="StandardMaterial3D" id="Eyes"]
 albedo_color = Color(0.02, 0.02, 0.02, 1)
 roughness = 0.5
+[sub_resource type="StyleBoxFlat" id="JoystickStyle"]
+bg_color = Color(0.08, 0.12, 0.16, 0.72)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.55, 0.72, 0.78, 0.65)
+corner_radius_top_left = 70
+corner_radius_top_right = 70
+corner_radius_bottom_right = 70
+corner_radius_bottom_left = 70
+[sub_resource type="StyleBoxFlat" id="KnobStyle"]
+bg_color = Color(0.25, 0.65, 0.72, 0.9)
+corner_radius_top_left = 45
+corner_radius_top_right = 45
+corner_radius_bottom_right = 45
+corner_radius_bottom_left = 45
 
 [node name="Player" type="CharacterBody3D"]
 script = ExtResource("1_player")
-
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 position = Vector3(0, 0.9, 0)
 shape = SubResource("CapsuleShape")
-
 [node name="Torso" type="MeshInstance3D" parent="."]
 position = Vector3(0, 1.15, 0)
 mesh = SubResource("TorsoMesh")
 material_override = SubResource("Shirt")
-
 [node name="Head" type="MeshInstance3D" parent="."]
 position = Vector3(0, 1.78, 0)
 mesh = SubResource("HeadMesh")
 material_override = SubResource("Skin")
-
 [node name="Hair" type="MeshInstance3D" parent="."]
 position = Vector3(0, 1.99, 0)
 scale = Vector3(1.03, 0.55, 1.03)
 mesh = SubResource("HeadMesh")
 material_override = SubResource("Hair")
-
 [node name="LeftEye" type="MeshInstance3D" parent="."]
 position = Vector3(-0.105, 1.81, -0.255)
 scale = Vector3(0.45, 0.65, 0.25)
 mesh = SubResource("HandMesh")
 material_override = SubResource("Eyes")
-
 [node name="RightEye" type="MeshInstance3D" parent="."]
 position = Vector3(0.105, 1.81, -0.255)
 scale = Vector3(0.45, 0.65, 0.25)
 mesh = SubResource("HandMesh")
 material_override = SubResource("Eyes")
-
 [node name="LeftArm" type="MeshInstance3D" parent="."]
 position = Vector3(-0.39, 1.15, 0)
 rotation_degrees = Vector3(0, 0, -8)
 mesh = SubResource("LimbMesh")
 material_override = SubResource("Skin")
-
 [node name="RightArm" type="MeshInstance3D" parent="."]
 position = Vector3(0.39, 1.15, 0)
 rotation_degrees = Vector3(0, 0, 8)
 mesh = SubResource("LimbMesh")
 material_override = SubResource("Skin")
-
 [node name="LeftHand" type="MeshInstance3D" parent="."]
 position = Vector3(-0.42, 0.73, 0)
 mesh = SubResource("HandMesh")
 material_override = SubResource("Skin")
-
 [node name="RightHand" type="MeshInstance3D" parent="."]
 position = Vector3(0.42, 0.73, 0)
 mesh = SubResource("HandMesh")
 material_override = SubResource("Skin")
-
 [node name="LeftLeg" type="MeshInstance3D" parent="."]
 position = Vector3(-0.18, 0.48, 0)
 mesh = SubResource("LimbMesh")
 material_override = SubResource("Pants")
-
 [node name="RightLeg" type="MeshInstance3D" parent="."]
 position = Vector3(0.18, 0.48, 0)
 mesh = SubResource("LimbMesh")
 material_override = SubResource("Pants")
-
 [node name="LeftFoot" type="MeshInstance3D" parent="."]
 position = Vector3(-0.18, 0.08, -0.08)
 scale = Vector3(1.0, 0.55, 1.25)
 mesh = SubResource("FootMesh")
 material_override = SubResource("Pants")
-
 [node name="RightFoot" type="MeshInstance3D" parent="."]
 position = Vector3(0.18, 0.08, -0.08)
 scale = Vector3(1.0, 0.55, 1.25)
 mesh = SubResource("FootMesh")
 material_override = SubResource("Pants")
-
 [node name="Camera3D" type="Camera3D" parent="."]
 position = Vector3(0, 3.1, 5.8)
 rotation_degrees = Vector3(-16, 0, 0)
 current = true
-
 [node name="InteractionRay" type="RayCast3D" parent="Camera3D"]
 script = ExtResource("2_interaction")
+
+[node name="MobileControls" type="CanvasLayer" parent="."]
+[node name="JoystickBase" type="Panel" parent="MobileControls"]
+offset_left = 55.0
+offset_top = 515.0
+offset_right = 195.0
+offset_bottom = 655.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("JoystickStyle")
+[node name="JoystickKnob" type="Panel" parent="MobileControls/JoystickBase"]
+offset_left = 40.0
+offset_top = 40.0
+offset_right = 100.0
+offset_bottom = 100.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("KnobStyle")
+visible = false
