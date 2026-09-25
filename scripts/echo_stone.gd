@@ -77,7 +77,7 @@ func _release(direction: Vector3) -> void:
     var nearby := get_tree().get_nodes_in_group("echo_reactive")
     for node in nearby:
         if node is RigidBody3D:
-            var offset := node.global_position - global_position
+            var offset: Vector3 = node.global_position - global_position
             var distance := maxf(offset.length(), 0.5)
             if distance <= 5.0:
                 node.apply_central_impulse(impulse / distance)
