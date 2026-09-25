@@ -1,7 +1,7 @@
 extends Node3D
 
-## Lightweight deterministic terrain for the first Veyra vertical slice.
-## The same seed rebuilds the same base landscape on every peer.
+## Deterministic terrain and resource generation for Veyra.
+## Visuals stay procedural so the mobile build does not depend on large texture assets.
 
 @export var seed_value := 47291
 @export var grid_size := 48
@@ -12,6 +12,7 @@ extends Node3D
 var noise := FastNoiseLite.new()
 var detail_noise := FastNoiseLite.new()
 var generated := false
+var resource_textures: Dictionary = {}
 
 func _ready() -> void:
     call_deferred("generate")
@@ -62,8 +63,9 @@ func generate() -> void:
     mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 
     var material := StandardMaterial3D.new()
-    material.albedo_color = Color(0.22, 0.27, 0.21, 1)
+    material.albedo_texture = _make_terrain_texture()
     material.roughness = 1.0
+    material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
     mesh.surface_set_material(0, material)
 
     var terrain := MeshInstance3D.new()
@@ -106,7 +108,7 @@ func _spawn_resources() -> void:
         if Vector2(x, z).length() < 10.0:
             continue
 
-        var y := get_height_at_world(x, z) + 0.7
+        var y := get_height_at_world(x, z) + 0.55
         add_child(_make_resource_node(i, Vector3(x, y, z)))
 
 func _make_resource_node(index: int, spawn_position: Vector3) -> StaticBody3D:
@@ -122,21 +124,11 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> StaticBody3D:
     node.resource_type = resource_type
     node.amount = 1
 
-    var mesh := SphereMesh.new()
-    mesh.radius = 0.55
-    mesh.height = 1.1
-
-    var material := StandardMaterial3D.new()
-    material.roughness = 0.85
-    material.albedo_color = _resource_color(resource_type)
-    if resource_type == "Vitreous Lux":
-        material.emission_enabled = true
-        material.emission = Color(0.02, 0.35, 0.4, 1)
-        material.emission_energy_multiplier = 1.4
-
     var visual := MeshInstance3D.new()
-    visual.mesh = mesh
-    visual.material_override = material
+    visual.mesh = _resource_mesh(resource_type)
+    visual.material_override = _resource_material(resource_type)
+    visual.rotation.y = rng.randf_range(0.0, TAU)
+    visual.scale = Vector3.ONE * rng.randf_range(0.85, 1.15)
     node.add_child(visual)
 
     var collision := CollisionShape3D.new()
@@ -146,6 +138,106 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> StaticBody3D:
     node.add_child(collision)
 
     return node
+
+func _resource_mesh(resource_type: String) -> Mesh:
+    match resource_type:
+        "Stone":
+            var stone := SphereMesh.new()
+            stone.radius = 0.62
+            stone.height = 0.9
+            stone.radial_segments = 8
+            stone.rings = 4
+            return stone
+        "Wood":
+            var wood := CylinderMesh.new()
+            wood.top_radius = 0.45
+            wood.bottom_radius = 0.58
+            wood.height = 0.85
+            wood.radial_segments = 8
+            return wood
+        "Metal":
+            var metal := PrismMesh.new()
+            metal.size = Vector3(0.95, 1.0, 0.95)
+            return metal
+        _:
+            var lux := PrismMesh.new()
+            lux.size = Vector3(0.72, 1.45, 0.72)
+            return lux
+
+func _resource_material(resource_type: String) -> StandardMaterial3D:
+    var material := StandardMaterial3D.new()
+    material.albedo_texture = _make_resource_texture(resource_type)
+    material.roughness = 0.82
+
+    match resource_type:
+        "Stone":
+            material.albedo_color = Color(0.72, 0.75, 0.70, 1)
+        "Wood":
+            material.albedo_color = Color(0.70, 0.42, 0.20, 1)
+        "Metal":
+            material.albedo_color = Color(0.62, 0.68, 0.72, 1)
+            material.metallic = 0.72
+            material.roughness = 0.38
+        "Vitreous Lux":
+            material.albedo_color = Color(0.20, 0.80, 0.84, 1)
+            material.emission_enabled = true
+            material.emission = Color(0.02, 0.34, 0.38, 1)
+            material.emission_energy_multiplier = 1.25
+
+    return material
+
+func _make_terrain_texture() -> ImageTexture:
+    var image := Image.create(128, 128, false, Image.FORMAT_RGBA8)
+    var texture_noise := FastNoiseLite.new()
+    texture_noise.seed = seed_value + 8000
+    texture_noise.frequency = 0.045
+    texture_noise.fractal_octaves = 3
+
+    for y in range(128):
+        for x in range(128):
+            var n := texture_noise.get_noise_2d(float(x), float(y))
+            var fine := texture_noise.get_noise_2d(float(x) * 2.7, float(y) * 2.7) * 0.18
+            var v := clampf(0.5 + n * 0.42 + fine, 0.0, 1.0)
+            var grass := Color(0.16, 0.23, 0.14, 1)
+            var soil := Color(0.30, 0.25, 0.17, 1)
+            var color := grass.lerp(soil, clampf((0.48 - v) * 2.4, 0.0, 1.0))
+            image.set_pixel(x, y, color)
+
+    return ImageTexture.create_from_image(image)
+
+func _make_resource_texture(resource_type: String) -> ImageTexture:
+    if resource_textures.has(resource_type):
+        return resource_textures[resource_type]
+
+    var image := Image.create(32, 32, false, Image.FORMAT_RGBA8)
+    var texture_noise := FastNoiseLite.new()
+    texture_noise.seed = seed_value + resource_type.hash()
+    texture_noise.frequency = 0.12
+
+    var base := Color.WHITE
+    var dark := Color(0.45, 0.45, 0.45, 1)
+    match resource_type:
+        "Stone":
+            base = Color(0.66, 0.68, 0.64, 1)
+            dark = Color(0.30, 0.32, 0.30, 1)
+        "Wood":
+            base = Color(0.62, 0.35, 0.14, 1)
+            dark = Color(0.26, 0.12, 0.045, 1)
+        "Metal":
+            base = Color(0.64, 0.69, 0.74, 1)
+            dark = Color(0.20, 0.24, 0.28, 1)
+        "Vitreous Lux":
+            base = Color(0.14, 0.72, 0.76, 1)
+            dark = Color(0.025, 0.16, 0.20, 1)
+
+    for y in range(32):
+        for x in range(32):
+            var n := clampf(0.5 + texture_noise.get_noise_2d(float(x), float(y)) * 0.5, 0.0, 1.0)
+            image.set_pixel(x, y, dark.lerp(base, n))
+
+    var texture := ImageTexture.create_from_image(image)
+    resource_textures[resource_type] = texture
+    return texture
 
 func _spawn_landmark() -> void:
     var base := MeshInstance3D.new()
