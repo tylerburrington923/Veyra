@@ -11,11 +11,16 @@ extends Node3D
 
 var noise := FastNoiseLite.new()
 var detail_noise := FastNoiseLite.new()
+var generated := false
 
 func _ready() -> void:
-    generate()
+    call_deferred("generate")
 
 func generate() -> void:
+    if generated:
+        return
+
+    generated = true
     noise.seed = seed_value
     noise.frequency = 0.018
     noise.fractal_octaves = 3
