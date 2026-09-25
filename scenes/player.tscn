@@ -147,6 +147,22 @@ exclude_parent = true
 script = ExtResource("2_interaction")
 
 [node name="MobileControls" type="CanvasLayer" parent="."]
+[node name="Crosshair" type="Label" parent="MobileControls"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -10.0
+offset_top = -16.0
+offset_right = 10.0
+offset_bottom = 16.0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 28
+text = "•"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="DebugHUD" type="Label" parent="MobileControls"]
 offset_left = 24.0
 offset_top = 24.0
