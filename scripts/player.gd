@@ -41,6 +41,10 @@ var touch_start: Dictionary = {}
 @onready var interact_button: Button = get_node_or_null("MobileControls/InteractButton") as Button
 @onready var jump_button: Button = get_node_or_null("MobileControls/JumpButton") as Button
 @onready var camera: Camera3D = get_node_or_null("Camera3D") as Camera3D
+@onready var debug_hud: Label = get_node_or_null("MobileControls/DebugHUD") as Label
+@onready var left_leg: MeshInstance3D = get_node_or_null("LeftLeg") as MeshInstance3D
+@onready var right_leg: MeshInstance3D = get_node_or_null("RightLeg") as MeshInstance3D
+var walk_time: float = 0.0
 
 
 func _ready() -> void:
@@ -111,6 +115,27 @@ func _physics_process(delta: float) -> void:
 	jump_requested = false
 
 	move_and_slide()
+	_update_player_visuals(delta, direction)
+	_update_debug_hud(input_vector)
+
+
+func _update_player_visuals(delta: float, direction: Vector3) -> void:
+	if direction.length_squared() > 0.001:
+		var target_yaw := atan2(-direction.x, -direction.z)
+		rotation.y = lerp_angle(rotation.y, target_yaw, minf(1.0, 10.0 * delta))
+		walk_time += delta * 9.0
+	else:
+		walk_time = move_toward(walk_time, 0.0, delta * 8.0)
+	if left_leg and right_leg:
+		var swing := sin(walk_time) * 0.35 if direction.length_squared() > 0.001 else 0.0
+		left_leg.rotation.x = swing
+		right_leg.rotation.x = -swing
+
+
+func _update_debug_hud(input_vector: Vector2) -> void:
+	if not debug_hud:
+		return
+	debug_hud.text = "MOVE: %.2f, %.2f | GROUND: %s" % [input_vector.x, input_vector.y, "YES" if is_on_floor() else "NO"]
 
 
 func _camera_relative_direction(input_vector: Vector2) -> Vector3:
