@@ -29,7 +29,7 @@ extends CharacterBody3D
 @export_range(0.0, 0.5, 0.01) var joystick_deadzone: float = 0.12
 @export_range(0.1, 0.9, 0.01) var left_screen_ratio: float = 0.48
 
-var look_pitch: float = deg_to_rad(16.0)
+var look_pitch: float = deg_to_rad(-18.0)
 var move_input: Vector2 = Vector2.ZERO
 var jump_requested := false
 var move_touch_id: int = -1
@@ -63,6 +63,8 @@ func _configure_camera() -> void:
 	camera.fov = camera_fov
 	camera.far = camera_far
 	camera.position = Vector3(0.0, camera_height, camera_distance)
+	camera.look_at(Vector3(0.0, 1.0, 0.0), Vector3.UP)
+	look_pitch = camera.rotation.x
 	camera.rotation.x = look_pitch
 
 
