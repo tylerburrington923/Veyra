@@ -7,6 +7,7 @@
 [ext_resource type="Environment" path="res://scenes/default_environment.tres" id="5_environment"]
 [ext_resource type="Script" path="res://scripts/foliage_patch.gd" id="6_foliage"]
 [ext_resource type="Script" path="res://scripts/world_detail.gd" id="7_detail"]
+[ext_resource type="Script" path="res://scripts/echo_stone.gd" id="8_echo"]
 
 [sub_resource type="SphereMesh" id="ArtifactMesh"]
 radius = 0.75
@@ -14,6 +15,20 @@ height = 1.5
 
 [sub_resource type="SphereShape3D" id="ArtifactShape"]
 radius = 0.75
+
+[sub_resource type="CylinderMesh" id="EchoStoneMesh"]
+top_radius = 0.65
+bottom_radius = 0.9
+height = 1.8
+radial_segments = 7
+
+[sub_resource type="CylinderShape3D" id="EchoStoneShape"]
+radius = 0.7
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="EchoStoneMaterial"]
+albedo_color = Color(0.30, 0.25, 0.38, 1)
+roughness = 0.9
 
 [node name="Veyra" type="Node3D"]
 script = ExtResource("1_world")
@@ -39,6 +54,17 @@ radius = 80.0
 script = ExtResource("7_detail")
 rock_count = 45
 mineral_count = 14
+
+[node name="EchoStone" type="StaticBody3D" parent="."]
+position = Vector3(6, 0, -6)
+script = ExtResource("8_echo")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="EchoStone"]
+mesh = SubResource("EchoStoneMesh")
+material_override = SubResource("EchoStoneMaterial")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EchoStone"]
+shape = SubResource("EchoStoneShape")
 
 [node name="VeyraArtifact" type="StaticBody3D" parent="."]
 position = Vector3(0, 0.85, -4)
