@@ -15,6 +15,7 @@ var thermal_state := 0.0
 var structural_state := 0.0
 var resonance_state := 0.0
 var activated := false
+var pulse_time := 0.0
 
 @onready var mesh := get_node_or_null("MeshInstance3D") as MeshInstance3D
 
@@ -24,6 +25,11 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
     stored_energy = maxf(0.0, stored_energy - memory_decay_per_second * delta)
+    pulse_time += delta
+
+    if mesh:
+        var pulse := 1.0 + sin(pulse_time * 5.0) * resonance_state * 0.035
+        mesh.scale = Vector3.ONE * pulse
     thermal_state = move_toward(thermal_state, 0.0, delta * 0.12)
     resonance_state = move_toward(resonance_state, 0.0, delta * 0.2)
 
