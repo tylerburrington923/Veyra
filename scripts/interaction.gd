@@ -14,10 +14,15 @@ func _unhandled_input(event: InputEvent) -> void:
 func try_interact() -> void:
     force_raycast_update()
     if not is_colliding():
-        print("Nothing to interact with.")
+        print("Veyra interaction: nothing in range.")
         return
 
     var target := get_collider()
+    if target and target.has_method("interact"):
+        target.interact()
+        print("Veyra interaction: interacted with ", target.name)
+        return
+
     if target and target.has_method("apply_force"):
         var direction := -global_transform.basis.z
         target.apply_force(direction, echo_force)
