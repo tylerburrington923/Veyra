@@ -119,18 +119,18 @@ func _spawn_resources() -> void:
         var y: float = get_height_at_world(x, z) + 0.82
         add_child(_make_resource_node(i, Vector3(x, y, z)))
 
-func _make_resource_node(index: int, spawn_position: Vector3) -> StaticBody3D:
+func _make_resource_node(index: int, spawn_position: Vector3) -> VeyraResourceNode:
     var rng := RandomNumberGenerator.new()
     rng.seed = seed_value + index * 17
     var types := ["Stone", "Wood", "Metal", "Vitreous Lux"]
     var resource_type: String = types[rng.randi_range(0, types.size() - 1)]
 
-    var node := StaticBody3D.new()
+    var node := VeyraResourceNode.new()
     node.name = resource_type + "_" + str(index)
     node.position = spawn_position
-    node.set_script(preload("res://scripts/resource_node.gd"))
     node.resource_type = resource_type
     node.amount = 1
+    node.add_to_group("resource_node")
 
     var visual := MeshInstance3D.new()
     visual.mesh = _resource_mesh(resource_type)
