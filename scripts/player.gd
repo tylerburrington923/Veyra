@@ -10,7 +10,6 @@ extends CharacterBody3D
 @export var acceleration: float = 22.0
 @export var braking: float = 28.0
 @export var gravity: float = 18.0
-@export var turn_speed: float = 12.0
 
 @export_category("Look")
 @export var mouse_sensitivity: float = 0.003
@@ -91,10 +90,6 @@ func _physics_process(delta: float) -> void:
 			direction.z * speed,
 			acceleration * delta
 		)
-
-		# Face travel direction without fighting camera yaw.
-		var target_yaw := atan2(direction.x, direction.z)
-		rotation.y = lerp_angle(rotation.y, target_yaw, minf(1.0, turn_speed * delta))
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, braking * delta)
 		velocity.z = move_toward(velocity.z, 0.0, braking * delta)
