@@ -14,9 +14,12 @@ var joystick_center := Vector2.ZERO
 @onready var controls := get_node_or_null("MobileControls")
 @onready var joystick_base := get_node_or_null("MobileControls/JoystickBase")
 @onready var joystick_knob := get_node_or_null("MobileControls/JoystickBase/JoystickKnob")
+@onready var interact_button := get_node_or_null("MobileControls/InteractButton")
 
 func _ready() -> void:
     add_to_group("local_player")
+    if interact_button:
+        interact_button.pressed.connect(_on_interact_pressed)
     if joystick_base:
         joystick_base.visible = false
     if joystick_knob:
@@ -103,3 +106,9 @@ func add_resource(resource_type: String, amount: int) -> void:
     var inventory_node := get_node_or_null("Inventory")
     if inventory_node and inventory_node.has_method("add_resource"):
         inventory_node.add_resource(resource_type, amount)
+
+
+func _on_interact_pressed() -> void:
+    var ray := get_node_or_null("Camera3D/InteractionRay")
+    if ray and ray.has_method("try_interact"):
+        ray.try_interact()
