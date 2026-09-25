@@ -42,28 +42,28 @@ func _generate() -> void:
 	var leaf_transforms: Array[Transform3D] = []
 
 	for i in range(count):
-		var angle := rng.randf_range(0.0, TAU)
-		var distance := sqrt(rng.randf()) * radius
-		var x := cos(angle) * distance
-		var z := sin(angle) * distance
+		var angle: float = rng.randf_range(0.0, TAU)
+		var distance: float = sqrt(rng.randf()) * radius
+		var x: float = cos(angle) * distance
+		var z: float = sin(angle) * distance
 
 		if Vector2(x, z).length() < exclusion_radius:
 			continue
 
-		var ground_y := _ground_height(x, z)
-		var scale := rng.randf_range(0.8, 1.25)
-		var yaw := rng.randf_range(0.0, TAU)
+		var ground_y: float = _ground_height(x, z)
+		var tree_scale: float = rng.randf_range(0.8, 1.25)
+		var yaw: float = rng.randf_range(0.0, TAU)
 
-		var basis := Basis(Vector3.UP, yaw).scaled(Vector3.ONE * scale)
+		var basis := Basis(Vector3.UP, yaw).scaled(Vector3.ONE * tree_scale)
 
 		trunk_transforms.append(
 			Transform3D(
 				basis,
-				Vector3(x, ground_y + 0.75 * scale, z)
+				Vector3(x, ground_y + 0.75 * tree_scale, z)
 			)
 		)
 
-		var leaf_y := rng.randf_range(1.6, 2.3) * scale
+		var leaf_y: float = rng.randf_range(1.6, 2.3) * tree_scale
 		leaf_transforms.append(
 			Transform3D(
 				basis,
