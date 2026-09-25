@@ -109,7 +109,7 @@ func _spawn_resources() -> void:
 func _make_resource_node(index: int, spawn_position: Vector3) -> StaticBody3D:
     var rng := RandomNumberGenerator.new()
     rng.seed = seed_value + index * 17
-    var types := ["Stone", "Wood", "Metal", "Echo-Stone", "Vitreous Lux"]
+    var types := ["Stone", "Wood", "Metal", "Vitreous Lux"]
     var resource_type: String = types[rng.randi_range(0, types.size() - 1)]
 
     var node := StaticBody3D.new()
