@@ -80,6 +80,7 @@ func generate() -> void:
     var collision := CollisionShape3D.new()
     var shape := ConcavePolygonShape3D.new()
     shape.set_faces(mesh.get_faces())
+    shape.backface_collision = true
     collision.shape = shape
     body.add_child(collision)
     add_child(body)
