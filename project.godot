@@ -2,7 +2,7 @@
 config/name="Veyra"
 run/main_scene="res://scenes/world.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
-config/version="0.1.0"
+config/version="0.1.1"
 
 [autoload]
 GameManager="*res://scripts/game_manager.gd"
