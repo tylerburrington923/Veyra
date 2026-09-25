@@ -171,7 +171,7 @@ func _handle_screen_touch(event: InputEventScreenTouch) -> void:
 func _handle_screen_drag(event: InputEventScreenDrag) -> void:
 	if event.index == move_touch_id:
 		var origin: Vector2 = touch_start.get(event.index, event.position)
-		var offset := event.position - origin
+		var offset: Vector2 = event.position - origin
 
 		move_input = _joystick_vector(offset)
 		_update_joystick(event.position)
@@ -247,7 +247,7 @@ func _update_joystick(pos: Vector2) -> void:
 		return
 
 	var base_center := joystick_base.position + joystick_base.size * 0.5
-	var offset := (pos - base_center).limit_length(joystick_radius)
+	var offset: Vector2 = (pos - base_center).limit_length(joystick_radius)
 	var knob_center := joystick_base.size * 0.5 + offset
 
 	joystick_knob.position = knob_center - joystick_knob.size * 0.5
