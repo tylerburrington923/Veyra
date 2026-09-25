@@ -84,7 +84,7 @@ func _stabilize_spawn() -> void:
 	if world_generator and world_generator.has_method("is_generated") and world_generator.is_generated():
 		var terrain_y: float = world_generator.get_height_at_world(global_position.x, global_position.z)
 		if global_position.y < terrain_y + safe_spawn_height * 0.5:
-			global_position.y = terrain_y + safe_spawn_height
+			global_position.y = terrain_y + 2.0
 		velocity = Vector3.ZERO
 
 
