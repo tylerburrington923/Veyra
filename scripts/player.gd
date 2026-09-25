@@ -51,7 +51,7 @@ func _physics_process(delta: float) -> void:
     if direction.length_squared() > 0.001:
         direction = direction.normalized()
         velocity.x = move_toward(velocity.x, direction.x * speed, acceleration * delta)
-        velocity.z = move_toward(velocity.z, direction.z * speed, acceleration * delta) 
+        velocity.z = move_toward(velocity.z, direction.z * speed, acceleration * delta)
     else:
         velocity.x = move_toward(velocity.x, 0.0, braking * delta)
         velocity.z = move_toward(velocity.z, 0.0, braking * delta)
@@ -80,6 +80,9 @@ func _camera_relative_direction(input: Vector2) -> Vector3:
 func _input(event: InputEvent) -> void:
     if event is InputEventScreenTouch:
         if event.pressed:
+            if interact_button and interact_button.get_global_rect().has_point(event.position):
+                return
+
             var screen_width := get_viewport().get_visible_rect().size.x
 
             if event.position.x < screen_width * 0.48 and move_touch_id == -1:
