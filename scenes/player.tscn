@@ -153,12 +153,17 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("KnobStyle")
 visible = false
 
-
 [node name="InteractButton" type="Button" parent="MobileControls"]
-offset_left = 1050.0
-offset_top = 570.0
-offset_right = 1190.0
-offset_bottom = 650.0
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -190.0
+offset_top = -125.0
+offset_right = -40.0
+offset_bottom = -35.0
+grow_horizontal = 0
+grow_vertical = 0
 text = "USE"
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("InteractStyle")
