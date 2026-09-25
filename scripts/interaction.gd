@@ -2,7 +2,6 @@ extends RayCast3D
 
 @export var interact_distance := 4.0
 @export var echo_force := 1.8
-@export var echo_charge_distance := 5.0
 
 func _ready() -> void:
     target_position = Vector3(0, 0, -interact_distance)
