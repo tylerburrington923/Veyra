@@ -136,6 +136,14 @@ position = Vector3(0.18, 0.08, -0.08)
 scale = Vector3(1.0, 0.55, 1.25)
 mesh = SubResource("FootMesh")
 material_override = SubResource("Pants")
+[node name="Camera3D" type="Camera3D" parent="."]
+position = Vector3(0, 3.1, 5.8)
+rotation_degrees = Vector3(-16, 0, 0)
+current = true
+[node name="InteractionRay" type="RayCast3D" parent="Camera3D"]
+script = ExtResource("2_interaction")
+
+[node name="MobileControls" type="CanvasLayer" parent="."]
 [node name="DebugHUD" type="Label" parent="MobileControls"]
 offset_left = 24.0
 offset_top = 24.0
@@ -145,14 +153,6 @@ mouse_filter = 2
 theme_override_font_sizes/font_size = 20
 text = "MOVE: 0.00, 0.00 | GROUND: NO"
 
-[node name="Camera3D" type="Camera3D" parent="."]
-position = Vector3(0, 3.1, 5.8)
-rotation_degrees = Vector3(-16, 0, 0)
-current = true
-[node name="InteractionRay" type="RayCast3D" parent="Camera3D"]
-script = ExtResource("2_interaction")
-
-[node name="MobileControls" type="CanvasLayer" parent="."]
 [node name="JoystickBase" type="Panel" parent="MobileControls"]
 offset_left = 55.0
 offset_top = 515.0
