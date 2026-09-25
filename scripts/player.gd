@@ -28,7 +28,7 @@ extends CharacterBody3D
 @export_range(0.0, 0.5, 0.01) var joystick_deadzone: float = 0.12
 @export_range(0.1, 0.9, 0.01) var left_screen_ratio: float = 0.48
 
-var look_pitch: float = deg_to_rad(-16.0)
+var look_pitch: float = deg_to_rad(16.0)
 var move_input: Vector2 = Vector2.ZERO
 var move_touch_id: int = -1
 var look_touch_id: int = -1
