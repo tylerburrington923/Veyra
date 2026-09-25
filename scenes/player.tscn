@@ -163,6 +163,15 @@ text = "•"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="TargetHUD" type="Label" parent="MobileControls"]
+offset_left = 24.0
+offset_top = 82.0
+offset_right = 430.0
+offset_bottom = 175.0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 18
+text = "TARGET: NONE\\nNAME: --\\nDIST: --\\nHANDLER: --"
+
 [node name="DebugHUD" type="Label" parent="MobileControls"]
 offset_left = 24.0
 offset_top = 24.0
