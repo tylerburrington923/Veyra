@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/world_generator.gd" id="4_generator"]
 [ext_resource type="Environment" path="res://scenes/default_environment.tres" id="5_environment"]
 [ext_resource type="Script" path="res://scripts/foliage_patch.gd" id="6_foliage"]
+[ext_resource type="Script" path="res://scripts/world_detail.gd" id="7_detail"]
 
 [sub_resource type="SphereMesh" id="ArtifactMesh"]
 radius = 0.75
@@ -33,6 +34,11 @@ seed_value = 47291
 script = ExtResource("6_foliage")
 count = 55
 radius = 80.0
+
+[node name="WorldDetail" type="Node3D" parent="."]
+script = ExtResource("7_detail")
+rock_count = 45
+mineral_count = 14
 
 [node name="VeyraArtifact" type="StaticBody3D" parent="."]
 position = Vector3(0, 0.85, -4)
