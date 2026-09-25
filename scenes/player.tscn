@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/interaction.gd" id="2_interaction"]
 [ext_resource type="Script" path="res://scripts/inventory.gd" id="3_inventory"]
+[ext_resource type="Script" path="res://scripts/hotbar.gd" id="4_hotbar"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape"]
 radius = 0.34
@@ -200,3 +201,47 @@ grow_vertical = 0
 text = "USE"
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("InteractStyle")
+
+[node name="HUDInventory" type="CanvasLayer" parent="."]
+script = ExtResource("4_hotbar")
+
+[node name="Hotbar" type="Panel" parent="HUDInventory"]
+offset_left = 28.0
+offset_top = 92.0
+offset_right = 620.0
+offset_bottom = 142.0
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="HUDInventory/Hotbar"]
+offset_left = 14.0
+offset_top = 10.0
+offset_right = 578.0
+offset_bottom = 42.0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 18
+text = "STONE  0  |  WOOD  0  |  METAL  0  |  LUX  0"
+
+[node name="PickupToast" type="Label" parent="HUDInventory"]
+offset_left = 28.0
+offset_top = 150.0
+offset_right = 400.0
+offset_bottom = 188.0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 22
+text = "Picked up"
+visible = false
+
+[node name="InventoryPanel" type="Panel" parent="HUDInventory"]
+offset_left = 28.0
+offset_top = 205.0
+offset_right = 360.0
+offset_bottom = 420.0
+
+[node name="Label" type="Label" parent="HUDInventory/InventoryPanel"]
+offset_left = 18.0
+offset_top = 14.0
+offset_right = 315.0
+offset_bottom = 205.0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 18
+text = "INVENTORY\nStone         0\nWood          0\nMetal         0\nVitreous Lux  0\n\nTOTAL ITEMS: 0\nPress I to close"
