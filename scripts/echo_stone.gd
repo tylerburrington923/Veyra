@@ -21,6 +21,9 @@ var pulse_time := 0.0
 
 func _ready() -> void:
     add_to_group("echo_stone")
+    var terrain := get_parent().get_node_or_null("WorldGenerator")
+    if terrain and terrain.has_method("get_height_at_world"):
+        global_position.y = terrain.get_height_at_world(global_position.x, global_position.z) + 0.9
     _refresh_visual()
 
 func _physics_process(delta: float) -> void:
