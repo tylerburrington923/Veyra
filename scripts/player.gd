@@ -83,8 +83,7 @@ func _stabilize_spawn() -> void:
 	var world_generator := get_parent().get_node_or_null("WorldGenerator")
 	if world_generator and world_generator.has_method("is_generated") and world_generator.is_generated():
 		var terrain_y: float = world_generator.get_height_at_world(global_position.x, global_position.z)
-		if global_position.y < terrain_y + safe_spawn_height * 0.5:
-			global_position.y = terrain_y + 2.0
+		global_position.y = maxf(global_position.y, terrain_y + 1.5)
 		velocity = Vector3.ZERO
 
 
@@ -100,7 +99,7 @@ func _physics_process(delta: float) -> void:
 	if input_vector.length() > 1.0:
 		input_vector = input_vector.normalized()
 
-	var direction := _camera_relative_direction(input_vector)
+	var direction: Vector3 = _camera_relative_direction(input_vector)
 
 	if direction.length_squared() > 0.001:
 		direction = direction.normalized()
@@ -154,7 +153,7 @@ func _camera_relative_direction(input_vector: Vector2) -> Vector3:
 	if input_vector.length_squared() < 0.0001:
 		return Vector3.ZERO
 
-	var forward := -global_transform.basis.z
+	var forward: Vector3 = -global_transform.basis.z
 
 	if camera:
 		forward = -camera.global_transform.basis.z
@@ -166,7 +165,7 @@ func _camera_relative_direction(input_vector: Vector2) -> Vector3:
 	else:
 		forward = forward.normalized()
 
-	var right := forward.cross(Vector3.UP)
+	var right: Vector3 = forward.cross(Vector3.UP)
 
 	if right.length_squared() < 0.0001:
 		right = Vector3.RIGHT
@@ -199,7 +198,7 @@ func _handle_screen_touch(event: InputEventScreenTouch) -> void:
 		return
 
 	if event.pressed:
-		var screen_width := get_viewport().get_visible_rect().size.x
+		var screen_width: float = get_viewport().get_visible_rect().size.x
 
 		if (
 			event.position.x < screen_width * left_screen_ratio
@@ -246,7 +245,7 @@ func _release_touch(index: int) -> void:
 
 
 func _joystick_vector(offset: Vector2) -> Vector2:
-	var distance := offset.length()
+	var distance: float = offset.length()
 
 	if distance <= joystick_deadzone * joystick_radius:
 		return Vector2.ZERO
