@@ -226,13 +226,6 @@ func _resource_mesh(resource_type: String) -> Mesh:
             stone.radial_segments = 8
             stone.rings = 4
             mesh = stone
-        "Wood":
-            var wood := CylinderMesh.new()
-            wood.top_radius = 0.45
-            wood.bottom_radius = 0.58
-            wood.height = 0.85
-            wood.radial_segments = 8
-            mesh = wood
         "Metal":
             var metal := PrismMesh.new()
             metal.size = Vector3(0.95, 1.0, 0.95)
