@@ -7,8 +7,9 @@ extends RayCast3D
 
 const INTERACTION_LAYER_MASK := 2 | 4
 const RAY_DISTANCE := 6.0
-const MAX_TARGET_DISTANCE := 5.5
-const MAX_SCREEN_RADIUS := 0.62
+const MAX_TARGET_DISTANCE := 5.0
+const MAX_SCREEN_RADIUS := 0.24
+const TARGET_SCORE_DISTANCE_WEIGHT := 0.05
 const MAX_HANDLER_DEPTH := 8
 
 @export var interact_distance: float = MAX_TARGET_DISTANCE
@@ -120,7 +121,7 @@ func _query_target() -> Dictionary:
 
 		# Screen center dominates. Distance breaks ties without forcing
 		# the player into an exact interaction position.
-		var score := normalized_screen_offset * 8.0 + distance * 0.035
+		var score := normalized_screen_offset + distance * TARGET_SCORE_DISTANCE_WEIGHT
 		if score < best_score:
 			best_score = score
 			best = {
