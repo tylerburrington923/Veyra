@@ -107,7 +107,8 @@ func _build_ui() -> void:
 	panel.add_child(cancel_button)
 	cancel_button.position = Vector2(158, 360)
 
-	var open_button := Button.new()
+	workshop_button = Button.new()
+	var open_button := workshop_button
 	open_button.name = "WorkshopButton"
 	open_button.text = "WORKSHOP"
 	open_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
