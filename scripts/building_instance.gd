@@ -214,9 +214,9 @@ func _build_house() -> void:
     # Gable roof: each panel spans the house depth and slopes across X.
     # The ridge is centered on X=0; the outer edges overhang the side walls.
     var roof_angle := deg_to_rad(25.0)
-    var roof_half_span := (HOUSE_WIDTH + 0.45) * 0.5
-    var roof_center_x := roof_half_span * cos(roof_angle)
-    var roof_center_y := HOUSE_WALL_HEIGHT + roof_half_span * sin(roof_angle) + 0.08
+    var roof_panel_half_span := (HOUSE_WIDTH * 0.5 + 0.25) * 0.5
+    var roof_center_x := roof_panel_half_span * cos(roof_angle)
+    var roof_center_y := HOUSE_WALL_HEIGHT + roof_panel_half_span * sin(roof_angle) + 0.08
     var roof_depth := HOUSE_DEPTH + 0.45
     var left_roof := _mesh_box(
         Vector3(HOUSE_WIDTH * 0.5 + 0.25, 0.20, roof_depth),
