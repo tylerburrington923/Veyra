@@ -132,6 +132,22 @@ func _query_target() -> Dictionary:
 				"screen_score": normalized_screen_offset
 			}
 
+	# Keep the current target unless a new candidate is meaningfully better.
+	# This prevents the prompt from flickering between nearby rocks/trees.
+	if not best.is_empty() and _locked_handler_id != 0:
+		var current_handler := instance_from_id(_locked_handler_id) as Node
+		if current_handler and is_instance_valid(current_handler):
+			for hit in hits:
+				var candidate := hit.get("collider") as Node
+				var candidate_handler := _find_handler(candidate, "interact")
+				if not candidate_handler:
+					candidate_handler = _find_handler(candidate, "resonate")
+				if candidate_handler == current_handler:
+					var point := _get_interaction_point(current_handler, Vector3.ZERO)
+					if player.global_position.distance_to(point) <= MAX_TARGET_DISTANCE and not camera.is_position_behind(point):
+						best = {"collider": candidate, "handler": current_handler, "position": point, "distance": player.global_position.distance_to(point), "screen_score": 0.0}
+						break
+
 	return best
 
 func try_interact() -> void:
