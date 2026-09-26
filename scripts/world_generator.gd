@@ -66,7 +66,7 @@ func generate() -> void:
     var material := StandardMaterial3D.new()
     material.albedo_texture = _make_terrain_texture()
     material.roughness = 1.0
-    material.cull_mode = BaseMaterial3D.CULL_DISABLED
+    material.cull_mode = BaseMaterial3D.CULL_BACK
     material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
     mesh.surface_set_material(0, material)
 
@@ -109,7 +109,12 @@ func _spawn_resources() -> void:
     var rng := RandomNumberGenerator.new()
     rng.seed = seed_value + 991
 
-    for i in range(resource_count):
+    var spawned := 0
+    var attempts := 0
+    var max_attempts := maxi(resource_count * 3, 12)
+
+    while spawned < resource_count and attempts < max_attempts:
+        attempts += 1
         var x := rng.randf_range(-grid_size * cell_size * 0.45, grid_size * cell_size * 0.45)
         var z := rng.randf_range(-grid_size * cell_size * 0.45, grid_size * cell_size * 0.45)
 
@@ -117,7 +122,8 @@ func _spawn_resources() -> void:
             continue
 
         var y: float = get_height_at_world(x, z) + 0.82
-        add_child(_make_resource_node(i, Vector3(x, y, z)))
+        add_child(_make_resource_node(spawned, Vector3(x, y, z)))
+        spawned += 1
 
 func _make_resource_node(index: int, spawn_position: Vector3) -> VeyraResourceNode:
     var rng := RandomNumberGenerator.new()
