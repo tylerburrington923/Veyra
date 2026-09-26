@@ -37,6 +37,14 @@ func _process(delta: float) -> void:
         _visual_accumulator = 0.0
         _refresh_visual()
 
+func can_interact(player: Node) -> bool:
+    if not player or not player.has_method("get_tool_id"):
+        return false
+    return player.get_tool_id() == "I02_STONE_PICK"
+
+func get_interaction_requirement(player: Node) -> String:
+    return "" if can_interact(player) else "Stone Pick"
+
 func interact() -> void:
     resonate(1.0)
 
