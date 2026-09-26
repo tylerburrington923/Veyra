@@ -49,7 +49,8 @@ func generate() -> void:
             var h := get_height_at_world(px, pz)
             vertices.append(Vector3(px, h, pz))
             normals.append(_sample_normal(x, z))
-            uvs.append(Vector2(float(x) / grid_size, float(z) / grid_size))
+            var terrain_uv_scale := 10.0
+            uvs.append(Vector2(float(x) / grid_size, float(z) / grid_size) * terrain_uv_scale)
 
     for z in range(grid_size):
         for x in range(grid_size):
@@ -164,12 +165,37 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
     node.collision_layer = 4
     node.collision_mask = 1
 
-    var visual := MeshInstance3D.new()
-    visual.mesh = _resource_mesh(resource_type)
-    visual.material_override = _resource_material(resource_type)
-    visual.rotation.y = rng.randf_range(0.0, TAU)
-    visual.scale = Vector3.ONE * rng.randf_range(0.85, 1.15)
-    node.add_child(visual)
+    if resource_type == "Wood":
+        # Hand-gathered wood is represented as loose sticks lying on the ground,
+        # not as an upright stump/block. Keep the node itself at ground level so
+        # interaction and collision stay centered on the visible pickup.
+        node.position.y -= 0.70
+        var stick_mesh := _wood_stick_mesh()
+        var stick_material := _resource_material(resource_type)
+        for stick_index in range(3):
+            var stick := MeshInstance3D.new()
+            stick.name = "WoodStick%d" % (stick_index + 1)
+            stick.mesh = stick_mesh
+            stick.material_override = stick_material
+            stick.position = Vector3(
+                rng.randf_range(-0.22, 0.22),
+                0.08 + rng.randf_range(-0.015, 0.02),
+                rng.randf_range(-0.18, 0.18)
+            )
+            stick.rotation = Vector3(
+                deg_to_rad(rng.randf_range(78.0, 98.0)),
+                rng.randf_range(0.0, TAU),
+                rng.randf_range(-0.18, 0.18)
+            )
+            stick.scale = Vector3.ONE * rng.randf_range(0.82, 1.08)
+            node.add_child(stick)
+    else:
+        var visual := MeshInstance3D.new()
+        visual.mesh = _resource_mesh(resource_type)
+        visual.material_override = _resource_material(resource_type)
+        visual.rotation.y = rng.randf_range(0.0, TAU)
+        visual.scale = Vector3.ONE * rng.randf_range(0.85, 1.15)
+        node.add_child(visual)
 
     var collision := CollisionShape3D.new()
     collision.shape = resource_collision_shape
@@ -184,7 +210,7 @@ func _wood_stick_mesh() -> Mesh:
     var stick := CylinderMesh.new()
     stick.top_radius = 0.055
     stick.bottom_radius = 0.065
-    stick.height = 0.78
+    stick.height = 0.82
     stick.radial_segments = 6
     return stick
 
@@ -242,23 +268,61 @@ func _resource_material(resource_type: String) -> StandardMaterial3D:
     return material
 
 func _make_terrain_texture() -> ImageTexture:
+    # Keep the texture procedural and small for mobile, but build it from
+    # broad patches, medium variation, fine grain, and sparse soil flecks.
     var image := Image.create(128, 128, false, Image.FORMAT_RGBA8)
-    var texture_noise := FastNoiseLite.new()
-    texture_noise.seed = seed_value + 8000
-    texture_noise.frequency = 0.028
-    texture_noise.fractal_octaves = 2
 
-    var grass := Color(0.25, 0.40, 0.20, 1)
-    var grass_light := Color(0.31, 0.47, 0.24, 1)
-    var soil := Color(0.30, 0.25, 0.16, 1)
+    var broad_noise := FastNoiseLite.new()
+    broad_noise.seed = seed_value + 8000
+    broad_noise.frequency = 0.018
+    broad_noise.fractal_octaves = 3
+
+    var medium_noise := FastNoiseLite.new()
+    medium_noise.seed = seed_value + 8001
+    medium_noise.frequency = 0.065
+    medium_noise.fractal_octaves = 2
+
+    var fine_noise := FastNoiseLite.new()
+    fine_noise.seed = seed_value + 8002
+    fine_noise.frequency = 0.18
+    fine_noise.fractal_octaves = 2
+
+    var fleck_noise := FastNoiseLite.new()
+    fleck_noise.seed = seed_value + 8003
+    fleck_noise.frequency = 0.34
+    fleck_noise.fractal_octaves = 1
+
+    var grass_dark := Color(0.19, 0.32, 0.15, 1)
+    var grass := Color(0.27, 0.43, 0.20, 1)
+    var grass_light := Color(0.35, 0.51, 0.25, 1)
+    var soil := Color(0.28, 0.22, 0.14, 1)
+    var soil_dark := Color(0.20, 0.16, 0.10, 1)
 
     for y in range(128):
         for x in range(128):
-            var n := texture_noise.get_noise_2d(float(x), float(y))
-            var fine := texture_noise.get_noise_2d(float(x) * 3.0, float(y) * 3.0) * 0.06
-            var v := clampf(0.5 + n * 0.30 + fine, 0.0, 1.0)
-            var color := grass.lerp(grass_light, clampf((v - 0.25) * 1.35, 0.0, 1.0))
-            color = color.lerp(soil, clampf((0.34 - v) * 2.0, 0.0, 0.65))
+            var fx := float(x)
+            var fy := float(y)
+            var broad := broad_noise.get_noise_2d(fx, fy)
+            var medium := medium_noise.get_noise_2d(fx, fy)
+            var fine := fine_noise.get_noise_2d(fx, fy)
+            var fleck := fleck_noise.get_noise_2d(fx, fy)
+
+            var grass_value := clampf(
+                0.50 + broad * 0.24 + medium * 0.12 + fine * 0.055,
+                0.0,
+                1.0
+            )
+            var color := grass_dark.lerp(grass, grass_value)
+            color = color.lerp(grass_light, clampf((grass_value - 0.58) * 1.9, 0.0, 1.0))
+
+            var soil_amount := clampf((-broad - 0.22) * 1.55, 0.0, 0.62)
+            color = color.lerp(soil, soil_amount)
+
+            if fleck < -0.70:
+                color = color.lerp(soil_dark, 0.38)
+            elif fleck > 0.72:
+                color = color.lerp(grass_light, 0.28)
+
             image.set_pixel(x, y, color)
 
     return ImageTexture.create_from_image(image)
