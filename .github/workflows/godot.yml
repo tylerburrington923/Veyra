@@ -1,0 +1,73 @@
+name: Veyra Godot CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  godot-validation:
+    name: Godot 4.7.2 validation
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.7.2
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Godot version
+        run: |
+          godot --version
+          godot --version | grep -q "4.7.2"
+
+      - name: Validate required project files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f project.godot
+          test -f scenes/world.tscn
+          test -f scripts/world.gd
+          test -f scripts/player.gd
+          test -f scripts/building_manager.gd
+          test -f scripts/building_instance.gd
+          test -f scripts/save_manager.gd
+          grep -q 'run/main_scene="res://scenes/world.tscn"' project.godot
+          grep -q 'BuildingManager="*res://scripts/building_manager.gd"' project.godot
+
+      - name: Import project
+        run: godot --headless --path . --editor --quit --verbose
+
+      - name: Run headless smoke test
+        timeout-minutes: 2
+        run: godot --headless --path . --quit-after 10 --verbose
+
+      - name: Check for import/parser errors
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot --headless --path . --editor --quit --verbose 2>&1 | tee godot-editor.log
+          if grep -Eqi 'SCRIPT ERROR|PARSE ERROR|ERROR:.*(Invalid|Cannot|Failed|not found)' godot-editor.log; then
+            echo "Godot reported an error during project import/editor startup."
+            exit 1
+          fi
+
+      - name: Package source snapshot
+        run: |
+          mkdir -p build
+          zip -r "build/Veyra-source-${GITHUB_SHA::7}.zip" .             -x ".git/*" ".godot/*" "build/*"
+
+      - name: Upload validation logs and source
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: veyra-godot-validation-${{ github.sha }}
+          path: |
+            godot-editor.log
+            build/Veyra-source-${{ github.sha }}.zip
+          if-no-files-found: warn
