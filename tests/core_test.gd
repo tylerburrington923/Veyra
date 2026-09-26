@@ -12,7 +12,7 @@ func _run_tests() -> void:
 	_test_tool_state_contract()
 	_test_resource_collision_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (4 suites)")
+		print("VEYRA CORE TESTS: PASS (5 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -46,7 +46,7 @@ func _test_crafting_transaction() -> void:
 	root.add_child(inventory)
 	inventory.add_resource("Wood", 3)
 	inventory.add_resource("Stone", 2)
-	_check(CraftingManager.can_craft("I01_STONE_AXE", inventory), "axe should be craftable")
+	_check(_crafting_manager().can_craft("I01_STONE_AXE", inventory), "axe should be craftable")
 	_check(_crafting_manager().craft("I01_STONE_AXE", inventory), "axe craft should succeed")
 	_check(inventory.has_item("I01_STONE_AXE"), "crafted axe missing")
 	_check(inventory.get_amount("Wood") == 0, "axe craft should consume wood")
