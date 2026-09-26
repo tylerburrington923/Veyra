@@ -31,8 +31,8 @@ func interact() -> void:
     if not player or not player.has_method("add_resource"):
         return
 
-    if tool_required != "T00_HANDS" and player.has_method("get_tool_id"):
-        if player.get_tool_id() != tool_required:
+    if tool_required != "T00_HANDS":
+        if not player.has_method("get_tool_id") or player.get_tool_id() != tool_required:
             return
 
     if player.has_method("use_tool") and not player.use_tool(durability_cost):
@@ -41,10 +41,10 @@ func interact() -> void:
     var yield_amount := maxi(1, int(round(float(amount) * tool_efficiency)))
     player.add_resource(resource_type, yield_amount)
     depleted = true
-        respawn_time = maxf(1.0, respawn_seconds)
-        visible = false
-        collision_layer = 0
-        collision_mask = 0
+    respawn_time = maxf(1.0, respawn_seconds)
+    visible = false
+    collision_layer = 0
+    collision_mask = 0
 
 func _restore() -> void:
     depleted = false
