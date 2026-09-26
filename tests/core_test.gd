@@ -23,8 +23,8 @@ func _check(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
 
-func _crafting_manager() -> VeyraCraftingManager:
-	return root.get_node("CraftingManager") as VeyraCraftingManager
+func _crafting_manager() -> Node:
+	return root.get_node("CraftingManager")
 
 func _test_inventory_round_trip() -> void:
 	var inventory := VeyraInventory.new()
@@ -85,7 +85,8 @@ func _test_tool_state_contract() -> void:
 	player.queue_free()
 
 func _test_resource_collision_contract() -> void:
-	var resource := load("res://scripts/resource_node.gd").new() as StaticBody3D
+	var resource_scene := load("res://scenes/resource_node.tscn") as PackedScene
+	var resource := resource_scene.instantiate() as StaticBody3D
 	root.add_child(resource)
 	resource.resource_id = "TEST-001"
 	resource.resource_type = "Stone"
