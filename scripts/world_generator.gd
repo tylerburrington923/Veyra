@@ -154,7 +154,8 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
     var types := ["Stone", "Wood", "Metal", "Vitreous Lux"]
     var resource_type: String = types[rng.randi_range(0, types.size() - 1)]
 
-    var node: Node = load("res://scripts/resource_node.gd").new()
+    var node: StaticBody3D = StaticBody3D.new()
+    node.set_script(load("res://scripts/resource_node.gd"))
     node.resource_id = "R01-%03d" % (index + 1)
     node.name = node.resource_id
     node.position = spawn_position
