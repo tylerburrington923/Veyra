@@ -12,6 +12,7 @@ var resource_id: String = ""
 var remaining: int = 0
 var depleted := false
 var respawn_time := 0.0
+var interaction_cooldown := 0.0
 
 func _ready() -> void:
     add_to_group("resource_node")
@@ -21,7 +22,7 @@ func _ready() -> void:
     set_process(false)
 
 func interact() -> void:
-    if depleted or remaining <= 0:
+    if depleted or remaining <= 0 or interaction_cooldown > 0.0:
         return
 
     var player := get_tree().get_first_node_in_group("local_player")
@@ -69,14 +70,6 @@ func _deplete() -> void:
     visible = false
     collision_layer = 0
     collision_mask = 0
-
-func _process(delta: float) -> void:
-    if not depleted:
-        return
-
-    respawn_time -= delta
-    if respawn_time <= 0.0:
-        _restore()
 
 func _restore() -> void:
     remaining = maxi(0, amount)
