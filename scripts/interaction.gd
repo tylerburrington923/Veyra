@@ -83,7 +83,7 @@ func try_interact() -> void:
 
     var resonance_target: Node = _find_handler(target, "resonate")
     if resonance_target:
-        resonance_target.resonate(echo_force)
+        resonance_target.resonate(resonance_strength)
         _set_target_state(_classify_target(resonance_target), resonance_target.name, "resonate()", collision_point)
         return
 
