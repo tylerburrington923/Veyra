@@ -7,6 +7,7 @@ extends RayCast3D
 @export var collision_mask_value: int = 0x7FFFFFFF
 
 var target_label: Label
+var interact_button: Button
 var last_target_name: String = ""
 var last_target_type: String = "NONE"
 var last_handler_name: String = ""
@@ -19,6 +20,7 @@ func _ready() -> void:
     collide_with_areas = true
     enabled = true
     target_label = get_node_or_null("../../MobileControls/TargetHUD") as Label
+    interact_button = get_node_or_null("../../MobileControls/InteractButton") as Button
     _update_target_debug()
 
 func _physics_process(_delta: float) -> void:
@@ -110,6 +112,11 @@ func _set_target_state(target_type: String, target_name: String, handler: String
     last_target_name = target_name
     last_handler_name = handler
     last_collision_point = collision_point
+
+    if interact_button:
+        var actionable := handler != ""
+        interact_button.disabled = not actionable
+        interact_button.text = "PUSH" if handler == "apply_force()" else "USE"
 
     if target_label:
         var distance_text: String = "--"
