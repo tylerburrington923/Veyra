@@ -10,6 +10,7 @@ func _run_tests() -> void:
 	_test_crafting_transaction()
 	_test_collision_contract()
 	_test_tool_state_contract()
+	_test_resource_collision_contract()
 	if failures.is_empty():
 		print("VEYRA CORE TESTS: PASS (4 suites)")
 		quit(0)
@@ -79,3 +80,18 @@ func _test_tool_state_contract() -> void:
 	_check(player.use_tool(5.0), "tool should consume durability")
 	_check(absf(float(player.get_save_state().get("tool_durability", 0.0)) - 95.0) < 0.001, "tool durability mismatch")
 	player.queue_free()
+
+func _test_resource_collision_contract() -> void:
+	var resource := load("res://scripts/resource_node.gd").new() as StaticBody3D
+	root.add_child(resource)
+	resource.resource_id = "TEST-001"
+	resource.resource_type = "Stone"
+	resource.amount = 3
+	resource._ready()
+	_check(resource.collision_layer == 4, "resource must remain a collidable interactable on layer 4")
+	_check(resource.collision_mask == 1, "resource should detect terrain layer 1")
+	resource._deplete()
+	_check(resource.collision_layer == 0, "depleted resource must disable collision")
+	resource._restore()
+	_check(resource.collision_layer == 4, "restored resource must regain interaction collision")
+	resource.queue_free()
