@@ -181,12 +181,12 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
     return node
 
 func _wood_stick_mesh() -> Mesh:
-	var stick := CylinderMesh.new()
-	stick.top_radius = 0.055
-	stick.bottom_radius = 0.065
-	stick.height = 0.78
-	stick.radial_segments = 6
-	return stick
+    var stick := CylinderMesh.new()
+    stick.top_radius = 0.055
+    stick.bottom_radius = 0.065
+    stick.height = 0.78
+    stick.radial_segments = 6
+    return stick
 
 func _resource_mesh(resource_type: String) -> Mesh:
     if resource_meshes.has(resource_type):
