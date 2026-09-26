@@ -60,6 +60,7 @@ func interact() -> void:
 
     remaining -= accepted
     interaction_cooldown = 0.18
+    set_process(true)
     if remaining <= 0:
         _deplete()
 
@@ -72,6 +73,8 @@ func _process(delta: float) -> void:
     if interaction_cooldown > 0.0:
         interaction_cooldown = maxf(0.0, interaction_cooldown - delta)
     if not depleted:
+        if interaction_cooldown <= 0.0:
+            set_process(false)
         return
     respawn_time -= delta
     if respawn_time <= 0.0:
