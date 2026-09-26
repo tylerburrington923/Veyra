@@ -15,7 +15,7 @@ func _run_tests() -> void:
 	_test_first_person_viewmodel_contract()
 	_test_resource_interaction_matrix()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (5 suites)")
+		print("VEYRA CORE TESTS: PASS (8 suites)")
 		quit(0)
 	else:
 		for failure in failures:
