@@ -222,10 +222,16 @@ func _cancel_build() -> void:
 func _update_build_status() -> void:
 	if not building:
 		return
-	if building.placement_valid:
-		status.text = "Location valid — tap PLACE BUILDING."
+	var can_afford := building.has_required_materials(inventory)
+	if building.placement_location_valid and can_afford:
+		status.text = "Ready to build — tap PLACE BUILDING."
+		confirm_button.disabled = false
+	elif building.placement_location_valid:
+		status.text = "Location ready — gather the listed materials."
+		confirm_button.disabled = true
 	else:
-		status.text = "Invalid location or missing materials."
+		status.text = "Move to a clear location."
+		confirm_button.disabled = true
 
 func _clear_options() -> void:
 	for child in option_list.get_children():
