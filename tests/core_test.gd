@@ -153,7 +153,11 @@ func _test_townhall_contract() -> void:
 	var hall := VeyraBuildingInstance.new()
 	root.add_child(hall)
 	hall.setup("TEST-TOWNHALL", "B05_TOWNHALL", Vector3.ZERO)
-	_check(hall.get_node_or_null("CollisionShape3D") != null, "town hall must have solid collision")
+	var collision_count := 0
+	for child in hall.get_children():
+		if child is CollisionShape3D:
+			collision_count += 1
+	_check(collision_count >= 2, "town hall must have solid collision")
 	_check(hall.get_child_count() >= 10, "town hall must have a substantial civic visual assembly")
 	hall.queue_free()
 
