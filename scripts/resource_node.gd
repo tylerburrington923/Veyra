@@ -29,13 +29,13 @@ func interact() -> void:
     if not player:
         return
 
-    var inventory: VeyraInventory = player.get_inventory() if player.has_method("get_inventory") else null
+    var inventory: Node = player.get_inventory() if player.has_method("get_inventory") else null
     if not inventory:
         return
 
     var required := tool_required
     if required.is_empty():
-        required = VeyraResourceCatalog.required_tool(resource_type)
+        required = "T00_HANDS"
 
     if required != "T00_HANDS":
         if not player.has_method("get_tool_id") or player.get_tool_id() != required:
