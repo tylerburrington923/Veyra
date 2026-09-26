@@ -233,6 +233,14 @@ func _update_build_status() -> void:
 		status.text = "Move to a clear location."
 		confirm_button.disabled = true
 
+func _has_cost(cost: Dictionary) -> bool:
+	if not inventory:
+		return false
+	for key in cost.keys():
+		if not inventory.has_resource(str(key), int(cost[key])):
+			return false
+	return true
+
 func _clear_options() -> void:
 	for child in option_list.get_children():
 		child.queue_free()
