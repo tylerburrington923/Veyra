@@ -82,6 +82,8 @@ func _test_tool_state_contract() -> void:
 	_check(float(state.get("tool_durability", 0.0)) == 100.0, "initial durability mismatch")
 	_check(player.use_tool(5.0), "tool should consume durability")
 	_check(absf(float(player.get_save_state().get("tool_durability", 0.0)) - 95.0) < 0.001, "tool durability mismatch")
+	var tool_button := player.get_node_or_null("HUDInventory/ToolButton") as Button
+	_check(tool_button != null, "mobile tool selector missing")
 	player.queue_free()
 
 func _test_resource_collision_contract() -> void:
