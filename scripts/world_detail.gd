@@ -195,7 +195,7 @@ func _make_water() -> void:
 	var shader := Shader.new()
 	shader.code = """
 shader_type spatial;
-render_mode blend_mix, depth_draw_alpha_prepass, cull_disabled;
+render_mode blend_mix, depth_prepass_alpha, cull_disabled;
 
 uniform vec4 deep_color : source_color = vec4(0.035, 0.20, 0.24, 0.88);
 uniform vec4 shallow_color : source_color = vec4(0.12, 0.42, 0.45, 0.82);
