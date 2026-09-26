@@ -36,11 +36,11 @@ func can_interact(player: Node) -> bool:
 		return false
 	if not VeyraItemCatalog.is_valid_tool(tool_required):
 		return false
-	return tool_required == VeyraItemCatalog.HANDS_ID or equipped_tool == tool_required
+	return equipped_tool == tool_required
 
 func get_interaction_requirement(player: Node) -> String:
 	if not can_interact(player):
-		if tool_required != "T00_HANDS":
+		if tool_required != VeyraItemCatalog.HANDS_ID:
 			return VeyraItemCatalog.display_name(tool_required)
 		return "NOT AVAILABLE"
 	return ""
@@ -65,7 +65,7 @@ func interact() -> void:
 		return
 	if not VeyraItemCatalog.is_valid_tool(tool_required):
 		return
-	if tool_required != VeyraItemCatalog.HANDS_ID and equipped_tool != tool_required:
+	if equipped_tool != tool_required:
 		return
 
 	var actual_tool_cost: float = VeyraItemCatalog.durability_cost(equipped_tool, resource_type)
@@ -94,7 +94,8 @@ func interact() -> void:
 		_deplete()
 
 func get_interaction_point() -> Vector3:
-	return global_position + Vector3.UP * 0.75
+	var interaction_height := 0.12 if resource_type == "Wood" else 0.75
+	return global_position + Vector3.UP * interaction_height
 
 func get_interaction_text() -> String:
 	if depleted or remaining <= 0:
