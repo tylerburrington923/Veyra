@@ -72,11 +72,27 @@ func _read_file(path: String) -> Dictionary:
     return parsed if parsed is Dictionary else {}
 
 func _sanitize_inventory(inventory: Dictionary) -> Dictionary:
-    var clean := {}
-    for key in inventory.keys():
-        var value = inventory[key]
-        if key is String and (value is int or value is float) and int(value) > 0:
-            clean[key] = int(value)
+    var clean := {
+        "resources": {},
+        "items": {}
+    }
+    if inventory.is_empty():
+        return clean
+
+    var resources = inventory.get("resources", inventory)
+    if resources is Dictionary:
+        for key in resources.keys():
+            var value = resources[key]
+            if key is String and (value is int or value is float) and int(value) > 0 and VeyraResourceCatalog.is_valid(key):
+                clean["resources"][key] = int(value)
+
+    var items = inventory.get("items", {})
+    if items is Dictionary:
+        for key in items.keys():
+            var value = items[key]
+            if key is String and (value is int or value is float) and int(value) > 0 and VeyraItemCatalog.is_valid(key):
+                clean["items"][key] = int(value)
+
     return clean
 
 func _sanitize_settlement(settlement: Dictionary) -> Dictionary:
