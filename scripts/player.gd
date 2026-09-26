@@ -63,8 +63,14 @@ var touch_start: Dictionary = {}
 @onready var viewmodel_right_arm: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightArmFP") as MeshInstance3D
 @onready var viewmodel_left_hand: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftHandFP") as MeshInstance3D
 @onready var viewmodel_right_hand: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightHandFP") as MeshInstance3D
+@onready var tool_holder: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder") as Node3D
+@onready var equipped_tool_visual: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool") as Node3D
 var walk_time: float = 0.0
 var _debug_hud_accumulator: float = 0.0
+var _tool_swing_time: float = 0.0
+var _tool_swing_duration: float = 0.22
+var _tool_swing_active: bool = false
+var _tool_base_rotation: Vector3 = Vector3.ZERO
 signal tool_changed(tool_id: String, durability: float)
 
 var selected_tool_id: String = "T00_HANDS"
@@ -125,7 +131,7 @@ func load_save_state(state: Dictionary) -> void:
 	_update_equipped_tool_visual()
 
 func _update_equipped_tool_visual() -> void:
-	var tool_visual := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool") as Node3D
+	var tool_visual := equipped_tool_visual
 	if not tool_visual:
 		return
 	tool_visual.visible = selected_tool_id != "T00_HANDS"
@@ -179,6 +185,7 @@ func _ready() -> void:
 	_configure_first_person_view()
 	_hide_joystick()
 	_update_equipped_tool_visual()
+	_tool_base_rotation = tool_holder.rotation_degrees if tool_holder else Vector3.ZERO
 
 
 func _configure_camera() -> void:
@@ -196,15 +203,9 @@ func _configure_camera() -> void:
 
 func _configure_first_person_view() -> void:
 	# Keep the camera inside the player capsule but hide body geometry so it cannot occlude the world.
-	for mesh in [head, hair, left_eye, right_eye, left_arm, right_arm, left_hand, right_hand]:
+	for mesh in [head, hair, left_eye, right_eye, left_arm, right_arm, left_hand, right_hand, torso, left_leg, right_leg, get_node_or_null("LeftFoot"), get_node_or_null("RightFoot")]:
 		if mesh:
 			mesh.visible = false
-	if torso:
-		torso.visible = true
-	if left_leg:
-		left_leg.visible = true
-	if right_leg:
-		right_leg.visible = true
 	for mesh in [viewmodel_left_arm, viewmodel_right_arm, viewmodel_left_hand, viewmodel_right_hand]:
 		if mesh:
 			mesh.visible = true
@@ -265,11 +266,37 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	_update_player_visuals(delta, direction)
+	_update_tool_animation(delta)
 	_debug_hud_accumulator += delta
 	if _debug_hud_accumulator >= 0.25:
 		_debug_hud_accumulator = 0.0
 		_update_debug_hud(input_vector)
 
+
+func play_tool_use() -> void:
+	if selected_tool_id == VeyraItemCatalog.HANDS_ID or not equipped_tool_visual or not equipped_tool_visual.visible:
+		return
+	_tool_swing_time = 0.0
+	_tool_swing_active = true
+
+func _update_tool_animation(delta: float) -> void:
+	if not tool_holder:
+		return
+	if not _tool_swing_active:
+		tool_holder.rotation_degrees = tool_holder.rotation_degrees.lerp(_tool_base_rotation, minf(1.0, delta * 14.0))
+		return
+
+	_tool_swing_time += delta
+	var progress := clampf(_tool_swing_time / _tool_swing_duration, 0.0, 1.0)
+	var arc := sin(progress * PI)
+	var lift := -62.0 * arc
+	var side := 18.0 * arc
+	tool_holder.rotation_degrees = _tool_base_rotation + Vector3(lift, side, -10.0 * arc)
+	tool_holder.position = Vector3(0.48, -0.56 - 0.05 * arc, -0.90 + 0.12 * arc)
+	if progress >= 1.0:
+		_tool_swing_active = false
+		tool_holder.position = Vector3(0.48, -0.56, -0.90)
+		tool_holder.rotation_degrees = _tool_base_rotation
 
 func _update_player_visuals(delta: float, direction: Vector3) -> void:
 	var moving := direction.length_squared() > 0.001 and is_on_floor()
