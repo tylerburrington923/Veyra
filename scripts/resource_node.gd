@@ -13,6 +13,7 @@ var remaining: int = 0
 var depleted := false
 var respawn_time := 0.0
 var interaction_cooldown := 0.0
+var _visual_controller: Callable
 
 func _ready() -> void:
 	add_to_group("resource_node")
@@ -20,6 +21,9 @@ func _ready() -> void:
 	collision_mask = 1
 	remaining = maxi(0, amount)
 	set_process(false)
+
+func set_visual_controller(controller: Callable) -> void:
+	_visual_controller = controller
 
 func can_interact(player: Node) -> bool:
 	if depleted or remaining <= 0 or interaction_cooldown > 0.0:
@@ -119,6 +123,8 @@ func _deplete() -> void:
 	respawn_time = maxf(1.0, respawn_seconds)
 	set_process(true)
 	visible = false
+	if _visual_controller.is_valid():
+		_visual_controller.call(false)
 	collision_layer = 0
 	collision_mask = 0
 
@@ -128,6 +134,8 @@ func _restore() -> void:
 	respawn_time = 0.0
 	set_process(false)
 	visible = true
+	if _visual_controller.is_valid():
+		_visual_controller.call(true)
 	collision_layer = 6 if physical_collision else 4
 	collision_mask = 1
 
@@ -151,6 +159,8 @@ func apply_save_state(state: Dictionary) -> void:
 	if depleted:
 		set_process(true)
 		visible = false
+		if _visual_controller.is_valid():
+			_visual_controller.call(false)
 		collision_layer = 0
 		collision_mask = 0
 	else:
