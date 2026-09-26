@@ -161,7 +161,7 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
     node.position = spawn_position
     node.resource_type = resource_type
     node.amount = 3
-    node.collision_layer = 2
+    node.collision_layer = 4
     node.collision_mask = 1
 
     var visual := MeshInstance3D.new()
