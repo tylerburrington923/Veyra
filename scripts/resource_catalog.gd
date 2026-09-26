@@ -33,5 +33,5 @@ static func weight(resource_type: String) -> float:
         _:
             return 1.0
 
-static func required_tool(resource_type: String) -> String:
+static func required_tool(_resource_type: String) -> String:
     return "T00_HANDS"
