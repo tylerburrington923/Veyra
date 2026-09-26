@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/interaction.gd" id="2_interaction"]
@@ -375,12 +375,10 @@ script = ExtResource("5_craft_build")
 script = ExtResource("4_hotbar")
 
 [node name="ToolHotbar" type="HBoxContainer" parent="HUDInventory"]
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
 anchor_left = 0.5
+anchor_top = 1.0
 anchor_right = 0.5
+anchor_bottom = 1.0
 offset_left = -174.0
 offset_top = -125.0
 offset_right = 174.0
