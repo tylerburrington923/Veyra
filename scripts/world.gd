@@ -51,7 +51,7 @@ func _apply_loaded_state(save_data: Dictionary) -> void:
         SettlementManager.load_settlement_state(settlement_state)
 
     var inventory_state: Dictionary = save_data.get("inventory", {})
-    var player := get_tree().get_first_node_in_group("local_player")
+    var player: Node = get_tree().get_first_node_in_group("local_player")
     if player and player.has_method("get_inventory"):
         var inventory := player.get_inventory()
         if inventory:
