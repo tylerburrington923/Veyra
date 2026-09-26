@@ -15,6 +15,7 @@ func _ready() -> void:
     add_to_group("resource_node")
     collision_layer = 2
     collision_mask = 1
+    set_process(false)
 
 func _process(delta: float) -> void:
     if not depleted:
@@ -42,6 +43,7 @@ func interact() -> void:
     player.add_resource(resource_type, yield_amount)
     depleted = true
     respawn_time = maxf(1.0, respawn_seconds)
+    set_process(true)
     visible = false
     collision_layer = 0
     collision_mask = 0
@@ -49,6 +51,7 @@ func interact() -> void:
 func _restore() -> void:
     depleted = false
     respawn_time = 0.0
+    set_process(false)
     visible = true
     collision_layer = 2
     collision_mask = 1
