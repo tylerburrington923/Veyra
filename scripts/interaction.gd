@@ -2,6 +2,7 @@ extends RayCast3D
 
 @export var interact_distance: float = 4.0
 @export var echo_force: float = 1.8
+@export var collision_mask_value: int = 0x7FFFFFFF
 
 var target_label: Label
 var last_target_name: String = ""
@@ -10,6 +11,9 @@ var last_handler_name: String = ""
 
 func _ready() -> void:
     target_position = Vector3(0, 0, -interact_distance)
+    collision_mask = collision_mask_value
+    collide_with_bodies = true
+    collide_with_areas = true
     enabled = true
     target_label = get_node_or_null("../../MobileControls/TargetHUD") as Label
     _update_target_debug()
