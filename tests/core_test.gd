@@ -15,6 +15,7 @@ func _run_tests() -> void:
 	_test_first_person_viewmodel_contract()
 	_test_first_person_presentation_contract()
 	_test_resource_interaction_matrix()
+	_test_hand_gathered_wood_contract()
 	_test_npc_definition_data_layer()
 	_test_npc_state_data_layer()
 	_test_npc_state_validation_vs_sanitization()
@@ -22,7 +23,7 @@ func _run_tests() -> void:
 	_test_npc_simulation_definition_separation()
 	_test_full_game_skeleton_contracts()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (15 suites)")
+		print("VEYRA CORE TESTS: PASS (16 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -202,6 +203,30 @@ func _test_resource_interaction_matrix() -> void:
 	stone.queue_free()
 	lux.queue_free()
 	player.queue_free()
+
+func _test_hand_gathered_wood_contract() -> void:
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+
+	var resource_scene := load("res://scenes/resource_node.tscn") as PackedScene
+	var wood := resource_scene.instantiate()
+	root.add_child(wood)
+	wood.resource_type = "Wood"
+	wood.tool_required = VeyraItemCatalog.HANDS_ID
+	wood.amount = 3
+	wood.remaining = 3
+
+	_check(player.set_tool(VeyraItemCatalog.HANDS_ID), "hands selection should succeed for wood test")
+	_check(wood.can_interact(player), "ground wood should be gatherable by hands")
+	_check(wood.get_interaction_point().y < wood.global_position.y + 0.2, "ground wood interaction point must stay near the sticks")
+
+	_check(player.set_tool("I01_STONE_AXE"), "axe selection should succeed for wood restriction test")
+	_check(not wood.can_interact(player), "hand-gathered wood must reject the axe")
+
+	wood.queue_free()
+	player.queue_free()
+
 
 func _test_resource_collision_contract() -> void:
 	var resource_scene := load("res://scenes/resource_node.tscn") as PackedScene
