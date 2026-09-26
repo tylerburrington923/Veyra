@@ -17,6 +17,8 @@ var last_snapshot: Dictionary = {}
 func _ready() -> void:
 	if inventory and inventory.has_signal("inventory_changed"):
 		inventory.inventory_changed.connect(_on_inventory_changed)
+	if player and player.has_signal("tool_changed"):
+		player.tool_changed.connect(_on_tool_changed)
 	if tool_button and not tool_button.pressed.is_connected(_cycle_tool):
 		tool_button.pressed.connect(_cycle_tool)
 	if inventory and inventory.has_method("get_snapshot"):
@@ -39,6 +41,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		_toggle_inventory()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_Q:
 		_cycle_tool()
+
+func _on_tool_changed(_tool_id: String, _durability: float) -> void:
+	_refresh()
 
 func _on_inventory_changed(_snapshot: Dictionary, changed_type: String, changed_amount: int) -> void:
 	_refresh()
