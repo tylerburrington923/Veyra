@@ -1,10 +1,12 @@
 extends RayCast3D
 
-## Interaction uses a camera-space physics query as the authoritative target check.\n## The RayCast3D remains as a lightweight visual/debug fallback.
+## Interaction ray uses a dedicated target collision layer so terrain cannot
+## occlude low resources, rocks, minerals, or other interactable objects.
 
-@export var interact_distance: float = 4.0
+const INTERACTION_LAYER := 2
+
+@export var interact_distance: float = 6.0
 @export var echo_force: float = 1.8
-@export var collision_mask_value: int = 0x7FFFFFFF
 
 var target_label: Label
 var interact_button: Button
@@ -15,7 +17,7 @@ var last_collision_point: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
     target_position = Vector3(0, 0, -interact_distance)
-    collision_mask = collision_mask_value
+    collision_mask = 1 << (INTERACTION_LAYER - 1)
     collide_with_bodies = true
     collide_with_areas = true
     enabled = true
@@ -39,7 +41,11 @@ func _query_target() -> Dictionary:
     var direction: Vector3 = -viewport_camera.global_transform.basis.z.normalized()
     var endpoint: Vector3 = origin + direction * interact_distance
 
-    var query := PhysicsRayQueryParameters3D.create(origin, endpoint, collision_mask_value)
+    var query := PhysicsRayQueryParameters3D.create(
+        origin,
+        endpoint,
+        1 << (INTERACTION_LAYER - 1)
+    )
     query.collide_with_bodies = true
     query.collide_with_areas = true
 
@@ -48,7 +54,6 @@ func _query_target() -> Dictionary:
         query.exclude = [player.get_rid()]
 
     return get_world_3d().direct_space_state.intersect_ray(query)
-
 
 func try_interact() -> void:
     var hit := _query_target()
@@ -81,7 +86,6 @@ func try_interact() -> void:
 
     _set_target_state(_classify_target(target), target.name, "NONE", collision_point)
 
-
 func _update_target_debug() -> void:
     var hit := _query_target()
     if hit.is_empty():
@@ -106,7 +110,6 @@ func _update_target_debug() -> void:
 
     _set_target_state(_classify_target(target), target.name, "NONE", collision_point)
 
-
 func _set_target_state(target_type: String, target_name: String, handler: String, collision_point: Vector3) -> void:
     last_target_type = target_type
     last_target_name = target_name
@@ -130,7 +133,6 @@ func _set_target_state(target_type: String, target_name: String, handler: String
             distance_text,
             handler if handler != "" else "--"
         ]
-
 
 func _classify_target(node: Node) -> String:
     if not node:
