@@ -33,7 +33,8 @@ func save_current_game(world: Node) -> bool:
     if SettlementManager:
         settlement_state = SettlementManager.get_settlement_state()
 
-    var saved := SaveManager.save_world(world, inventory.get_snapshot(), settlement_state)
+    var player_state := player.get_save_state() if player.has_method("get_save_state") else {}
+    var saved := SaveManager.save_world(world, inventory.get_snapshot(), settlement_state, player_state)
     if saved:
         loaded_save = SaveManager.load_world()
     return saved
