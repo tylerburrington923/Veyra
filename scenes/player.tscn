@@ -73,7 +73,7 @@ corner_radius_bottom_left = 45
 
 [node name="Player" type="CharacterBody3D"]
 collision_layer = 1
-collision_mask = 1
+collision_mask = 3
 script = ExtResource("1_player")
 
 [node name="Inventory" type="Node" parent="."]
@@ -145,7 +145,7 @@ position = Vector3(0, 2.75, 4.6)
 rotation_degrees = Vector3(-16, 0, 0)
 current = true
 [node name="InteractionRay" type="RayCast3D" parent="Camera3D"]
-collision_mask = 1
+collision_mask = 2
 exclude_parent = true
 script = ExtResource("2_interaction")
 
