@@ -215,7 +215,7 @@ func restore_from_settlement() -> void:
     var settlement := _get_settlement_manager()
     if not settlement:
         return
-    var buildings: Dictionary = settlement.get("buildings", {})
+    var buildings: Dictionary = settlement.get("buildings")
     for building_id in buildings.keys():
         var record: Dictionary = buildings[building_id]
         var position_data = record.get("position", [0.0, 0.0, 0.0])
