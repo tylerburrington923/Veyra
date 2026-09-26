@@ -164,10 +164,10 @@ func _create_rock_collision(transforms: Array[Transform3D]) -> void:
 	collision_body.collision_layer = 1
 	collision_body.collision_mask = 1
 	add_child(collision_body)
+	var shape := SphereShape3D.new()
+	shape.radius = 0.48
 	for transform in transforms:
 		var collision := CollisionShape3D.new()
-		var shape := SphereShape3D.new()
-		shape.radius = 0.48
 		collision.shape = shape
 		collision.transform = transform
 		collision_body.add_child(collision)
@@ -180,10 +180,10 @@ func _create_crystal_collision(transforms: Array[Transform3D]) -> void:
 	body.collision_layer = 1
 	body.collision_mask = 1
 	add_child(body)
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(0.65, 1.6, 0.65)
 	for transform in transforms:
 		var collision := CollisionShape3D.new()
-		var shape := BoxShape3D.new()
-		shape.size = Vector3(0.65, 1.6, 0.65)
 		collision.shape = shape
 		collision.transform = transform
 		body.add_child(collision)
