@@ -24,12 +24,119 @@ func _run_tests() -> void:
 	_test_npc_simulation_definition_separation()
 	_test_full_game_skeleton_contracts()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (16 suites)")
+		print("VEYRA CORE TESTS: PASS (20 suites)")
 		quit(0)
 	else:
 		for failure in failures:
 			push_error("VEYRA CORE TEST FAILURE: " + failure)
 		quit(1)
+
+
+func _test_tree_harvest_visual_contract() -> void:
+	var foliage_script := load("res://scripts/foliage_patch.gd")
+	var foliage: Node3D = foliage_script.new()
+	root.add_child(foliage)
+
+	var mesh := BoxMesh.new()
+	var trunk := MultiMeshInstance3D.new()
+	var trunk_mm := MultiMesh.new()
+	trunk_mm.transform_format = MultiMesh.TRANSFORM_3D
+	trunk_mm.mesh = mesh
+	trunk_mm.instance_count = 1
+	trunk_mm.set_instance_transform(0, Transform3D(Basis.IDENTITY, Vector3(0, 1, 0)))
+	trunk.multimesh = trunk_mm
+	root.add_child(trunk)
+
+	var canopy := MultiMeshInstance3D.new()
+	var canopy_mm := MultiMesh.new()
+	canopy_mm.transform_format = MultiMesh.TRANSFORM_3D
+	canopy_mm.mesh = mesh
+	canopy_mm.instance_count = 1
+	canopy_mm.set_instance_transform(0, Transform3D(Basis.IDENTITY, Vector3(0, 2, 0)))
+	canopy.multimesh = canopy_mm
+	root.add_child(canopy)
+
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3.ONE
+	collision.shape = shape
+	root.add_child(collision)
+
+	foliage._set_tree_visual(
+		trunk,
+		canopy,
+		collision,
+		0,
+		Transform3D(Basis.IDENTITY, Vector3(0, 1, 0)),
+		Transform3D(Basis.IDENTITY, Vector3(0, 2, 0)),
+		false
+	)
+	_check(trunk_mm.get_instance_transform(0).basis.get_scale().is_zero_approx(), "depleted tree trunk visual must hide")
+	_check(canopy_mm.get_instance_transform(0).basis.get_scale().is_zero_approx(), "depleted tree canopy visual must hide")
+	_check(collision.disabled, "depleted tree collision must disable")
+
+	foliage._set_tree_visual(
+		trunk,
+		canopy,
+		collision,
+		0,
+		Transform3D(Basis.IDENTITY, Vector3(0, 1, 0)),
+		Transform3D(Basis.IDENTITY, Vector3(0, 2, 0)),
+		true
+	)
+	_check(not trunk_mm.get_instance_transform(0).basis.get_scale().is_zero_approx(), "respawned tree trunk visual must restore")
+	_check(not canopy_mm.get_instance_transform(0).basis.get_scale().is_zero_approx(), "respawned tree canopy visual must restore")
+	_check(not collision.disabled, "respawned tree collision must restore")
+
+	foliage.queue_free()
+	trunk.queue_free()
+	canopy.queue_free()
+	collision.queue_free()
+
+
+func _test_house_door_contract() -> void:
+	_check(VeyraBuildingCatalog.get_building("B03_SHELTER").get("name", "") == "House", "shelter display name must be House")
+	var house := VeyraBuildingInstance.new()
+	root.add_child(house)
+	house.setup("TEST-HOUSE", "B03_SHELTER", Vector3.ZERO)
+	_check(house.can_interact(null), "house door must be interactable")
+	_check(not house.door_open, "house door must start closed")
+	var door_collision := house.get_node_or_null("Door/CollisionShape3D") as CollisionShape3D
+	_check(door_collision != null and not door_collision.disabled, "closed house door must block the doorway")
+	house.interact()
+	_check(house.door_open, "house door must open on interaction")
+	_check(door_collision != null and door_collision.disabled, "open house door must clear its collision")
+	house.interact()
+	_check(not house.door_open, "house door must close on second interaction")
+	_check(door_collision != null and not door_collision.disabled, "closed house door must restore collision")
+	house.queue_free()
+
+
+func _test_starter_inventory_contract() -> void:
+	if not GameManager.get_loaded_save().is_empty():
+		return
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var inventory: VeyraInventory = player.get_inventory()
+	_check(inventory.get_amount("Wood") == 100, "new player must start with 100 wood")
+	_check(inventory.get_amount("Stone") == 100, "new player must start with 100 stone")
+	player.queue_free()
+
+
+func _test_mobile_action_layout_contract() -> void:
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var jump_button := player.get_node_or_null("MobileControls/JumpButton") as Button
+	var use_button := player.get_node_or_null("MobileControls/InteractButton") as Button
+	var craft_ui := player.get_node_or_null("CraftBuildUI") as VeyraCraftBuildUI
+	var craft_button: Button = craft_ui.crafting_button if craft_ui else null
+	_check(jump_button != null and use_button != null and craft_button != null, "mobile action controls must exist")
+	if jump_button and use_button and craft_button:
+		_check(not craft_button.get_global_rect().intersects(jump_button.get_global_rect()), "crafting button must not overlap jump button")
+		_check(not craft_button.get_global_rect().intersects(use_button.get_global_rect()), "crafting button must not overlap use button")
+	player.queue_free()
 
 func _check(condition: bool, message: String) -> void:
 	if not condition:
