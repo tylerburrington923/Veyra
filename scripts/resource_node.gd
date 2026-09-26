@@ -29,7 +29,7 @@ func interact() -> void:
     if not player:
         return
 
-    var inventory := player.get_inventory() if player.has_method("get_inventory") else null
+    var inventory: VeyraInventory = player.get_inventory() if player.has_method("get_inventory") else null
     if not inventory:
         return
 
