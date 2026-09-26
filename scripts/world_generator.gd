@@ -162,6 +162,7 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
     node.position = spawn_position
     node.resource_type = resource_type
     node.amount = 3
+    node.tool_required = VeyraItemCatalog.HANDS_ID if resource_type == "Wood" else "I02_STONE_PICK"
     node.collision_layer = 4
     node.collision_mask = 1
 
