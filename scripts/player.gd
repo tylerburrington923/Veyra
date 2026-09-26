@@ -81,6 +81,8 @@ func use_tool(durability_cost: float = 1.0) -> bool:
 		return false
 	if selected_tool_id != "T00_HANDS":
 		tool_durability = maxf(0.0, tool_durability - maxf(0.0, durability_cost))
+		if tool_durability <= 0.0:
+			selected_tool_id = "T00_HANDS"
 	return true
 
 func get_save_state() -> Dictionary:
