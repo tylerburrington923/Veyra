@@ -200,7 +200,10 @@ func _initialize_building_root() -> void:
 		return
 	building_root = Node3D.new()
 	building_root.name = "PlacedBuildings"
-	get_tree().current_scene.add_child(building_root)
+	var parent: Node = get_tree().current_scene
+	if not parent:
+		parent = get_tree().root
+	parent.add_child(building_root)
 
 func restore_from_settlement() -> void:
 	_initialize_building_root()
