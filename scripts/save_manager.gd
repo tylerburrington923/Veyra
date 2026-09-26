@@ -12,7 +12,8 @@ func save_world(world: Node, inventory: Dictionary, settlement: Dictionary = {})
         "version": SAVE_VERSION,
         "world": world.get_world_state(),
         "inventory": _sanitize_inventory(inventory),
-        "settlement": _sanitize_settlement(settlement)
+        "settlement": _sanitize_settlement(settlement),
+        "player": _sanitize_player_state(inventory)
     }
     var json := JSON.stringify(payload)
 
@@ -94,6 +95,17 @@ func _sanitize_inventory(inventory: Dictionary) -> Dictionary:
                 clean["items"][key] = int(value)
 
     return clean
+
+func _sanitize_player_state(player_state: Dictionary) -> Dictionary:
+    if player_state.is_empty():
+        return {"tool_id": "T00_HANDS", "tool_durability": 100.0}
+    var tool_id := str(player_state.get("tool_id", "T00_HANDS"))
+    if tool_id != "T00_HANDS" and not VeyraItemCatalog.is_valid(tool_id):
+        tool_id = "T00_HANDS"
+    return {
+        "tool_id": tool_id,
+        "tool_durability": clampf(float(player_state.get("tool_durability", 100.0)), 0.0, 100.0)
+    }
 
 func _sanitize_settlement(settlement: Dictionary) -> Dictionary:
     if settlement.is_empty():
