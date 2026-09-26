@@ -63,15 +63,15 @@ func _apply_loaded_state(save_data: Dictionary) -> void:
 func _apply_seed_to_generators() -> void:
     var generator := get_node_or_null("WorldGenerator")
     if generator:
-        generator.seed_value = world_seed
+        generator.set("seed_value", world_seed)
 
     var foliage := get_node_or_null("Foliage")
     if foliage:
-        foliage.seed_value = world_seed
+        foliage.set("seed_value", world_seed)
 
     var detail := get_node_or_null("WorldDetail")
     if detail:
-        detail.seed_value = world_seed
+        detail.set("seed_value", world_seed)
 
 
 func get_world_time() -> float:
