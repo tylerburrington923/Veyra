@@ -173,6 +173,9 @@ func _craft(recipe_id: String) -> void:
 	if crafting.craft(recipe_id, inventory):
 		var recipe := VeyraCraftingCatalog.get_recipe(recipe_id)
 		status.text = "Crafted %s." % recipe.get("name", recipe_id)
+		if player and player.has_method("set_tool") and recipe_id in ["I01_STONE_AXE", "I02_STONE_PICK"]:
+			player.set_tool(recipe_id)
+			status.text += " Equipped."
 	else:
 		status.text = "Need materials or inventory space."
 
