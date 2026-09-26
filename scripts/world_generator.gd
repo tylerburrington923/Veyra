@@ -56,7 +56,7 @@ func generate() -> void:
             var b := a + 1
             var c := a + row
             var d := c + 1
-            indices.append_array(PackedInt32Array([a, c, b, b, c, d]))
+            indices.append_array(PackedInt32Array([a, b, c, b, d, c]))
 
     var arrays := []
     arrays.resize(Mesh.ARRAY_MAX)
