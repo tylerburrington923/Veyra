@@ -5,10 +5,10 @@ extends RayCast3D
 ## targeting is centered on the player instead of requiring a camera ray hit.
 
 const INTERACTION_LAYER := 2
-const PROXIMITY_RADIUS := 3.75
+const PROXIMITY_RADIUS := 4.5
 const MAX_HANDLER_DEPTH := 8
-const MIN_VIEW_DOT := 0.20
-const RAY_DISTANCE := 5.0
+const MIN_VIEW_DOT := -0.10
+const RAY_DISTANCE := 5.5
 
 @export var interact_distance: float = PROXIMITY_RADIUS
 @export var resonance_strength: float = 1.8
@@ -115,26 +115,36 @@ func _query_target() -> Dictionary:
             continue
 
         var handler_position := (handler as Node3D).global_position
-        var to_target := handler_position - player.global_position
+        var target_point := handler_position
+        var shape_point: Variant = hit.get("position", null)
+        if shape_point is Vector3:
+            target_point = shape_point
+
+        var to_target := target_point - player.global_position
         var distance := to_target.length()
         if distance <= 0.01 or distance > PROXIMITY_RADIUS:
             continue
 
-        to_target.y = 0.0
-        if to_target.length_squared() < 0.0001:
-            continue
-        var view_dot := camera_forward.dot(to_target.normalized())
+        var flat_target := to_target
+        flat_target.y = 0.0
+        if flat_target.length_squared() < 0.0001:
+            flat_target = camera_forward
+        else:
+            flat_target = flat_target.normalized()
+
+        var view_dot := camera_forward.dot(flat_target)
         if view_dot < MIN_VIEW_DOT:
             continue
 
-        # Favor objects that are close and centered in the camera view.
-        var score := view_dot * 2.0 - distance * 0.18
+        # Use the actual collision point for range, then favor a target that
+        # is reasonably in front of the camera without demanding precision.
+        var score := view_dot * 1.5 - distance * 0.10
         if score > best_score:
             best_score = score
             best = hit.duplicate(true)
             best["handler"] = handler
             best["distance"] = distance
-            best["position"] = handler_position
+            best["position"] = target_point
 
     return best
 
