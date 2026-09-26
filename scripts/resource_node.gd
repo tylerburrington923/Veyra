@@ -38,6 +38,13 @@ func interact() -> void:
     if player.has_method("get_tool_id"):
         equipped_tool = player.get_tool_id()
 
+    if tool_required != "T00_HANDS" and equipped_tool != tool_required:
+        return
+
+    var actual_tool_cost := VeyraItemCatalog.durability_cost(equipped_tool, resource_type)
+    if actual_tool_cost > 0.0 and player.has_method("can_use_tool") and not player.can_use_tool(actual_tool_cost):
+        return
+
     var yield_amount := maxi(1, int(round(tool_efficiency)))
     yield_amount += VeyraItemCatalog.gathering_bonus(equipped_tool, resource_type)
     yield_amount = mini(yield_amount, remaining)
@@ -45,14 +52,10 @@ func interact() -> void:
     if not inventory.has_method("add_resource"):
         return
 
-    if player.has_method("can_use_tool") and not player.can_use_tool(durability_cost):
-        return
-
     var accepted := int(inventory.add_resource(resource_type, yield_amount))
     if accepted <= 0:
         return
 
-    var actual_tool_cost := VeyraItemCatalog.durability_cost(equipped_tool, resource_type)
     if actual_tool_cost > 0.0 and player.has_method("use_tool") and not player.use_tool(actual_tool_cost):
         inventory.remove_resource(resource_type, accepted)
         return
