@@ -57,7 +57,7 @@ func interact() -> void:
     if accepted <= 0:
         return
 
-    if player.has_method("use_tool") and not player.use_tool(durability_cost):
+    if equipped_tool != "T00_HANDS" and player.has_method("use_tool") and not player.use_tool(durability_cost):
         inventory.remove_resource(resource_type, accepted)
         return
 
