@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://scripts/interaction.gd" id="2_interaction"]
 [ext_resource type="Script" path="res://scripts/inventory.gd" id="3_inventory"]
 [ext_resource type="Script" path="res://scripts/hotbar.gd" id="4_hotbar"]
+[ext_resource type="Script" path="res://scripts/craft_build_ui.gd" id="5_craft_build"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape"]
 radius = 0.34
@@ -212,6 +213,9 @@ grow_vertical = 0
 text = "USE"
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("InteractStyle")
+
+[node name="CraftBuildUI" type="CanvasLayer" parent="."]
+script = ExtResource("5_craft_build")
 
 [node name="HUDInventory" type="CanvasLayer" parent="."]
 script = ExtResource("4_hotbar")
