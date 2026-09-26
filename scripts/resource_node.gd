@@ -46,14 +46,16 @@ func interact() -> void:
     if not inventory.has_method("add_resource"):
         return
 
+    if player.has_method("can_use_tool") and not player.can_use_tool(durability_cost):
+        return
+
     var accepted := int(inventory.add_resource(resource_type, yield_amount))
     if accepted <= 0:
         return
 
-    if accepted > 0 and player.has_method("use_tool"):
-        if not player.use_tool(durability_cost):
-            inventory.remove_resource(resource_type, accepted)
-            return
+    if player.has_method("use_tool") and not player.use_tool(durability_cost):
+        inventory.remove_resource(resource_type, accepted)
+        return
 
     remaining -= accepted
     if remaining <= 0:
