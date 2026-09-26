@@ -19,8 +19,9 @@ func _run_tests() -> void:
 	_test_npc_state_validation_vs_sanitization()
 	_test_npc_simulation_layer()
 	_test_npc_simulation_definition_separation()
+	_test_full_game_skeleton_contracts()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (13 suites)")
+		print("VEYRA CORE TESTS: PASS (14 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -243,6 +244,53 @@ func _test_npc_simulation_definition_separation() -> void:
 	_check(NPCSimulation.process_tick(state, definition, 5.0), "definition separation tick should succeed")
 	_check(definition.to_dict() == before, "NPCDefinition must remain unmodified by simulation ticks")
 
+
+
+func _test_full_game_skeleton_contracts() -> void:
+	var job_def := JobDefinition.new("job_gather", "Gather Wood", "GATHER", 1, ["worker"], [], ["axe"], 5.0)
+	_check(job_def.is_valid(), "job definition must be valid")
+	var job_manager := JobManager.new()
+	_check(job_manager.register_definition(job_def), "job definition registration must succeed")
+	var job_state := job_manager.create_job("job_01", "job_gather")
+	_check(job_state != null and job_state.is_valid(), "job state must be created")
+	_check(job_manager.assign_worker("job_01", "npc_worker_1"), "job assignment must succeed")
+
+	var animal_def := AnimalDefinition.new("deer", "Forest Deer", "cervid")
+	var animal_state := AnimalState.new("animal_01", "deer")
+	_check(animal_def.is_valid() and animal_state.is_valid(), "animal contracts must be valid")
+	var animal_hunger := animal_state.hunger
+	_check(AnimalSimulation.process_tick(animal_state, animal_def, 10.0), "animal simulation tick must succeed")
+	_check(animal_state.hunger < animal_hunger, "animal hunger must decay")
+
+	var enemy_def := EnemyDefinition.new("wolf", "Shadow Wolf")
+	var enemy_state := EnemyState.new("enemy_01", "wolf")
+	_check(enemy_def.is_valid() and enemy_state.is_valid(), "enemy contracts must be valid")
+	_check(EnemySimulation.process_tick(enemy_state, enemy_def, 1.0), "enemy simulation tick must succeed")
+
+	var production_def := ProductionDefinition.new("plank_prod", {"Wood": 2}, {"Plank": 1}, 10.0, "sawmill", "worker")
+	var production_manager := ProductionManager.new()
+	_check(production_manager.register_definition(production_def), "production registration must succeed")
+	var production_state := production_manager.create_production("prod_01", "plank_prod", "bld_01")
+	_check(production_state != null, "production state must be created")
+	production_state.active = true
+	_check(production_manager.advance_progress("prod_01", 10.0), "production should complete at duration")
+
+	var additive := ModifierDefinition.new("add", "speed", ModifierDefinition.ModifierType.ADDITIVE, 2.0)
+	var multiplier := ModifierDefinition.new("mult", "speed", ModifierDefinition.ModifierType.MULTIPLICATIVE, 1.5)
+	_check(is_equal_approx(ModifierSystem.calculate_modified_value(10.0, [additive, multiplier]), 18.0), "modifier calculation mismatch")
+
+	var quest_def := QuestDefinition.new("quest_01", "First Task")
+	var quest_state := QuestState.new("quest_state_01", "quest_01")
+	_check(quest_def.is_valid() and quest_state.is_valid(), "quest contracts must be valid")
+
+	var event_def := EventDefinition.new("event_01", "Lunar Disturbance", 60.0)
+	var event_manager := EventManager.new()
+	_check(event_manager.register_definition(event_def), "event registration must succeed")
+	var event_state := event_manager.trigger_event("event_state_01", "event_01")
+	_check(event_state != null and event_state.active, "event should trigger")
+
+	var raw_job := JobState.from_dict({"job_id": "raw", "definition_id": "job_gather", "progress": -10.0})
+	_check(raw_job.progress == -10.0 and not raw_job.is_valid(), "job deserialization must preserve invalid raw state")
 
 func _test_npc_definition_data_layer() -> void:
 	var definition := NPCDefinition.new("human_gatherer", "Gatherer", "human", 4.0, 1.2, 25, ["GATHER", "HAUL"], "villager_01")
