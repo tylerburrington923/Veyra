@@ -25,6 +25,7 @@ func _ready() -> void:
         lunar_cycle.cycle_length_seconds = lunar_cycle_seconds
         lunar_cycle.configure(world_seed, world_time)
 
+    call_deferred("_restore_buildings")
     print("Veyra world initialized. Seed: ", world_seed, " | Lunar phase: ", lunar_cycle.get_phase_name() if lunar_cycle else "Unavailable")
 
 
@@ -105,5 +106,5 @@ func save_game() -> bool:
 
 
 func _restore_buildings() -> void:
-	if BuildingManager and BuildingManager.has_method("restore_from_settlement"):
-		BuildingManager.restore_from_settlement()
+    if BuildingManager and BuildingManager.has_method("restore_from_settlement"):
+        BuildingManager.restore_from_settlement()
