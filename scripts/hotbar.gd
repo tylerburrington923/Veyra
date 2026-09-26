@@ -60,7 +60,7 @@ func _format_inventory(snapshot: Dictionary) -> String:
     var total: int = 0
     for value in snapshot.values():
         total += int(value)
-    var capacity := inventory.get_capacity_state() if inventory.has_method("get_capacity_state") else {}
+    var capacity: Dictionary = inventory.get_capacity_state() if inventory.has_method("get_capacity_state") else {}
     lines.append("")
     lines.append("TOTAL ITEMS: %d" % total)
     if not capacity.is_empty():
