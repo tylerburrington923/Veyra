@@ -203,7 +203,7 @@ func get_tree_visual_state(index: int) -> Dictionary:
 
 func _hidden_transform(original: Transform3D) -> Transform3D:
     var hidden := original
-    hidden.origin.y -= 10000.0
+    hidden.origin.y -= 100000.0
     return hidden
 
 
