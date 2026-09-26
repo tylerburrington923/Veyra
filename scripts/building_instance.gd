@@ -75,6 +75,8 @@ func _build_visual() -> void:
             _build_house()
         "B04_WELL":
             _build_well()
+        "B05_TOWNHALL":
+            _build_townhall()
         _:
             _build_generic()
 
@@ -281,6 +283,58 @@ func _build_house() -> void:
     _add_box_collision(Vector3(side_width, HOUSE_WALL_HEIGHT, 0.20), Vector3((HOUSE_DOOR_WIDTH + side_width) * 0.5, HOUSE_WALL_HEIGHT * 0.5, front_z))
     _door_collision.disabled = door_open
     _door_root.rotation_degrees.y = 92.0 if door_open else 0.0
+
+
+
+func _build_townhall() -> void:
+    var foundation := _material(Color(0.24, 0.25, 0.26), 0.82)
+    var stone := _material(Color(0.36, 0.38, 0.39))
+    var stone_light := _material(Color(0.48, 0.49, 0.48))
+    var wood := _material(Color(0.30, 0.17, 0.075))
+    var trim := _material(Color(0.15, 0.10, 0.06))
+    var roof := _material(Color(0.10, 0.13, 0.15), 0.72)
+    var roof_light := _material(Color(0.16, 0.19, 0.21), 0.72)
+    var glass := _emissive_material(Color(0.20, 0.48, 0.52), 0.6)
+    var metal := _material(Color(0.22, 0.24, 0.25), 0.38, 0.7)
+    var banner := _emissive_material(Color(0.08, 0.46, 0.52), 0.8)
+
+    _mesh_box(Vector3(8.0, 0.24, 7.0), Vector3(0, 0.12, 0), foundation)
+    _mesh_box(Vector3(7.4, 2.6, 6.4), Vector3(0, 1.42, 0), stone)
+
+    # Timber frame and central civic tower.
+    _mesh_box(Vector3(7.65, 0.22, 0.24), Vector3(0, 2.65, -3.25), wood)
+    _mesh_box(Vector3(7.65, 0.22, 0.24), Vector3(0, 2.65, 3.25), wood)
+    _mesh_box(Vector3(0.24, 0.22, 6.5), Vector3(-3.55, 2.65, 0), wood)
+    _mesh_box(Vector3(0.24, 0.22, 6.5), Vector3(3.55, 2.65, 0), wood)
+    _mesh_box(Vector3(3.0, 4.2, 3.0), Vector3(0, 3.55, 0), stone_light)
+
+    # Four roof planes form a steep civic crown.
+    var roof_angle := deg_to_rad(35.0)
+    var roof_y := 6.25
+    _mesh_box(Vector3(2.0, 0.22, 3.65), Vector3(-0.98, roof_y, 0), roof, Vector3(0, 0, roof_angle))
+    _mesh_box(Vector3(2.0, 0.22, 3.65), Vector3(0.98, roof_y, 0), roof, Vector3(0, 0, -roof_angle))
+    _mesh_box(Vector3(3.65, 0.22, 2.0), Vector3(0, roof_y, -0.98), roof_light, Vector3(roof_angle, 0, 0))
+    _mesh_box(Vector3(3.65, 0.22, 2.0), Vector3(0, roof_y, 0.98), roof_light, Vector3(-roof_angle, 0, 0))
+
+    # Front civic entrance and steps.
+    var front_z := -3.32
+    _mesh_box(Vector3(2.1, 0.22, 1.25), Vector3(0, 0.11, front_z - 0.58), foundation)
+    _mesh_box(Vector3(2.5, 2.25, 0.22), Vector3(0, 1.25, front_z), wood)
+    _mesh_box(Vector3(1.65, 2.0, 0.16), Vector3(0, 1.05, front_z - 0.13), trim)
+    _mesh_box(Vector3(1.25, 1.75, 0.10), Vector3(0, 1.0, front_z - 0.22), glass)
+
+    for x in [-2.55, 2.55]:
+        for y in [1.35, 2.35]:
+            _add_window(Vector3(x, y, -3.36), Vector3.ZERO, glass, trim)
+
+    for x in [-0.86, 0.86]:
+        _mesh_box(Vector3(0.58, 0.82, 0.10), Vector3(x, 4.15, -1.54), glass)
+    _mesh_cylinder(0.18, 0.42, Vector3(0, 6.70, 0), metal, 8)
+    _mesh_sphere(0.20, Vector3(0, 6.98, 0), metal)
+    _mesh_box(Vector3(1.0, 1.45, 0.06), Vector3(0, 3.45, front_z - 0.15), banner)
+
+    _add_box_collision(Vector3(7.4, 2.6, 6.4), Vector3(0, 1.42, 0))
+    _add_box_collision(Vector3(3.0, 4.2, 3.0), Vector3(0, 3.55, 0))
 
 
 func _add_window(position_value: Vector3, rotation_value: Vector3, glass: Material, frame: Material) -> void:
