@@ -82,9 +82,10 @@ func _test_tool_state_contract() -> void:
 	_check(float(state.get("tool_durability", 0.0)) == 100.0, "initial durability mismatch")
 	_check(player.use_tool(5.0), "tool should consume durability")
 	_check(absf(float(player.get_save_state().get("tool_durability", 0.0)) - 95.0) < 0.001, "tool durability mismatch")
-	var tool_button := player.get_node_or_null("HUDInventory/ToolButton") as Button
-	_check(tool_button != null, "mobile tool selector missing")
-	_check(tool_button.text.contains("STONE AXE"), "equipment HUD did not synchronize after equip")
+	var axe_slot := player.get_node_or_null("HUDInventory/ToolHotbar/AxeSlot") as Button
+	_check(axe_slot != null, "mobile axe hotbar slot missing")
+	_check(axe_slot.text.contains("AXE"), "axe hotbar slot label missing")
+	_check(not axe_slot.disabled, "axe hotbar slot should be enabled after crafting/equipping")
 	player.queue_free()
 
 func _test_resource_collision_contract() -> void:
