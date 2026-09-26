@@ -17,7 +17,7 @@ func add_resource(resource_type: String, amount: int) -> int:
     var stack_limit := VeyraResourceCatalog.max_stack(resource_type)
     var free_slots := maxi(0, max_slots - _used_slots())
     var capacity_by_slots := free_slots * stack_limit
-    if current > 0:
+    if current > 0 and current % stack_limit != 0:
         capacity_by_slots += stack_limit - (current % stack_limit)
     var accepted := mini(amount, capacity_by_slots)
 
