@@ -77,6 +77,8 @@ func generate() -> void:
 
     var body := StaticBody3D.new()
     body.name = "TerrainCollision"
+    body.collision_layer = 1
+    body.collision_mask = 1
     var collision := CollisionShape3D.new()
     var shape := ConcavePolygonShape3D.new()
     shape.set_faces(mesh.get_faces())
@@ -137,6 +139,8 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> VeyraResourceNo
     node.resource_type = resource_type
     node.amount = 1
     node.add_to_group("resource_node")
+    node.collision_layer = 2
+    node.collision_mask = 1
 
     var visual := MeshInstance3D.new()
     visual.mesh = _resource_mesh(resource_type)
