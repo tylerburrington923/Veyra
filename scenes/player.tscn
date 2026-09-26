@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/interaction.gd" id="2_interaction"]
@@ -39,6 +39,13 @@ roughness = 1.0
 [sub_resource type="StandardMaterial3D" id="Eyes"]
 albedo_color = Color(0.02, 0.02, 0.02, 1)
 roughness = 0.5
+[sub_resource type="BoxMesh" id="ToolMesh"]
+size = Vector3(0.1, 0.62, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="ToolMaterial"]
+albedo_color = Color(0.35, 0.38, 0.42, 1)
+roughness = 0.72
+
 [sub_resource type="StyleBoxFlat" id="JoystickStyle"]
 bg_color = Color(0.08, 0.12, 0.16, 0.72)
 border_width_left = 3
@@ -122,6 +129,12 @@ material_override = SubResource("Skin")
 position = Vector3(0.42, 0.73, 0)
 mesh = SubResource("HandMesh")
 material_override = SubResource("Skin")
+[node name="EquippedTool" type="MeshInstance3D" parent="RightHand"]
+position = Vector3(0.0, -0.12, -0.08)
+mesh = SubResource("ToolMesh")
+material_override = SubResource("ToolMaterial")
+visible = false
+
 [node name="LeftLeg" type="MeshInstance3D" parent="."]
 position = Vector3(-0.18, 0.48, 0)
 mesh = SubResource("LimbMesh")
@@ -225,7 +238,7 @@ offset_right = -200.0
 offset_bottom = -140.0
 grow_horizontal = 0
 grow_vertical = 0
-text = "TOOL\\nHANDS"
+text = "TOOL\nHANDS"
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("InteractStyle")
 
