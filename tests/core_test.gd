@@ -17,8 +17,10 @@ func _run_tests() -> void:
 	_test_npc_definition_data_layer()
 	_test_npc_state_data_layer()
 	_test_npc_state_validation_vs_sanitization()
+	_test_npc_simulation_layer()
+	_test_npc_simulation_definition_separation()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (11 suites)")
+		print("VEYRA CORE TESTS: PASS (13 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -202,6 +204,44 @@ func _test_resource_collision_contract() -> void:
 	resource._restore()
 	_check(resource.collision_layer == 4, "restored resource must regain interaction collision")
 	resource.queue_free()
+
+
+func _test_npc_simulation_layer() -> void:
+	var definition := NPCDefinition.new("human_worker", "Worker", "human", 3.5, 1.0, 20, ["BUILD"], "worker_01")
+	var state := NPCState.new("npc_sim_01", "human_worker")
+
+	_check(definition.is_valid(), "simulation definition must be valid")
+	_check(state.is_valid(), "simulation state must be valid")
+
+	var initial_hunger: float = state.hunger
+	_check(NPCSimulation.process_tick(state, definition, 0.0), "zero delta tick should succeed")
+	_check(state.hunger == initial_hunger, "zero delta must produce no state mutations")
+
+	_check(not NPCSimulation.process_tick(state, definition, -1.0), "negative delta must be rejected")
+	_check(state.hunger == initial_hunger, "rejected negative delta must leave state unmodified")
+
+	_check(NPCSimulation.process_tick(state, definition, 10.0), "valid tick processing should succeed")
+	_check(state.hunger < initial_hunger, "hunger must deterministically decay after positive delta")
+
+	var state_a := NPCState.new("npc_a", "human_worker")
+	var state_b := NPCState.new("npc_b", "human_worker")
+	NPCSimulation.process_tick(state_a, definition, 25.0)
+	NPCSimulation.process_tick(state_b, definition, 25.0)
+	_check(state_a.hunger == state_b.hunger, "identical inputs must yield identical hunger outputs")
+	_check(state_a.thirst == state_b.thirst, "identical inputs must yield identical thirst outputs")
+	_check(state_a.health == state_b.health, "identical inputs must yield identical health outputs")
+
+	state.alive = false
+	var dead_hunger: float = state.hunger
+	_check(NPCSimulation.process_tick(state, definition, 10.0), "dead NPC processing should be accepted without updates")
+	_check(state.hunger == dead_hunger, "dead NPC must undergo no needs updates")
+
+func _test_npc_simulation_definition_separation() -> void:
+	var definition := NPCDefinition.new("human_worker", "Worker")
+	var state := NPCState.new("npc_sep_01", "human_worker")
+	var before := definition.to_dict()
+	_check(NPCSimulation.process_tick(state, definition, 5.0), "definition separation tick should succeed")
+	_check(definition.to_dict() == before, "NPCDefinition must remain unmodified by simulation ticks")
 
 
 func _test_npc_definition_data_layer() -> void:
