@@ -64,14 +64,16 @@ func _query_target() -> Dictionary:
 			ray_handler = _find_handler(ray_collider, "resonate")
 		if ray_handler:
 			var point := _get_interaction_point(ray_handler, get_collision_point())
-			if player.global_position.distance_to(point) <= MAX_TARGET_DISTANCE:
+			var direct_distance := player.global_position.distance_to(point)
+			# An aimed-but-unavailable object must not block fallback selection.
+			if direct_distance <= MAX_TARGET_DISTANCE and _is_handler_eligible(ray_handler, player):
 				return {
 					"collider": ray_collider,
 					"handler": ray_handler,
 					"position": point,
-					"distance": player.global_position.distance_to(point),
+					"distance": direct_distance,
 					"screen_score": 0.0,
-					"eligible": _is_handler_eligible(ray_handler, player)
+					"eligible": true
 				}
 
 	# Fallback: gather interactables around the player, but choose by where
@@ -167,27 +169,26 @@ func try_interact() -> void:
 func _update_target_debug() -> void:
 	var hit := _query_target()
 	if hit.is_empty():
-		_set_target_state("NONE", "", "", Vector3.ZERO)
+		_set_target_state("NONE", "", "", Vector3.ZERO, false)
 		return
 
 	var handler := hit.get("handler") as Node
 	var point: Vector3 = hit.get("position", Vector3.ZERO)
 	if not handler:
-		_set_target_state("UNKNOWN", "", "", point)
+		_set_target_state("UNKNOWN", "", "", point, false)
 		return
 
 	var action := "interact()" if handler.has_method("interact") else "resonate()" if handler.has_method("resonate") else ""
-	_set_target_state(_classify_target(handler), handler.name, action, point)
+	_set_target_state(_classify_target(handler), handler.name, action, point, bool(hit.get("eligible", false)))
 
-func _set_target_state(target_type: String, target_name: String, handler: String, collision_point: Vector3) -> void:
+func _set_target_state(target_type: String, target_name: String, handler: String, collision_point: Vector3, eligible: bool = false) -> void:
 	last_target_type = target_type
 	last_target_name = target_name
 	last_handler_name = handler
 	last_collision_point = collision_point
 
 	var player := get_tree().get_first_node_in_group("local_player") as Node3D
-	var current_target := _query_target() if handler != "" else {}
-	var actionable := handler != "" and bool(current_target.get("eligible", true))
+	var actionable := handler != "" and eligible
 
 	if interact_button:
 		interact_button.disabled = not actionable
