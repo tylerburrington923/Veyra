@@ -94,7 +94,7 @@ func get_world_state() -> Dictionary:
         "world_time": world_time,
         "lunar": get_lunar_state(),
         "resources": _get_resource_state(),
-        "version": 4
+        "version": 5
     }
 
 func _get_resource_state() -> Dictionary:
