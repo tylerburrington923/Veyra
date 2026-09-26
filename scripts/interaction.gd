@@ -83,11 +83,8 @@ func try_interact() -> void:
 
     var physics_target: Node = _find_handler(target, "apply_force")
     if physics_target:
-        var viewport_camera := get_viewport().get_camera_3d()
-        var direction := -viewport_camera.global_transform.basis.z.normalized() if viewport_camera else -global_transform.basis.z
-        physics_target.apply_force(direction, echo_force)
-        print("Force transferred into ", physics_target.name)
-        _set_target_state("PHYSICS", physics_target.name, "apply_force()", collision_point)
+        physics_target.apply_force(-global_transform.basis.z, echo_force)
+        _set_target_state(_classify_target(physics_target), physics_target.name, "apply_force()", collision_point)
         return
 
     _set_target_state(_classify_target(target), target.name, "NONE", collision_point)
@@ -125,7 +122,7 @@ func _set_target_state(target_type: String, target_name: String, handler: String
     if interact_button:
         var actionable := handler != ""
         interact_button.disabled = not actionable
-        interact_button.text = "PUSH" if handler == "apply_force()" else "USE"
+        interact_button.text = "USE"
 
     if target_label:
         var distance_text: String = "--"
