@@ -81,15 +81,11 @@ func evaluate_placement(player: Node3D, position: Vector3, inventory: VeyraInven
 		placement_changed.emit(selected_building_id, false, placement_position)
 		return false
 
-	var cost: Dictionary = definition.get("cost", {})
-	for resource_type in cost.keys():
-		if not inventory.has_resource(str(resource_type), int(cost[resource_type])):
-			_update_preview(false)
-			placement_changed.emit(selected_building_id, false, placement_position)
-			return false
-
-	placement_valid = _is_space_clear(placement_position, definition.get("size", Vector2.ONE), player)
-	_update_preview(placement_valid)
+	placement_location_valid = _is_space_clear(placement_position, definition.get("size", Vector2.ONE), player)
+	placement_valid = placement_location_valid and has_required_materials(inventory)
+	_update_preview(placement_location_valid)
+	placement_changed.emit(selected_building_id, placement_valid, placement_position)
+	return placement_valid
 	placement_changed.emit(selected_building_id, placement_valid, placement_position)
 	return placement_valid
 
