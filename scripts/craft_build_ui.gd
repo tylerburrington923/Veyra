@@ -19,6 +19,7 @@ var confirm_button: Button
 var cancel_button: Button
 var mode := ""
 var selected_id := ""
+var workshop_button: Button
 
 func _ready() -> void:
 	player = get_parent() as Node3D
