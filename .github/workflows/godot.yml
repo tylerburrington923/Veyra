@@ -76,4 +76,5 @@ jobs:
           path: |
             godot-editor.log
             build/Veyra-source-${{ github.sha }}.zip
+            build/Veyra-source-${GITHUB_SHA:0:7}.zip
           if-no-files-found: warn
