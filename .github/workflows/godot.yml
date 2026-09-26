@@ -38,7 +38,7 @@ jobs:
           test -f scripts/building_instance.gd
           test -f scripts/save_manager.gd
           grep -q 'run/main_scene="res://scenes/world.tscn"' project.godot
-          grep -q 'BuildingManager="*res://scripts/building_manager.gd"' project.godot
+          grep -Fq 'BuildingManager="*res://scripts/building_manager.gd"' project.godot
 
       - name: Import project
         run: godot --headless --path . --editor --quit --verbose
