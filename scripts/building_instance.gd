@@ -211,11 +211,27 @@ func _build_house() -> void:
     _mesh_box(Vector3(side_width, HOUSE_WALL_HEIGHT, 0.20), Vector3((HOUSE_DOOR_WIDTH + side_width) * 0.5, HOUSE_WALL_HEIGHT * 0.5, front_z), wall)
     _mesh_box(Vector3(HOUSE_DOOR_WIDTH + 0.35, 0.20, 0.22), Vector3(0, HOUSE_WALL_HEIGHT - 0.10, front_z), wall_light)
 
-    # Gable roof, built from two light mobile-friendly panels.
+    # Gable roof: each panel spans the house depth and slopes across X.
+    # The ridge is centered on X=0; the outer edges overhang the side walls.
     var roof_angle := deg_to_rad(25.0)
-    var roof_z := 1.05
-    _mesh_box(Vector3(HOUSE_WIDTH + 0.45, 0.20, 2.75), Vector3(0, HOUSE_WALL_HEIGHT + 0.45, -roof_z), roof, Vector3(roof_angle, 0, 0))
-    _mesh_box(Vector3(HOUSE_WIDTH + 0.45, 0.20, 2.75), Vector3(0, HOUSE_WALL_HEIGHT + 0.45, roof_z), roof, Vector3(-roof_angle, 0, 0))
+    var roof_half_span := (HOUSE_WIDTH + 0.45) * 0.5
+    var roof_center_x := roof_half_span * cos(roof_angle)
+    var roof_center_y := HOUSE_WALL_HEIGHT + roof_half_span * sin(roof_angle) + 0.08
+    var roof_depth := HOUSE_DEPTH + 0.45
+    var left_roof := _mesh_box(
+        Vector3(HOUSE_WIDTH * 0.5 + 0.25, 0.20, roof_depth),
+        Vector3(-roof_center_x, roof_center_y, 0),
+        roof,
+        Vector3(0, 0, roof_angle)
+    )
+    left_roof.name = "RoofLeft"
+    var right_roof := _mesh_box(
+        Vector3(HOUSE_WIDTH * 0.5 + 0.25, 0.20, roof_depth),
+        Vector3(roof_center_x, roof_center_y, 0),
+        roof,
+        Vector3(0, 0, -roof_angle)
+    )
+    right_roof.name = "RoofRight"
 
     # Simple windows and exterior trim.
     _add_window(Vector3(-HOUSE_WIDTH * 0.5 - 0.015, 1.55, 0.0), Vector3(0, deg_to_rad(90), 0), window, trim)
@@ -254,6 +270,11 @@ func _build_house() -> void:
     _door_root.add_child(_door_collision)
 
     _add_box_collision(Vector3(HOUSE_WIDTH, 0.16, HOUSE_DEPTH), Vector3(0, 0.08, 0))
+    var back_wall_collision := _add_box_collision(
+        Vector3(HOUSE_WIDTH, HOUSE_WALL_HEIGHT, 0.20),
+        Vector3(0, HOUSE_WALL_HEIGHT * 0.5, HOUSE_DEPTH * 0.5)
+    )
+    back_wall_collision.name = "BackWallCollision"
     _add_box_collision(Vector3(0.20, HOUSE_WALL_HEIGHT, HOUSE_DEPTH), Vector3(-HOUSE_WIDTH * 0.5, HOUSE_WALL_HEIGHT * 0.5, 0))
     _add_box_collision(Vector3(0.20, HOUSE_WALL_HEIGHT, HOUSE_DEPTH), Vector3(HOUSE_WIDTH * 0.5, HOUSE_WALL_HEIGHT * 0.5, 0))
     _add_box_collision(Vector3(side_width, HOUSE_WALL_HEIGHT, 0.20), Vector3(-(HOUSE_DOOR_WIDTH + side_width) * 0.5, HOUSE_WALL_HEIGHT * 0.5, front_z))
