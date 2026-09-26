@@ -5,6 +5,7 @@ extends RayCast3D
 ## screen-space relevance, distance, and line of sight so large world objects
 ## do not require the player to stand on an exact invisible interaction point.
 
+const RESOURCE_NODE_SCRIPT = preload("res://scripts/resource_node.gd")
 const INTERACTION_LAYER := 2
 const RAY_DISTANCE := 6.0
 const MAX_TARGET_DISTANCE := 5.5
