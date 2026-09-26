@@ -122,11 +122,7 @@ func _set_target_state(target_type: String, target_name: String, handler: String
     if interact_button:
         var actionable := handler != ""
         interact_button.disabled = not actionable
-        interact_button.text = "USE"
-        if target_name != "":
-            var target_node := _find_handler_by_name(target_name)
-            if target_node and target_node.has_method("get_interaction_text"):
-                interact_button.text = target_node.get_interaction_text()
+        interact_button.text = "GATHER" if target_type == "RESOURCE" else "USE"
 
     if target_label:
         var distance_text: String = "--"
@@ -140,15 +136,6 @@ func _set_target_state(target_type: String, target_name: String, handler: String
             distance_text,
             handler if handler != "" else "--"
         ]
-
-func _find_handler_by_name(target_name: String) -> Node:
-    if target_name.is_empty():
-        return null
-    var nodes := get_tree().get_nodes_in_group("resource_node")
-    for node in nodes:
-        if node.name == target_name:
-            return node
-    return null
 
 func _classify_target(node: Node) -> String:
     if not node:
