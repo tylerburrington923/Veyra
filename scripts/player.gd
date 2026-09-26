@@ -397,12 +397,6 @@ func _notification(what: int) -> void:
 		_hide_joystick()
 
 
-func add_resource(resource_type: String, amount: int) -> void:
-	var inventory_node := get_node_or_null("Inventory")
-
-	if inventory_node and inventory_node.has_method("add_resource"):
-		inventory_node.add_resource(resource_type, amount)
-
 
 func _on_jump_pressed() -> void:
 	jump_requested = true
