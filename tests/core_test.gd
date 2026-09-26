@@ -315,8 +315,8 @@ func _test_resource_respawn_contract() -> void:
 
 
 func _test_npc_job_execution_contract() -> void:
-	var definition := NPCDefinition.new("worker", "Worker", "human", 2.0, 1.0, 20, ["GATHER"], [], [], 2.0, "")
-	var state := NPCState.new("npc_job_01", "worker")
+	var definition := JobDefinition.new("worker_job", "Gather Wood", "GATHER", 1, ["human"], [], ["axe"], 2.0)
+	var state := NPCState.new("npc_job_01", "worker_job")
 	var job := JobState.new("job_01", "worker")
 	job.active = true
 	_check(NPCJobSimulation.assign_job(state, definition, NPCState.make_vector_dict(4.0, 0.0, 0.0)), "NPC job assignment must succeed")
