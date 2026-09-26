@@ -1,5 +1,7 @@
 extends RayCast3D
 
+## Interaction uses a camera-space physics query as the authoritative target check.\n## The RayCast3D remains as a lightweight visual/debug fallback.
+
 @export var interact_distance: float = 4.0
 @export var echo_force: float = 1.8
 @export var collision_mask_value: int = 0x7FFFFFFF
@@ -8,6 +10,7 @@ var target_label: Label
 var last_target_name: String = ""
 var last_target_type: String = "NONE"
 var last_handler_name: String = ""
+var last_collision_point: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
     target_position = Vector3(0, 0, -interact_distance)
@@ -25,70 +28,102 @@ func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E:
         try_interact()
 
+func _query_target() -> Dictionary:
+    var viewport_camera := get_viewport().get_camera_3d()
+    if not viewport_camera:
+        return {}
+
+    var origin: Vector3 = viewport_camera.global_position
+    var direction: Vector3 = -viewport_camera.global_transform.basis.z.normalized()
+    var endpoint: Vector3 = origin + direction * interact_distance
+
+    var query := PhysicsRayQueryParameters3D.create(origin, endpoint, collision_mask_value)
+    query.collide_with_bodies = true
+    query.collide_with_areas = true
+
+    var player := get_tree().get_first_node_in_group("local_player")
+    if player is CollisionObject3D:
+        query.exclude = [player.get_rid()]
+
+    return get_world_3d().direct_space_state.intersect_ray(query)
+
+
 func try_interact() -> void:
-    force_raycast_update()
-    if not is_colliding():
+    var hit := _query_target()
+    if hit.is_empty():
         print("Veyra interaction: nothing in range.")
-        _set_target_state("NONE", "", "")
+        _set_target_state("NONE", "", "", Vector3.ZERO)
         return
 
-    var target: Node = get_collider() as Node
+    var target: Node = hit.get("collider") as Node
+    var collision_point: Vector3 = hit.get("position", Vector3.ZERO)
+    if not target:
+        _set_target_state("UNKNOWN", "", "", collision_point)
+        return
+
     var interactable: Node = _find_handler(target, "interact")
     if interactable:
         interactable.interact()
         print("Veyra interaction: interacted with ", interactable.name)
-        _set_target_state(_classify_target(interactable), interactable.name, "interact()")
+        _set_target_state(_classify_target(interactable), interactable.name, "interact()", collision_point)
         return
 
     var physics_target: Node = _find_handler(target, "apply_force")
     if physics_target:
-        var direction: Vector3 = -global_transform.basis.z
+        var viewport_camera := get_viewport().get_camera_3d()
+        var direction := -viewport_camera.global_transform.basis.z.normalized() if viewport_camera else -global_transform.basis.z
         physics_target.apply_force(direction, echo_force)
         print("Force transferred into ", physics_target.name)
-        _set_target_state("PHYSICS", physics_target.name, "apply_force()")
+        _set_target_state("PHYSICS", physics_target.name, "apply_force()", collision_point)
         return
 
-    var target_name: String = target.name if target else "unknown"
-    var target_type: String = _classify_target(target)
-    print("Veyra interaction: hit ", target_name, " but it has no interaction handler.")
-    _set_target_state(target_type, target_name, "NONE")
+    _set_target_state(_classify_target(target), target.name, "NONE", collision_point)
+
 
 func _update_target_debug() -> void:
-    if not is_colliding():
-        _set_target_state("NONE", "", "")
+    var hit := _query_target()
+    if hit.is_empty():
+        _set_target_state("NONE", "", "", Vector3.ZERO)
         return
 
-    var target: Node = get_collider() as Node
+    var target: Node = hit.get("collider") as Node
+    var collision_point: Vector3 = hit.get("position", Vector3.ZERO)
     if not target:
-        _set_target_state("UNKNOWN", "", "")
+        _set_target_state("UNKNOWN", "", "", collision_point)
         return
 
     var interactable: Node = _find_handler(target, "interact")
     if interactable:
-        _set_target_state(_classify_target(interactable), interactable.name, "interact()")
+        _set_target_state(_classify_target(interactable), interactable.name, "interact()", collision_point)
         return
 
     var physics_target: Node = _find_handler(target, "apply_force")
     if physics_target:
-        _set_target_state("PHYSICS", physics_target.name, "apply_force()")
+        _set_target_state("PHYSICS", physics_target.name, "apply_force()", collision_point)
         return
 
-    _set_target_state(_classify_target(target), target.name, "NONE")
+    _set_target_state(_classify_target(target), target.name, "NONE", collision_point)
 
-func _set_target_state(target_type: String, target_name: String, handler: String) -> void:
+
+func _set_target_state(target_type: String, target_name: String, handler: String, collision_point: Vector3) -> void:
     last_target_type = target_type
     last_target_name = target_name
     last_handler_name = handler
+    last_collision_point = collision_point
+
     if target_label:
         var distance_text: String = "--"
-        if is_colliding():
-            distance_text = "%.2f" % global_position.distance_to(get_collision_point())
+        if target_type != "NONE":
+            var camera := get_viewport().get_camera_3d()
+            if camera:
+                distance_text = "%.2f" % camera.global_position.distance_to(collision_point)
         target_label.text = "TARGET: %s\nNAME: %s\nDIST: %s\nHANDLER: %s" % [
             target_type,
             target_name if target_name != "" else "--",
             distance_text,
             handler if handler != "" else "--"
         ]
+
 
 func _classify_target(node: Node) -> String:
     if not node:
