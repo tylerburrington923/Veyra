@@ -41,7 +41,7 @@ func _apply_loaded_state(save_data: Dictionary) -> void:
     var saved_world: Dictionary = save_data.get("world", {})
     if not saved_world.is_empty():
         world_time = maxf(0.0, float(saved_world.get("world_time", 0.0)))
-        var generator := get_node_or_null("WorldGenerator")
+        var generator: Node = get_node_or_null("WorldGenerator")
         var resource_state = saved_world.get("resources", {})
         if generator and resource_state is Dictionary and generator.has_method("set_saved_resource_state"):
             generator.set_saved_resource_state(resource_state)
