@@ -104,7 +104,7 @@ func _sanitize_player_state(player_state: Dictionary) -> Dictionary:
     if player_state.is_empty():
         return {"tool_id": "T00_HANDS", "tool_durability": 100.0}
     var tool_id := str(player_state.get("tool_id", "T00_HANDS"))
-    if tool_id != "T00_HANDS" and not VeyraItemCatalog.is_valid(tool_id):
+    if tool_id != "T00_HANDS" and not VeyraItemCatalog.is_tool(tool_id):
         tool_id = "T00_HANDS"
     return {
         "tool_id": tool_id,
