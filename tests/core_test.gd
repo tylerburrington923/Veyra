@@ -23,6 +23,9 @@ func _check(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
 
+func _crafting_manager() -> VeyraCraftingManager:
+	return root.get_node("CraftingManager") as VeyraCraftingManager
+
 func _test_inventory_round_trip() -> void:
 	var inventory := VeyraInventory.new()
 	root.add_child(inventory)
@@ -44,13 +47,13 @@ func _test_crafting_transaction() -> void:
 	inventory.add_resource("Wood", 3)
 	inventory.add_resource("Stone", 2)
 	_check(CraftingManager.can_craft("I01_STONE_AXE", inventory), "axe should be craftable")
-	_check(CraftingManager.craft("I01_STONE_AXE", inventory), "axe craft should succeed")
+	_check(_crafting_manager().craft("I01_STONE_AXE", inventory), "axe craft should succeed")
 	_check(inventory.has_item("I01_STONE_AXE"), "crafted axe missing")
 	_check(inventory.get_amount("Wood") == 0, "axe craft should consume wood")
 	_check(inventory.get_amount("Stone") == 0, "axe craft should consume stone")
 	var before_wood := inventory.get_amount("Wood")
 	var before_stone := inventory.get_amount("Stone")
-	_check(not CraftingManager.craft("I02_STONE_PICK", inventory), "pick should fail without materials")
+	_check(not _crafting_manager().craft("I02_STONE_PICK", inventory), "pick should fail without materials")
 	_check(inventory.get_amount("Wood") == before_wood, "failed craft changed wood")
 	_check(inventory.get_amount("Stone") == before_stone, "failed craft changed stone")
 	inventory.queue_free()
