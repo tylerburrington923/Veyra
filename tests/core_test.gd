@@ -13,6 +13,7 @@ func _run_tests() -> void:
 	_test_resource_collision_contract()
 	_test_tool_catalog_contract()
 	_test_first_person_viewmodel_contract()
+	_test_first_person_presentation_contract()
 	_test_resource_interaction_matrix()
 	_test_npc_definition_data_layer()
 	_test_npc_state_data_layer()
@@ -21,7 +22,7 @@ func _run_tests() -> void:
 	_test_npc_simulation_definition_separation()
 	_test_full_game_skeleton_contracts()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (14 suites)")
+		print("VEYRA CORE TESTS: PASS (15 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -136,6 +137,22 @@ func _test_first_person_viewmodel_contract() -> void:
 	_check(camera != null and (camera.cull_mask & 2) != 0, "camera must render viewmodel layer")
 	_check(right_hand != null and right_hand.position.z < -0.5, "right hand must be in front of camera")
 	_check(holder != null and holder.position.z < -0.5, "tool holder must be in front of camera")
+	player.queue_free()
+
+func _test_first_person_presentation_contract() -> void:
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var tool_holder := player.get_node_or_null("Camera3D/ViewModel/ToolHolder") as Node3D
+	var chest := player.get_node_or_null("Camera3D/ViewModel/ChestFP") as MeshInstance3D
+	var left_leg := player.get_node_or_null("Camera3D/ViewModel/LeftLegFP") as MeshInstance3D
+	var right_leg := player.get_node_or_null("Camera3D/ViewModel/RightLegFP") as MeshInstance3D
+	var hotbar := player.get_node_or_null("HUDInventory/ToolHotbar") as Control
+	_check(tool_holder != null, "tool holder must exist for first-person presentation")
+	_check(chest != null and left_leg != null and right_leg != null, "first-person body viewmodel must include torso and legs")
+	_check(chest != null and chest.layers == 2, "first-person chest must use viewmodel layer")
+	_check(hotbar != null and is_equal_approx(hotbar.anchor_left, 0.5) and is_equal_approx(hotbar.anchor_right, 0.5), "tool hotbar must be centered")
+	_check(player.has_method("play_tool_use"), "player must expose tool use presentation")
 	player.queue_free()
 
 func _test_resource_interaction_matrix() -> void:
