@@ -117,7 +117,8 @@ func _test_house_door_contract() -> void:
 
 
 func _test_starter_inventory_contract() -> void:
-	if not GameManager.get_loaded_save().is_empty():
+	var game_manager: Node = root.get_node_or_null("GameManager")
+	if game_manager and not game_manager.get_loaded_save().is_empty():
 		return
 	var player_scene := load("res://scenes/player.tscn") as PackedScene
 	var player := player_scene.instantiate()
