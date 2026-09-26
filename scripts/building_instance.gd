@@ -308,13 +308,14 @@ func _build_townhall() -> void:
     _mesh_box(Vector3(0.24, 0.22, 6.5), Vector3(3.55, 2.65, 0), wood)
     _mesh_box(Vector3(3.0, 4.2, 3.0), Vector3(0, 3.55, 0), stone_light)
 
-    # Four roof planes form a steep civic crown.
+    # Four roof planes form a compact hip roof. Each panel slopes toward the
+    # tower center; the overlap keeps the crown visually continuous from every side.
     var roof_angle := deg_to_rad(35.0)
-    var roof_y := 6.25
-    _mesh_box(Vector3(2.0, 0.22, 3.65), Vector3(-0.98, roof_y, 0), roof, Vector3(0, 0, roof_angle))
-    _mesh_box(Vector3(2.0, 0.22, 3.65), Vector3(0.98, roof_y, 0), roof, Vector3(0, 0, -roof_angle))
-    _mesh_box(Vector3(3.65, 0.22, 2.0), Vector3(0, roof_y, -0.98), roof_light, Vector3(roof_angle, 0, 0))
-    _mesh_box(Vector3(3.65, 0.22, 2.0), Vector3(0, roof_y, 0.98), roof_light, Vector3(-roof_angle, 0, 0))
+    var roof_y := 5.95
+    _mesh_box(Vector3(2.35, 0.20, 3.55), Vector3(-0.82, roof_y, 0), roof, Vector3(0, 0, roof_angle))
+    _mesh_box(Vector3(2.35, 0.20, 3.55), Vector3(0.82, roof_y, 0), roof, Vector3(0, 0, -roof_angle))
+    _mesh_box(Vector3(3.55, 0.20, 2.35), Vector3(0, roof_y, -0.82), roof_light, Vector3(roof_angle, 0, 0))
+    _mesh_box(Vector3(3.55, 0.20, 2.35), Vector3(0, roof_y, 0.82), roof_light, Vector3(-roof_angle, 0, 0))
 
     # Front civic entrance and steps.
     var front_z := -3.32
