@@ -12,9 +12,6 @@ const TOOL_IDS: Array[String] = ["I01_STONE_AXE", "I02_STONE_PICK"]
 static func is_valid(item_id: String) -> bool:
 	return item_id in ITEM_TYPES
 
-static func is_tool(item_id: String) -> bool:
-	return item_id in TOOL_IDS
-
 static func is_tool_for_resource(item_id: String, resource_type: String) -> bool:
 	match resource_type:
 		"Wood":
