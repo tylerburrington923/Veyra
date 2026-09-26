@@ -32,19 +32,14 @@ func interact() -> void:
     if not inventory:
         return
 
-    var required := tool_required
-    if required.is_empty():
-        required = "T00_HANDS"
-
-    # Tools are optional upgrades for the current beta loop. Hands can always
-    # gather basic resources; the matching crafted tool increases the yield.
+    # Basic resources are hand-gatherable. A matching crafted tool adds one
+    # unit of yield and consumes one durability point.
     var equipped_tool := "T00_HANDS"
     if player.has_method("get_tool_id"):
         equipped_tool = player.get_tool_id()
 
     var yield_amount := maxi(1, int(round(tool_efficiency)))
-    if _is_matching_tool(equipped_tool):
-        yield_amount = maxi(yield_amount + 1, 2)
+    yield_amount += VeyraItemCatalog.gathering_bonus(equipped_tool, resource_type)
     yield_amount = mini(yield_amount, remaining)
 
     if not inventory.has_method("add_resource"):
