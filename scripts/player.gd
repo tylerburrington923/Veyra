@@ -147,11 +147,11 @@ func _update_equipped_tool_visual() -> void:
 		pick_head.visible = selected_tool_id == "I02_STONE_PICK"
 	match selected_tool_id:
 		"I01_STONE_AXE":
-			tool_visual.rotation_degrees = Vector3(0, 0, -18)
-			tool_visual.scale = Vector3.ONE
+			tool_visual.rotation_degrees = Vector3(0, 0, -12)
+			tool_visual.scale = Vector3(0.82, 0.82, 0.82)
 		"I02_STONE_PICK":
-			tool_visual.rotation_degrees = Vector3(0, 0, 18)
-			tool_visual.scale = Vector3.ONE
+			tool_visual.rotation_degrees = Vector3(0, 0, 12)
+			tool_visual.scale = Vector3(0.82, 0.82, 0.82)
 		_:
 			tool_visual.visible = false
 
@@ -294,10 +294,10 @@ func _update_tool_animation(delta: float) -> void:
 	var lift := -62.0 * arc
 	var side := 18.0 * arc
 	tool_holder.rotation_degrees = _tool_base_rotation + Vector3(lift, side, -10.0 * arc)
-	tool_holder.position = Vector3(0.48, -0.56 - 0.05 * arc, -0.90 + 0.12 * arc)
+	tool_holder.position = Vector3(0.31 + 0.04 * arc, -0.70 - 0.04 * arc, -1.00 + 0.08 * arc)
 	if progress >= 1.0:
 		_tool_swing_active = false
-		tool_holder.position = Vector3(0.48, -0.56, -0.90)
+		tool_holder.position = Vector3(0.31, -0.70, -1.00)
 		tool_holder.rotation_degrees = _tool_base_rotation
 
 func _update_player_visuals(delta: float, direction: Vector3) -> void:
