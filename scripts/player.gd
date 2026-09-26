@@ -75,10 +75,12 @@ func get_tool_id() -> String:
 	return selected_tool_id
 
 func set_tool(tool_id: String) -> bool:
-	var next_tool := tool_id if tool_id != "" else "T00_HANDS"
-	if next_tool != "T00_HANDS":
+	var next_tool := tool_id if tool_id != "" else VeyraItemCatalog.HANDS_ID
+	if not VeyraItemCatalog.is_valid_tool(next_tool):
+		return false
+	if next_tool != VeyraItemCatalog.HANDS_ID:
 		var inventory := get_inventory()
-		if next_tool not in VeyraItemCatalog.TOOL_IDS or not inventory or not inventory.has_item(next_tool):
+		if not inventory or not inventory.has_item(next_tool):
 			return false
 	if next_tool == selected_tool_id:
 		return true
@@ -123,14 +125,14 @@ func load_save_state(state: Dictionary) -> void:
 	_update_equipped_tool_visual()
 
 func _update_equipped_tool_visual() -> void:
-	var tool_visual := get_node_or_null("Camera3D/ViewModel/RightHandFP/EquippedTool") as Node3D
+	var tool_visual := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool") as Node3D
 	if not tool_visual:
 		return
 	tool_visual.visible = selected_tool_id != "T00_HANDS"
 	if not tool_visual.visible:
 		return
-	var axe_head := get_node_or_null("Camera3D/ViewModel/RightHandFP/EquippedTool/AxeHead") as MeshInstance3D
-	var pick_head := get_node_or_null("Camera3D/ViewModel/RightHandFP/EquippedTool/PickHead") as MeshInstance3D
+	var axe_head := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeHead") as MeshInstance3D
+	var pick_head := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickHead") as MeshInstance3D
 	if axe_head:
 		axe_head.visible = selected_tool_id == "I01_STONE_AXE"
 	if pick_head:
