@@ -25,7 +25,7 @@ func save_current_game(world: Node) -> bool:
     if not player or not player.has_method("get_inventory"):
         return false
 
-    var inventory := player.get_inventory()
+    var inventory: VeyraInventory = player.get_inventory()
     if not inventory or not SaveManager:
         return false
 
