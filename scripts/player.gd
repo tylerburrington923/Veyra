@@ -54,6 +54,8 @@ var touch_start: Dictionary = {}
 @onready var torso: MeshInstance3D = get_node_or_null("Torso") as MeshInstance3D
 var walk_time: float = 0.0
 var _debug_hud_accumulator: float = 0.0
+signal tool_changed(tool_id: String, durability: float)
+
 var selected_tool_id: String = "T00_HANDS"
 var tool_durability: float = 100.0
 
@@ -71,6 +73,8 @@ func set_tool(tool_id: String) -> bool:
 		return true
 	selected_tool_id = next_tool
 	tool_durability = 100.0
+	tool_changed.emit(selected_tool_id, tool_durability)
+	_update_equipped_tool_visual()
 	return true
 
 func can_use_tool(durability_cost: float = 1.0) -> bool:
@@ -83,6 +87,8 @@ func use_tool(durability_cost: float = 1.0) -> bool:
 		tool_durability = maxf(0.0, tool_durability - maxf(0.0, durability_cost))
 		if tool_durability <= 0.0:
 			selected_tool_id = "T00_HANDS"
+		tool_changed.emit(selected_tool_id, tool_durability)
+		_update_equipped_tool_visual()
 	return true
 
 func get_save_state() -> Dictionary:
@@ -102,6 +108,28 @@ func load_save_state(state: Dictionary) -> void:
 	tool_durability = clampf(float(state.get("tool_durability", 100.0)), 0.0, 100.0)
 	if selected_tool_id == "T00_HANDS":
 		tool_durability = 100.0
+	tool_changed.emit(selected_tool_id, tool_durability)
+	_update_equipped_tool_visual()
+
+func _update_equipped_tool_visual() -> void:
+	var tool_visual := get_node_or_null("RightHand/EquippedTool") as MeshInstance3D
+	if not tool_visual:
+		return
+	tool_visual.visible = selected_tool_id != "T00_HANDS"
+	if not tool_visual.visible:
+		return
+	var tool_mesh := tool_visual.mesh as BoxMesh
+	if not tool_mesh:
+		return
+	match selected_tool_id:
+		"I01_STONE_AXE":
+			tool_mesh.size = Vector3(0.10, 0.62, 0.10)
+			tool_visual.rotation_degrees = Vector3(0, 0, -38)
+		"I02_STONE_PICK":
+			tool_mesh.size = Vector3(0.10, 0.62, 0.10)
+			tool_visual.rotation_degrees = Vector3(0, 0, 38)
+		_:
+			tool_visual.visible = false
 
 func get_inventory() -> VeyraInventory:
 	return get_node_or_null("Inventory") as VeyraInventory
@@ -133,6 +161,7 @@ func _ready() -> void:
 
 	_configure_camera()
 	_hide_joystick()
+	_update_equipped_tool_visual()
 
 
 func _configure_camera() -> void:
