@@ -221,7 +221,7 @@ func _has_line_of_sight(origin: Vector3, target: Vector3, player: Node3D, handle
 func _classify_target(node: Node) -> String:
 	if not node:
 		return "UNKNOWN"
-	if node.is_in_group("resource_node") or node is VeyraResourceNode:
+	if node.is_in_group("resource_node") or node.get_script() == RESOURCE_NODE_SCRIPT:
 		return "RESOURCE"
 	if node.is_in_group("anomaly"):
 		return "ANOMALY"
