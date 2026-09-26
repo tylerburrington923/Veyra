@@ -7,6 +7,7 @@ signal inventory_changed(snapshot: Dictionary, changed_type: String, changed_amo
 @export var max_weight: float = 120.0
 
 var resources: Dictionary = {}
+var items: Dictionary = {}
 var total_weight: float = 0.0
 
 func add_resource(resource_type: String, amount: int) -> int:
