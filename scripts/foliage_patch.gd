@@ -160,9 +160,9 @@ func _set_tree_visual(
 
 
 func _hidden_transform(original: Transform3D) -> Transform3D:
-	var hidden := original
-	hidden.origin.y -= 10000.0
-	return hidden
+    var hidden := original
+    hidden.origin.y -= 10000.0
+    return hidden
 
 
 func _create_multimesh(
