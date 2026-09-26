@@ -80,8 +80,10 @@ func _query_target() -> Dictionary:
         if not handler:
             continue
 
-        var target_position := (handler as Node3D).global_position if handler is Node3D else player.global_position
-        var distance := player.global_position.distance_to(target_position)
+        var handler_position: Vector3 = player.global_position
+        if handler is Node3D:
+            handler_position = (handler as Node3D).global_position
+        var distance: float = player.global_position.distance_to(handler_position)
         if distance < best_distance:
             best_distance = distance
             best = hit.duplicate(true)
@@ -100,7 +102,12 @@ func try_interact() -> void:
 
     var target := hit.get("collider") as Node
     var handler := hit.get("handler") as Node
-    var collision_point: Vector3 = hit.get("position", (handler.global_position if handler is Node3D else Vector3.ZERO))
+    var collision_point: Vector3 = Vector3.ZERO
+    var raw_position: Variant = hit.get("position", null)
+    if raw_position is Vector3:
+        collision_point = raw_position
+    elif handler is Node3D:
+        collision_point = (handler as Node3D).global_position
     if not handler:
         _set_target_state("UNKNOWN", target.name if target else "", "", collision_point)
         return
@@ -123,12 +130,21 @@ func _update_target_debug() -> void:
         return
 
     var handler := hit.get("handler") as Node
-    var collision_point: Vector3 = hit.get("position", Vector3.ZERO)
+    var collision_point: Vector3 = Vector3.ZERO
+    var raw_position: Variant = hit.get("position", null)
+    if raw_position is Vector3:
+        collision_point = raw_position
+    elif handler is Node3D:
+        collision_point = (handler as Node3D).global_position
     if not handler:
         _set_target_state("UNKNOWN", "", "", collision_point)
         return
 
-    var action := "interact()" if handler.has_method("interact") else "resonate()" if handler.has_method("resonate") else ""
+    var action: String = ""
+    if handler.has_method("interact"):
+        action = "interact()"
+    elif handler.has_method("resonate"):
+        action = "resonate()"
     _set_target_state(_classify_target(handler), handler.name, action, collision_point)
 
 
