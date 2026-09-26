@@ -168,7 +168,16 @@ func _update_player_visuals(delta: float, direction: Vector3) -> void:
 func _update_debug_hud(input_vector: Vector2) -> void:
 	if not debug_hud:
 		return
-	debug_hud.text = "MOVE: %.2f, %.2f | GROUND: %s | Y: %.1f | VY: %.1f" % [
+	var world := get_parent()
+	var lunar_text := "MOON: --"
+	var seed_text := "SEED: --"
+	if world and world.has_method("get_lunar_state"):
+		var lunar: Dictionary = world.get_lunar_state()
+		lunar_text = "MOON: %s" % str(lunar.get("phase_name", "--"))
+		seed_text = "SEED: VE-%05d" % int(lunar.get("world_seed", 0))
+	debug_hud.text = "%s | %s | MOVE: %.2f, %.2f | GROUND: %s | Y: %.1f | VY: %.1f" % [
+		seed_text,
+		lunar_text,
 		input_vector.x,
 		input_vector.y,
 		"YES" if is_on_floor() else "NO",
