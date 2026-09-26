@@ -161,7 +161,12 @@ func _set_tree_visual(
     var trunk_target := trunk_transform if active else _hidden_transform(trunk_transform)
     var leaf_target := leaf_transform if active else _hidden_transform(leaf_transform)
 
-    if index >= 0 and index < _tree_visual_active.size():
+    if index >= 0:
+        var required_size := index + 1
+        if _tree_visual_active.size() < required_size:
+            _tree_visual_active.resize(required_size)
+            _tree_trunk_visual_transforms.resize(required_size)
+            _tree_leaf_visual_transforms.resize(required_size)
         _tree_visual_active[index] = active
         _tree_trunk_visual_transforms[index] = trunk_target
         _tree_leaf_visual_transforms[index] = leaf_target
