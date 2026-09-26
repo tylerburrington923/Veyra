@@ -16,8 +16,11 @@ func save_world(world: Node, inventory: Dictionary, settlement: Dictionary = {})
     }
     var json := JSON.stringify(payload)
 
-    if not _write_file(BACKUP_PATH, json):
-        return false
+    if FileAccess.file_exists(SAVE_PATH):
+        var current := _read_text_file(SAVE_PATH)
+        if not current.is_empty() and not _write_file(BACKUP_PATH, current):
+            return false
+
     return _write_file(SAVE_PATH, json)
 
 func load_world() -> Dictionary:
@@ -51,14 +54,21 @@ func _write_file(path: String, json: String) -> bool:
     file.close()
     return true
 
-func _read_file(path: String) -> Dictionary:
+func _read_text_file(path: String) -> String:
     if not FileAccess.file_exists(path):
-        return {}
+        return ""
     var file := FileAccess.open(path, FileAccess.READ)
     if file == null:
-        return {}
-    var parsed = JSON.parse_string(file.get_as_text())
+        return ""
+    var text := file.get_as_text()
     file.close()
+    return text
+
+func _read_file(path: String) -> Dictionary:
+    var text := _read_text_file(path)
+    if text.is_empty():
+        return {}
+    var parsed = JSON.parse_string(text)
     return parsed if parsed is Dictionary else {}
 
 func _sanitize_inventory(inventory: Dictionary) -> Dictionary:
