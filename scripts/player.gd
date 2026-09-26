@@ -62,12 +62,14 @@ func get_tool_id() -> String:
 func set_tool(tool_id: String) -> void:
 	selected_tool_id = tool_id if tool_id != "" else "T00_HANDS"
 
+func can_use_tool(durability_cost: float = 1.0) -> bool:
+	return selected_tool_id == "T00_HANDS" or (tool_durability > 0.0 and durability_cost >= 0.0)
+
 func use_tool(durability_cost: float = 1.0) -> bool:
-	if selected_tool_id == "T00_HANDS":
-		return true
-	if tool_durability <= 0.0:
+	if not can_use_tool(durability_cost):
 		return false
-	tool_durability = maxf(0.0, tool_durability - maxf(0.0, durability_cost))
+	if selected_tool_id != "T00_HANDS":
+		tool_durability = maxf(0.0, tool_durability - maxf(0.0, durability_cost))
 	return true
 
 func get_inventory() -> VeyraInventory:
