@@ -127,7 +127,7 @@ func _create_tree_collision(transforms: Array[Transform3D]) -> void:
 		return
 	collision_body = StaticBody3D.new()
 	collision_body.name = "TreeCollision"
-	collision_body.collision_layer = 1
+	collision_body.collision_layer = 2
 	collision_body.collision_mask = 1
 	add_child(collision_body)
 	var shape := CylinderShape3D.new()
