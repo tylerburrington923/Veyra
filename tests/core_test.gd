@@ -25,10 +25,11 @@ func _run_tests() -> void:
 	_test_full_game_skeleton_contracts()
 	_test_tree_harvest_visual_contract()
 	_test_house_door_contract()
+	_test_house_geometry_contract()
 	_test_starter_inventory_contract()
 	_test_mobile_action_layout_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (20 suites)")
+		print("VEYRA CORE TESTS: PASS (21 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -117,6 +118,26 @@ func _test_house_door_contract() -> void:
 	house.interact()
 	_check(not house.door_open, "house door must close on second interaction")
 	_check(door_collision != null and not door_collision.disabled, "closed house door must restore collision")
+	house.queue_free()
+
+
+func _test_house_geometry_contract() -> void:
+	var house := VeyraBuildingInstance.new()
+	root.add_child(house)
+	house.setup("TEST-HOUSE-GEOMETRY", "B03_SHELTER", Vector3.ZERO)
+
+	var left_roof := house.get_node_or_null("RoofLeft") as MeshInstance3D
+	var right_roof := house.get_node_or_null("RoofRight") as MeshInstance3D
+	var back_wall := house.get_node_or_null("BackWallCollision") as CollisionShape3D
+	_check(left_roof != null and right_roof != null, "house roof panels must exist")
+	_check(left_roof != null and absf(left_roof.rotation.x) < 0.001, "left roof must slope around Z, not X")
+	_check(right_roof != null and absf(right_roof.rotation.x) < 0.001, "right roof must slope around Z, not X")
+	_check(left_roof != null and left_roof.rotation.z > 0.3, "left roof must slope up toward the ridge")
+	_check(right_roof != null and right_roof.rotation.z < -0.3, "right roof must slope up toward the ridge")
+	_check(back_wall != null, "house must have an explicit back wall collision")
+	if back_wall:
+		_check(not back_wall.disabled, "house back wall collision must be enabled")
+		_check(back_wall.position.z > 2.0, "house back wall collision must sit on the rear wall")
 	house.queue_free()
 
 
