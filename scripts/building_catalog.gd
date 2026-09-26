@@ -1,0 +1,41 @@
+extends RefCounted
+class_name VeyraBuildingCatalog
+
+const BUILDINGS := {
+	"B01_CAMPFIRE": {
+		"id": "B01_CAMPFIRE",
+		"name": "Campfire",
+		"size": Vector2(2.0, 2.0),
+		"cost": {"Stone": 4, "Wood": 4}
+	},
+	"B02_STORAGE": {
+		"id": "B02_STORAGE",
+		"name": "Storage Crate",
+		"size": Vector2(2.0, 2.0),
+		"cost": {"Wood": 12, "Stone": 4}
+	},
+	"B03_SHELTER": {
+		"id": "B03_SHELTER",
+		"name": "Shelter",
+		"size": Vector2(5.0, 4.0),
+		"cost": {"Wood": 40, "Stone": 10}
+	},
+	"B04_WELL": {
+		"id": "B04_WELL",
+		"name": "Well",
+		"size": Vector2(3.0, 3.0),
+		"cost": {"Stone": 20, "Wood": 10}
+	}
+}
+
+static func exists(building_id: String) -> bool:
+	return BUILDINGS.has(building_id)
+
+static func get_building(building_id: String) -> Dictionary:
+	return BUILDINGS.get(building_id, {}).duplicate(true)
+
+static func all_building_ids() -> Array[String]:
+	var result: Array[String] = []
+	for key in BUILDINGS.keys():
+		result.append(str(key))
+	return result
