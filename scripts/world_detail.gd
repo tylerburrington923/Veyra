@@ -56,8 +56,8 @@ func _generate() -> void:
 			)
 		)
 
-	_create_multimesh("Rocks", rock_mesh, rock_material, rock_transforms)
-	_create_harvest_nodes("SMALL_STONE", rock_transforms, "Stone", "T00_HANDS", 1, 0.0)
+	var rock_instances := _create_multimesh("Rocks", rock_mesh, rock_material, rock_transforms)
+	_create_harvest_nodes("SMALL_STONE", rock_transforms, "Stone", "T00_HANDS", 1, 0.0, rock_instances)
 
 	var crystal_mesh := PrismMesh.new()
 	crystal_mesh.size = Vector3(0.65, 1.6, 0.65)
@@ -88,19 +88,19 @@ func _generate() -> void:
 			)
 		)
 
-	_create_multimesh(
+	var crystal_instances := _create_multimesh(
 		"Minerals",
 		crystal_mesh,
 		crystal_material,
 		crystal_transforms
 	)
-	_create_harvest_nodes("PURPLE_LUX", crystal_transforms, "Vitreous Lux", "I02_STONE_PICK", 1, 1.0)
+	_create_harvest_nodes("PURPLE_LUX", crystal_transforms, "Vitreous Lux", "I02_STONE_PICK", 1, 1.0, crystal_instances)
 
 
 	_make_water()
 
 
-func _create_harvest_nodes(prefix: String, transforms: Array[Transform3D], resource_type: String, required_tool: String, amount: int, durability_cost: float) -> void:
+func _create_harvest_nodes(prefix: String, transforms: Array[Transform3D], resource_type: String, required_tool: String, amount: int, durability_cost: float, visual_instance: MultiMeshInstance3D) -> void:
 	if not terrain or transforms.is_empty():
 		return
 	for i in range(transforms.size()):
@@ -125,18 +125,32 @@ func _create_harvest_nodes(prefix: String, transforms: Array[Transform3D], resou
 		collision.shape = shape
 		node.add_child(collision)
 		terrain.add_child(node)
+		var original_transform := transforms[i]
+		if visual_instance:
+			node.set_visual_controller(func(active: bool) -> void:
+				_set_harvest_visual(visual_instance, i, original_transform, active)
+			)
 		var saved_state: Dictionary = terrain.saved_resource_state
 		if saved_state.has(node.resource_id):
 			node.apply_save_state(saved_state[node.resource_id])
 
+
+func _set_harvest_visual(instance: MultiMeshInstance3D, index: int, original_transform: Transform3D, active: bool) -> void:
+	if not is_instance_valid(instance) or instance.multimesh == null:
+		return
+	if active:
+		instance.multimesh.set_instance_transform(index, original_transform)
+	else:
+		instance.multimesh.set_instance_transform(index, Transform3D(Basis.IDENTITY.scaled(Vector3.ZERO), original_transform.origin))
 
 func _create_multimesh(
 	node_name: String,
 	mesh: Mesh,
 	material: StandardMaterial3D,
 	transforms: Array[Transform3D]
-) -> void:
+) -> MultiMeshInstance3D:
 	if transforms.is_empty():
+		return null
 		return
 
 	var instance := MultiMeshInstance3D.new()
@@ -153,6 +167,7 @@ func _create_multimesh(
 	instance.multimesh = multimesh
 	instance.material_override = material
 	add_child(instance)
+	return instance
 
 
 func _ground_height(x: float, z: float) -> float:
