@@ -9,7 +9,6 @@ extends Node3D
 
 var world_time: float = 0.0
 var world_seed: int = 47291
-var has_loaded_save := false
 
 @onready var lunar_cycle: VeyraLunarCycle = get_node_or_null("LunarCycle") as VeyraLunarCycle
 
@@ -54,7 +53,6 @@ func _apply_loaded_state(save_data: Dictionary) -> void:
         if inventory:
             inventory.load_snapshot(inventory_state)
 
-    has_loaded_save = true
 
 
 func _apply_seed_to_generators() -> void:
