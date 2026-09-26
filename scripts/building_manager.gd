@@ -36,6 +36,7 @@ func cancel_placement() -> void:
 	selected_building_id = ""
 	placement_active = false
 	placement_valid = false
+	placement_location_valid = false
 	_clear_preview()
 	placement_changed.emit("", false, placement_position)
 
@@ -84,8 +85,6 @@ func evaluate_placement(player: Node3D, position: Vector3, inventory: VeyraInven
 	placement_location_valid = _is_space_clear(placement_position, definition.get("size", Vector2.ONE), player)
 	placement_valid = placement_location_valid and has_required_materials(inventory)
 	_update_preview(placement_location_valid)
-	placement_changed.emit(selected_building_id, placement_valid, placement_position)
-	return placement_valid
 	placement_changed.emit(selected_building_id, placement_valid, placement_position)
 	return placement_valid
 
