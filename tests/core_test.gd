@@ -208,6 +208,8 @@ func _test_hand_gathered_wood_contract() -> void:
 	var player_scene := load("res://scenes/player.tscn") as PackedScene
 	var player := player_scene.instantiate()
 	root.add_child(player)
+	var inventory: VeyraInventory = player.get_inventory()
+	inventory.add_item("I01_STONE_AXE", 1)
 
 	var resource_scene := load("res://scenes/resource_node.tscn") as PackedScene
 	var wood := resource_scene.instantiate()
