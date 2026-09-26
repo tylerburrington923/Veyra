@@ -38,4 +38,5 @@ static func all_building_ids() -> Array[String]:
 	var result: Array[String] = []
 	for key in BUILDINGS.keys():
 		result.append(str(key))
+	result.sort()
 	return result
