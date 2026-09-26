@@ -63,10 +63,10 @@ func get_tool_id() -> String:
 
 func set_tool(tool_id: String) -> bool:
 	var next_tool := tool_id if tool_id != "" else "T00_HANDS"
-	if next_tool != "T00_HANDS" and not VeyraItemCatalog.is_valid(next_tool):
-		return false
-	if next_tool != "T00_HANDS" and next_tool not in ["I01_STONE_AXE", "I02_STONE_PICK"]:
-		return false
+	if next_tool != "T00_HANDS":
+		var inventory := get_inventory()
+		if not VeyraItemCatalog.is_tool(next_tool) or not inventory or not inventory.has_item(next_tool):
+			return false
 	if next_tool == selected_tool_id:
 		return true
 	selected_tool_id = next_tool
