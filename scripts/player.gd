@@ -140,18 +140,29 @@ func _update_equipped_tool_visual() -> void:
 	if not tool_visual.visible:
 		return
 	var axe_head := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeHead") as MeshInstance3D
+	var axe_blade := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeBlade") as MeshInstance3D
 	var pick_head := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickHead") as MeshInstance3D
+	var pick_spike_left := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickSpikeLeft") as MeshInstance3D
+	var pick_spike_right := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickSpikeRight") as MeshInstance3D
+	var axe_equipped := selected_tool_id == "I01_STONE_AXE"
+	var pick_equipped := selected_tool_id == "I02_STONE_PICK"
 	if axe_head:
-		axe_head.visible = selected_tool_id == "I01_STONE_AXE"
+		axe_head.visible = axe_equipped
+	if axe_blade:
+		axe_blade.visible = axe_equipped
 	if pick_head:
-		pick_head.visible = selected_tool_id == "I02_STONE_PICK"
+		pick_head.visible = pick_equipped
+	if pick_spike_left:
+		pick_spike_left.visible = pick_equipped
+	if pick_spike_right:
+		pick_spike_right.visible = pick_equipped
 	match selected_tool_id:
 		"I01_STONE_AXE":
-			tool_visual.rotation_degrees = Vector3(0, 0, -18)
-			tool_visual.scale = Vector3.ONE
+			tool_visual.rotation_degrees = Vector3(0, 0, -12)
+			tool_visual.scale = Vector3(0.72, 0.72, 0.72)
 		"I02_STONE_PICK":
-			tool_visual.rotation_degrees = Vector3(0, 0, 18)
-			tool_visual.scale = Vector3.ONE
+			tool_visual.rotation_degrees = Vector3(0, 0, 12)
+			tool_visual.scale = Vector3(0.82, 0.82, 0.82)
 		_:
 			tool_visual.visible = false
 
@@ -166,13 +177,13 @@ func add_resource(resource_type: String, amount: int) -> void:
 
 func _ready() -> void:
 	add_to_group("local_player")
-	# Give a brand-new save a tiny starter cache so the beta loop is testable
+	# Give a brand-new save a generous starter cache so the beta loop is testable
 	# immediately. Loaded saves are left untouched.
 	if GameManager and GameManager.get_loaded_save().is_empty():
 		var starter_inventory := get_inventory()
 		if starter_inventory:
-			starter_inventory.add_resource("Wood", 3)
-			starter_inventory.add_resource("Stone", 2)
+			starter_inventory.add_resource("Wood", 100)
+			starter_inventory.add_resource("Stone", 100)
 	up_direction = Vector3.UP
 	floor_snap_length = ground_snap_distance
 	floor_max_angle = deg_to_rad(max_floor_angle_degrees)
@@ -294,10 +305,10 @@ func _update_tool_animation(delta: float) -> void:
 	var lift := -62.0 * arc
 	var side := 18.0 * arc
 	tool_holder.rotation_degrees = _tool_base_rotation + Vector3(lift, side, -10.0 * arc)
-	tool_holder.position = Vector3(0.48, -0.56 - 0.05 * arc, -0.90 + 0.12 * arc)
+	tool_holder.position = Vector3(0.25 + 0.035 * arc, -0.73 - 0.035 * arc, -1.02 + 0.07 * arc)
 	if progress >= 1.0:
 		_tool_swing_active = false
-		tool_holder.position = Vector3(0.48, -0.56, -0.90)
+		tool_holder.position = Vector3(0.25, -0.73, -1.02)
 		tool_holder.rotation_degrees = _tool_base_rotation
 
 func _update_player_visuals(delta: float, direction: Vector3) -> void:

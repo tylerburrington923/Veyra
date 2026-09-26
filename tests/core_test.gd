@@ -23,13 +23,171 @@ func _run_tests() -> void:
 	_test_npc_simulation_layer()
 	_test_npc_simulation_definition_separation()
 	_test_full_game_skeleton_contracts()
+	_test_tree_harvest_visual_contract()
+	_test_house_door_contract()
+	_test_house_geometry_contract()
+	_test_townhall_contract()
+	_test_starter_inventory_contract()
+	_test_mobile_action_layout_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (16 suites)")
+		print("VEYRA CORE TESTS: PASS (22 suites)")
 		quit(0)
 	else:
 		for failure in failures:
 			push_error("VEYRA CORE TEST FAILURE: " + failure)
 		quit(1)
+
+
+func _test_tree_harvest_visual_contract() -> void:
+	var foliage_script := load("res://scripts/foliage_patch.gd")
+	var foliage: Node3D = foliage_script.new()
+	root.add_child(foliage)
+
+	var mesh := BoxMesh.new()
+	var trunk := MultiMeshInstance3D.new()
+	var trunk_mm := MultiMesh.new()
+	trunk_mm.transform_format = MultiMesh.TRANSFORM_3D
+	trunk_mm.mesh = mesh
+	trunk_mm.instance_count = 1
+	trunk_mm.set_instance_transform(0, Transform3D(Basis.IDENTITY, Vector3(0, 1, 0)))
+	trunk.multimesh = trunk_mm
+	root.add_child(trunk)
+
+	var canopy := MultiMeshInstance3D.new()
+	var canopy_mm := MultiMesh.new()
+	canopy_mm.transform_format = MultiMesh.TRANSFORM_3D
+	canopy_mm.mesh = mesh
+	canopy_mm.instance_count = 1
+	canopy_mm.set_instance_transform(0, Transform3D(Basis.IDENTITY, Vector3(0, 2, 0)))
+	canopy.multimesh = canopy_mm
+	root.add_child(canopy)
+
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3.ONE
+	collision.shape = shape
+	root.add_child(collision)
+
+	foliage._set_tree_visual(
+		trunk,
+		canopy,
+		collision,
+		0,
+		Transform3D(Basis.IDENTITY, Vector3(0, 1, 0)),
+		Transform3D(Basis.IDENTITY, Vector3(0, 2, 0)),
+		false
+	)
+	var depleted_state: Dictionary = foliage.get_tree_visual_state(0)
+	_check(not bool(depleted_state.get("active", true)), "depleted tree visual state must be inactive")
+	_check(float((depleted_state.get("trunk_transform", Transform3D())).origin.y) < -9999.0, "depleted tree trunk visual state must hide")
+	_check(float((depleted_state.get("leaf_transform", Transform3D())).origin.y) < -9999.0, "depleted tree canopy visual state must hide")
+	_check(collision.disabled, "depleted tree collision must disable")
+
+	foliage._set_tree_visual(
+		trunk,
+		canopy,
+		collision,
+		0,
+		Transform3D(Basis.IDENTITY, Vector3(0, 1, 0)),
+		Transform3D(Basis.IDENTITY, Vector3(0, 2, 0)),
+		true
+	)
+	var restored_state: Dictionary = foliage.get_tree_visual_state(0)
+	_check(bool(restored_state.get("active", false)), "respawned tree visual state must be active")
+	_check(absf(float((restored_state.get("trunk_transform", Transform3D())).origin.y) - 1.0) < 0.001, "respawned tree trunk visual state must restore")
+	_check(absf(float((restored_state.get("leaf_transform", Transform3D())).origin.y) - 2.0) < 0.001, "respawned tree canopy visual state must restore")
+	_check(not collision.disabled, "respawned tree collision must restore")
+
+	foliage.queue_free()
+	trunk.queue_free()
+	canopy.queue_free()
+	collision.queue_free()
+
+
+func _test_house_door_contract() -> void:
+	_check(VeyraBuildingCatalog.get_building("B03_SHELTER").get("name", "") == "House", "shelter display name must be House")
+	var house := VeyraBuildingInstance.new()
+	root.add_child(house)
+	house.setup("TEST-HOUSE", "B03_SHELTER", Vector3.ZERO)
+	_check(house.can_interact(null), "house door must be interactable")
+	_check(not house.door_open, "house door must start closed")
+	var door_collision: CollisionShape3D = house._door_collision
+	_check(door_collision != null and not door_collision.disabled, "closed house door must block the doorway")
+	house.interact()
+	_check(house.door_open, "house door must open on interaction")
+	_check(door_collision != null and door_collision.disabled, "open house door must clear its collision")
+	house.interact()
+	_check(not house.door_open, "house door must close on second interaction")
+	_check(door_collision != null and not door_collision.disabled, "closed house door must restore collision")
+	house.queue_free()
+
+
+func _test_house_geometry_contract() -> void:
+	var house := VeyraBuildingInstance.new()
+	root.add_child(house)
+	house.setup("TEST-HOUSE-GEOMETRY", "B03_SHELTER", Vector3.ZERO)
+
+	var left_roof := house.get_node_or_null("RoofLeft") as MeshInstance3D
+	var right_roof := house.get_node_or_null("RoofRight") as MeshInstance3D
+	var back_wall := house.get_node_or_null("BackWallCollision") as CollisionShape3D
+	_check(left_roof != null and right_roof != null, "house roof panels must exist")
+	_check(left_roof != null and absf(left_roof.rotation.x) < 0.001, "left roof must slope around Z, not X")
+	_check(right_roof != null and absf(right_roof.rotation.x) < 0.001, "right roof must slope around Z, not X")
+	_check(left_roof != null and left_roof.rotation.z > 0.3, "left roof must slope up toward the ridge")
+	_check(right_roof != null and right_roof.rotation.z < -0.3, "right roof must slope up toward the ridge")
+	_check(back_wall != null, "house must have an explicit back wall collision")
+	if back_wall:
+		_check(not back_wall.disabled, "house back wall collision must be enabled")
+		_check(back_wall.position.z > 2.0, "house back wall collision must sit on the rear wall")
+	house.queue_free()
+
+
+func _test_townhall_contract() -> void:
+	var definition := VeyraBuildingCatalog.get_building("B05_TOWNHALL")
+	_check(not definition.is_empty(), "town hall catalog entry must exist")
+	_check(str(definition.get("name", "")) == "Town Hall", "town hall display name must be Town Hall")
+	_check(definition.get("size", Vector2.ZERO) == Vector2(8.0, 7.0), "town hall footprint must be 8x7")
+	_check(int(definition.get("cost", {}).get("Wood", 0)) == 60, "town hall wood cost must be 60")
+	_check(int(definition.get("cost", {}).get("Stone", 0)) == 40, "town hall stone cost must be 40")
+
+	var hall := VeyraBuildingInstance.new()
+	root.add_child(hall)
+	hall.setup("TEST-TOWNHALL", "B05_TOWNHALL", Vector3.ZERO)
+	var collision_count := 0
+	for child in hall.get_children():
+		if child is CollisionShape3D:
+			collision_count += 1
+	_check(collision_count >= 2, "town hall must have solid collision")
+	_check(hall.get_child_count() >= 10, "town hall must have a substantial civic visual assembly")
+	hall.queue_free()
+
+
+func _test_starter_inventory_contract() -> void:
+	var game_manager: Node = root.get_node_or_null("GameManager")
+	if game_manager and not game_manager.get_loaded_save().is_empty():
+		return
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var inventory: VeyraInventory = player.get_inventory()
+	_check(inventory.get_amount("Wood") == 100, "new player must start with 100 wood")
+	_check(inventory.get_amount("Stone") == 100, "new player must start with 100 stone")
+	player.queue_free()
+
+
+func _test_mobile_action_layout_contract() -> void:
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var jump_button := player.get_node_or_null("MobileControls/JumpButton") as Button
+	var use_button := player.get_node_or_null("MobileControls/InteractButton") as Button
+	var craft_ui := player.get_node_or_null("CraftBuildUI") as VeyraCraftBuildUI
+	var craft_button: Button = craft_ui.crafting_button if craft_ui else null
+	_check(jump_button != null and use_button != null and craft_button != null, "mobile action controls must exist")
+	if jump_button and use_button and craft_button:
+		_check(not craft_button.get_global_rect().intersects(jump_button.get_global_rect()), "crafting button must not overlap jump button")
+		_check(not craft_button.get_global_rect().intersects(use_button.get_global_rect()), "crafting button must not overlap use button")
+	player.queue_free()
 
 func _check(condition: bool, message: String) -> void:
 	if not condition:

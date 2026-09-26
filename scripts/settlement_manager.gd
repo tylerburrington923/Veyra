@@ -33,8 +33,18 @@ func add_building(building_id: String, building_type: String, position: Vector3)
         "id": building_id,
         "type": building_type,
         "position": [position.x, position.y, position.z],
-        "condition": 1.0
+        "condition": 1.0,
+        "door_open": false
     }
+    settlement_changed.emit()
+    return true
+
+func set_building_door_state(building_id: String, open: bool) -> bool:
+    if not buildings.has(building_id):
+        return false
+    var record: Dictionary = buildings[building_id]
+    record["door_open"] = open
+    buildings[building_id] = record
     settlement_changed.emit()
     return true
 

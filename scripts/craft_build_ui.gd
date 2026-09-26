@@ -140,8 +140,8 @@ func _build_ui() -> void:
 	crafting_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	crafting_button.offset_left = -178
 	crafting_button.offset_right = -18
-	crafting_button.offset_top = -126
-	crafting_button.offset_bottom = -72
+	crafting_button.offset_top = -190
+	crafting_button.offset_bottom = -140
 	crafting_button.pressed.connect(_toggle_panel)
 	add_child(crafting_button)
 

@@ -5,19 +5,19 @@ const BUILDINGS := {
 	"B01_CAMPFIRE": {
 		"id": "B01_CAMPFIRE",
 		"name": "Campfire",
-		"size": Vector2(2.0, 2.0),
+		"size": Vector2(2.4, 2.4),
 		"cost": {"Stone": 4, "Wood": 4}
 	},
 	"B02_STORAGE": {
 		"id": "B02_STORAGE",
 		"name": "Storage Crate",
-		"size": Vector2(2.0, 2.0),
+		"size": Vector2(2.2, 2.0),
 		"cost": {"Wood": 12, "Stone": 4}
 	},
 	"B03_SHELTER": {
 		"id": "B03_SHELTER",
-		"name": "Shelter",
-		"size": Vector2(5.0, 4.0),
+		"name": "House",
+		"size": Vector2(5.8, 4.8),
 		"cost": {"Wood": 40, "Stone": 10}
 	},
 	"B04_WELL": {
@@ -25,6 +25,12 @@ const BUILDINGS := {
 		"name": "Well",
 		"size": Vector2(3.0, 3.0),
 		"cost": {"Stone": 20, "Wood": 10}
+	},
+	"B05_TOWNHALL": {
+		"id": "B05_TOWNHALL",
+		"name": "Town Hall",
+		"size": Vector2(8.0, 7.0),
+		"cost": {"Wood": 60, "Stone": 40}
 	}
 }
 

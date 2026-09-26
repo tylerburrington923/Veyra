@@ -4,7 +4,7 @@ class_name VeyraInventory
 signal inventory_changed(snapshot: Dictionary, changed_type: String, changed_amount: int)
 
 @export var max_slots: int = 24
-@export var max_weight: float = 120.0
+@export var max_weight: float = 400.0 # Temporary alpha testing capacity for the 100 Wood + 100 Stone starter cache.
 
 var resources: Dictionary = {}
 var items: Dictionary = {}

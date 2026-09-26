@@ -53,10 +53,9 @@ func _state_position(data: Dictionary) -> Vector3:
 		float(data.get("z", 0.0))
 	)
 
-func _state_rotation(data: Dictionary) -> Quaternion:
-	var euler := Vector3(
+func _state_rotation(data: Dictionary) -> Vector3:
+	return Vector3(
 		float(data.get("x", 0.0)),
 		float(data.get("y", 0.0)),
 		float(data.get("z", 0.0))
 	)
-	return Quaternion.from_euler(euler)
