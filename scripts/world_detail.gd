@@ -126,9 +126,10 @@ func _create_harvest_nodes(prefix: String, transforms: Array[Transform3D], resou
 		node.add_child(collision)
 		terrain.add_child(node)
 		var original_transform := transforms[i]
+		var visual_index := i
 		if visual_instance:
 			node.set_visual_controller(func(active: bool) -> void:
-				_set_harvest_visual(visual_instance, i, original_transform, active)
+				_set_harvest_visual(visual_instance, visual_index, original_transform, active)
 			)
 		var saved_state: Dictionary = terrain.saved_resource_state
 		if saved_state.has(node.resource_id):
@@ -151,7 +152,6 @@ func _create_multimesh(
 ) -> MultiMeshInstance3D:
 	if transforms.is_empty():
 		return null
-		return
 
 	var instance := MultiMeshInstance3D.new()
 	instance.name = node_name
@@ -182,8 +182,8 @@ func _make_water() -> void:
 
 	var mesh := PlaneMesh.new()
 	mesh.size = Vector2(32, 20)
-	mesh.subdivide_width = 2
-	mesh.subdivide_depth = 2
+	mesh.subdivide_width = 12
+	mesh.subdivide_depth = 8
 	water.mesh = mesh
 	water.position = Vector3(
 		28.0,
@@ -191,11 +191,32 @@ func _make_water() -> void:
 		18.0
 	)
 
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.10, 0.25, 0.29, 0.72)
-	material.metallic = 0.05
-	material.roughness = 0.22
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	var material := ShaderMaterial.new()
+	var shader := Shader.new()
+	shader.code = """
+shader_type spatial;
+render_mode blend_mix, depth_draw_alpha_prepass, cull_disabled;
+
+uniform vec4 deep_color : source_color = vec4(0.035, 0.20, 0.24, 0.88);
+uniform vec4 shallow_color : source_color = vec4(0.12, 0.42, 0.45, 0.82);
+
+void vertex() {
+	float wave_a = sin(VERTEX.x * 0.55 + TIME * 0.9) * 0.055;
+	float wave_b = cos(VERTEX.z * 0.72 + TIME * 0.65) * 0.04;
+	VERTEX.y += wave_a + wave_b;
+}
+
+void fragment() {
+	float wave = 0.5 + 0.5 * sin(UV.x * 18.0 + UV.y * 9.0 + TIME * 0.7);
+	vec3 surface = mix(deep_color.rgb, shallow_color.rgb, wave * 0.28);
+	float edge = pow(1.0 - max(dot(NORMAL, VIEW), 0.0), 2.0);
+	ALBEDO = mix(surface, vec3(0.55, 0.80, 0.78), edge * 0.18);
+	ROUGHNESS = 0.16;
+	METALLIC = 0.05;
+	ALPHA = mix(deep_color.a, shallow_color.a, wave * 0.2);
+}
+"""
+	material.shader = shader
 	water.material_override = material
 
 	add_child(water)
