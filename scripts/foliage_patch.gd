@@ -145,18 +145,31 @@ func _set_tree_visual(
     leaf_transform: Transform3D,
     active: bool
 ) -> void:
-    if is_instance_valid(trunk_instances) and trunk_instances.multimesh:
-        trunk_instances.multimesh.set_instance_transform(
-            index,
-            trunk_transform if active else _hidden_transform(trunk_transform)
-        )
-    if is_instance_valid(leaf_instances) and leaf_instances.multimesh:
-        leaf_instances.multimesh.set_instance_transform(
-            index,
-            leaf_transform if active else _hidden_transform(leaf_transform)
-        )
+    var trunk_target := trunk_transform if active else _hidden_transform(trunk_transform)
+    var leaf_target := leaf_transform if active else _hidden_transform(leaf_transform)
+
+    _set_multimesh_instance_transform(trunk_instances, index, trunk_target)
+    _set_multimesh_instance_transform(leaf_instances, index, leaf_target)
+
     if is_instance_valid(tree_collision):
         tree_collision.disabled = not active
+
+
+func _set_multimesh_instance_transform(instance: MultiMeshInstance3D, index: int, transform: Transform3D) -> void:
+    if not is_instance_valid(instance) or instance.multimesh == null:
+        return
+    if index < 0 or index >= instance.multimesh.instance_count:
+        return
+
+    # Update the authoritative MultiMesh resource and the RenderingServer RID.
+    # The latter avoids renderer-side stale instance data on headless/mobile paths.
+    instance.multimesh.set_instance_transform(index, transform)
+    RenderingServer.multimesh_instance_set_transform(
+        instance.multimesh.get_rid(),
+        index,
+        transform
+    )
+    instance.multimesh.emit_changed()
 
 
 func _hidden_transform(original: Transform3D) -> Transform3D:
