@@ -12,6 +12,7 @@ const GRID_SIZE := 1.0
 var selected_building_id: String = ""
 var placement_position := Vector3.ZERO
 var placement_valid := false
+var placement_location_valid := false
 var placement_active := false
 var preview: MeshInstance3D
 var building_root: Node3D
