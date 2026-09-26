@@ -47,6 +47,9 @@ var touch_start: Dictionary = {}
 @onready var debug_hud: Label = get_node_or_null("MobileControls/DebugHUD") as Label
 @onready var left_leg: MeshInstance3D = get_node_or_null("LeftLeg") as MeshInstance3D
 @onready var right_leg: MeshInstance3D = get_node_or_null("RightLeg") as MeshInstance3D
+@onready var left_arm: MeshInstance3D = get_node_or_null("LeftArm") as MeshInstance3D
+@onready var right_arm: MeshInstance3D = get_node_or_null("RightArm") as MeshInstance3D
+@onready var torso: MeshInstance3D = get_node_or_null("Torso") as MeshInstance3D
 var walk_time: float = 0.0
 
 
@@ -134,15 +137,33 @@ func _physics_process(delta: float) -> void:
 
 
 func _update_player_visuals(delta: float, direction: Vector3) -> void:
-	if direction.length_squared() > 0.001:
-		walk_time += delta * 9.0
+	var moving := direction.length_squared() > 0.001 and is_on_floor()
+	if moving:
+		walk_time += delta * 9.5
 	else:
-		walk_time = move_toward(walk_time, 0.0, delta * 8.0)
-	if left_leg and right_leg:
-		var swing := sin(walk_time) * 0.35 if direction.length_squared() > 0.001 else 0.0
-		left_leg.rotation.x = swing
-		right_leg.rotation.x = -swing
+		walk_time = move_toward(walk_time, 0.0, delta * 7.0)
 
+	var stride := sin(walk_time) if moving else 0.0
+	var opposite_stride := -stride
+	var lift := maxf(0.0, stride) * 0.035 if moving else 0.0
+	var opposite_lift := maxf(0.0, opposite_stride) * 0.035 if moving else 0.0
+	var arm_swing := stride * 0.18 if moving else 0.0
+
+	if left_leg:
+		left_leg.rotation.x = stride * 0.32
+		left_leg.position.y = 0.48 + lift
+	if right_leg:
+		right_leg.rotation.x = opposite_stride * 0.32
+		right_leg.position.y = 0.48 + opposite_lift
+
+	if left_arm:
+		left_arm.rotation.x = -arm_swing
+	if right_arm:
+		right_arm.rotation.x = arm_swing
+
+	if torso:
+		var target_y := 1.15 + (absf(stride) * 0.025 if moving else 0.0)
+		torso.position.y = move_toward(torso.position.y, target_y, delta * 2.5)
 
 func _update_debug_hud(input_vector: Vector2) -> void:
 	if not debug_hud:
