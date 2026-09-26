@@ -17,6 +17,7 @@ var resource_textures: Dictionary = {}
 var resource_meshes: Dictionary = {}
 var resource_materials: Dictionary = {}
 var resource_collision_shape := SphereShape3D.new()
+var saved_resource_state: Dictionary = {}
 
 func _ready() -> void:
     resource_collision_shape.radius = 0.58
@@ -98,6 +99,19 @@ func generate() -> void:
 func is_generated() -> bool:
     return generated and is_instance_valid(terrain_collision)
 
+func set_saved_resource_state(state: Dictionary) -> void:
+    saved_resource_state = state.duplicate(true)
+
+func get_resource_state() -> Dictionary:
+    var state := {}
+    for child in get_children():
+        if child is VeyraResourceNode:
+            var resource := child as VeyraResourceNode
+            var saved := resource.get_save_state()
+            if not saved.is_empty():
+                state[resource.resource_id] = saved
+    return state
+
 
 func get_height_at_world(x: float, z: float) -> float:
     var sample_x := x / cell_size + grid_size * 0.5
@@ -138,10 +152,11 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> VeyraResourceNo
     var resource_type: String = types[rng.randi_range(0, types.size() - 1)]
 
     var node := VeyraResourceNode.new()
-    node.name = resource_type + "_" + str(index)
+    node.resource_id = "R01-%03d" % (index + 1)
+    node.name = node.resource_id
     node.position = spawn_position
     node.resource_type = resource_type
-    node.amount = 1
+    node.amount = 3
     node.add_to_group("resource_node")
     node.collision_layer = 2
     node.collision_mask = 1
@@ -156,6 +171,9 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> VeyraResourceNo
     var collision := CollisionShape3D.new()
     collision.shape = resource_collision_shape
     node.add_child(collision)
+
+    if saved_resource_state.has(node.resource_id):
+        node.apply_save_state(saved_resource_state[node.resource_id])
 
     return node
 
