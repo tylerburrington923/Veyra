@@ -42,7 +42,7 @@ func get_interaction_requirement(player: Node) -> String:
 	if not can_interact(player):
 		if tool_required != VeyraItemCatalog.HANDS_ID:
 			return VeyraItemCatalog.display_name(tool_required)
-		return "NOT AVAILABLE"
+		return "Hands"
 	return ""
 
 func interact() -> void:

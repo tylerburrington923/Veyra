@@ -15,6 +15,7 @@ func _run_tests() -> void:
 	_test_first_person_viewmodel_contract()
 	_test_first_person_presentation_contract()
 	_test_resource_interaction_matrix()
+	_test_world_resource_tool_contract()
 	_test_hand_gathered_wood_contract()
 	_test_npc_definition_data_layer()
 	_test_npc_state_data_layer()
@@ -203,6 +204,17 @@ func _test_resource_interaction_matrix() -> void:
 	stone.queue_free()
 	lux.queue_free()
 	player.queue_free()
+
+func _test_world_resource_tool_contract() -> void:
+	var world_generator = load("res://scripts/world_generator.gd").new()
+
+	_check(world_generator.get_required_tool_for_resource("Wood") == VeyraItemCatalog.HANDS_ID, "world-generated ground wood must require hands")
+	_check(world_generator.get_required_tool_for_resource("Stone") == "I02_STONE_PICK", "world-generated stone must require the stone pick")
+	_check(world_generator.get_required_tool_for_resource("Metal") == "I02_STONE_PICK", "world-generated metal must require the stone pick")
+	_check(world_generator.get_required_tool_for_resource("Vitreous Lux") == "I02_STONE_PICK", "world-generated lux must require the stone pick")
+
+	world_generator.free()
+
 
 func _test_hand_gathered_wood_contract() -> void:
 	var player_scene := load("res://scenes/player.tscn") as PackedScene

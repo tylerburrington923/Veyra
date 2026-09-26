@@ -23,6 +23,7 @@ var interact_button: Button
 var last_target_name: String = ""
 var last_target_type: String = "NONE"
 var last_handler_name: String = ""
+var last_requirement: String = ""
 var last_collision_point: Vector3 = Vector3.ZERO
 var _target_update_accumulator := 0.0
 
@@ -201,7 +202,11 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 	last_target_type = target_type
 	last_target_name = target_name
 	last_handler_name = handler
+	last_requirement = ""
 	last_collision_point = collision_point
+	var handler_node := _find_handler_from_name(handler)
+	if handler_node and not eligible and handler_node.has_method("get_interaction_requirement"):
+		last_requirement = str(handler_node.get_interaction_requirement(get_tree().get_first_node_in_group("local_player")))
 
 	var player := get_tree().get_first_node_in_group("local_player") as Node3D
 	var actionable := handler != "" and eligible
@@ -217,11 +222,26 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 			var distance_text := "--"
 			if player:
 				distance_text = "%.1f m" % player.global_position.distance_to(collision_point)
-			target_label.text = "%s  •  %s\\n%s" % [
+			var requirement_text := ""
+			if not eligible and last_requirement != "":
+				requirement_text = "\\nREQUIRES: %s" % last_requirement
+			target_label.text = "%s  •  %s\\n%s%s" % [
 				_get_action_label(target_type),
 				target_name if target_name != "" else "Unknown",
-				distance_text
+				distance_text,
+				requirement_text
 			]
+
+func _find_handler_from_name(handler_name: String) -> Node:
+	if handler_name == "":
+		return null
+	var player := get_tree().get_first_node_in_group("local_player")
+	if not player:
+		return null
+	for node in get_tree().get_nodes_in_group("resource_node"):
+		if node.name == handler_name:
+			return node
+	return null
 
 func _get_action_label(target_type: String) -> String:
 	match target_type:

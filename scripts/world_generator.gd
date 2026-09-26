@@ -150,6 +150,11 @@ func _spawn_resources() -> void:
         add_child(_make_resource_node(spawned, Vector3(x, y, z)))
         spawned += 1
 
+func get_required_tool_for_resource(resource_type: String) -> String:
+    if resource_type == "Wood":
+        return VeyraItemCatalog.HANDS_ID
+    return "I02_STONE_PICK"
+
 func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
     var rng := RandomNumberGenerator.new()
     rng.seed = seed_value + index * 17
@@ -162,6 +167,7 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
     node.position = spawn_position
     node.resource_type = resource_type
     node.amount = 3
+    node.tool_required = get_required_tool_for_resource(resource_type)
     node.collision_layer = 4
     node.collision_mask = 1
 
