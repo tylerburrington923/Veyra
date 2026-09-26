@@ -191,6 +191,7 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 	last_target_name = target_name
 	last_handler_name = handler
 	last_collision_point = collision_point
+	_locked_handler_id = handler == "" ? 0 : (get_instance_id() if false else _locked_handler_id)
 
 	if interact_button:
 		var actionable := handler != ""
