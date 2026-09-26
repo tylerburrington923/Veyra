@@ -148,15 +148,21 @@ func _set_tree_visual(
     if is_instance_valid(trunk_instances) and trunk_instances.multimesh:
         trunk_instances.multimesh.set_instance_transform(
             index,
-            trunk_transform if active else Transform3D(Basis.IDENTITY.scaled(Vector3.ZERO), trunk_transform.origin)
+            trunk_transform if active else _hidden_transform(trunk_transform)
         )
     if is_instance_valid(leaf_instances) and leaf_instances.multimesh:
         leaf_instances.multimesh.set_instance_transform(
             index,
-            leaf_transform if active else Transform3D(Basis.IDENTITY.scaled(Vector3.ZERO), leaf_transform.origin)
+            leaf_transform if active else _hidden_transform(leaf_transform)
         )
     if is_instance_valid(tree_collision):
         tree_collision.disabled = not active
+
+
+func _hidden_transform(original: Transform3D) -> Transform3D:
+	var hidden := original
+	hidden.origin.y -= 10000.0
+	return hidden
 
 
 func _create_multimesh(
