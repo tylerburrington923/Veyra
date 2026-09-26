@@ -38,7 +38,7 @@ func _generate() -> void:
 		var z := rng.randf_range(-world_radius, world_radius)
 		var ground_y := _ground_height(x, z)
 
-		var basis := Basis(
+		var rock_basis := Basis(
 			Vector3.UP,
 			rng.randf_range(0.0, TAU)
 		).scaled(
@@ -74,12 +74,12 @@ func _generate() -> void:
 		var x := rng.randf_range(-world_radius * 0.82, world_radius * 0.82)
 		var z := rng.randf_range(-world_radius * 0.82, world_radius * 0.82)
 		var ground_y := _ground_height(x, z)
-		var scale := rng.randf_range(0.5, 1.2)
+		var crystal_scale := rng.randf_range(0.5, 1.2)
 
-		var basis := Basis(
+		var crystal_basis := Basis(
 			Vector3.UP,
 			rng.randf_range(0.0, TAU)
-		).scaled(Vector3.ONE * scale)
+		).scaled(Vector3.ONE * crystal_scale)
 
 		crystal_transforms.append(
 			Transform3D(
@@ -166,10 +166,10 @@ func _create_rock_collision(transforms: Array[Transform3D]) -> void:
 	add_child(collision_body)
 	var shape := SphereShape3D.new()
 	shape.radius = 0.48
-	for transform in transforms:
+	for rock_transform in transforms:
 		var collision := CollisionShape3D.new()
 		collision.shape = shape
-		collision.transform = transform
+		collision.transform = rock_transform
 		collision_body.add_child(collision)
 
 func _create_crystal_collision(transforms: Array[Transform3D]) -> void:
@@ -182,8 +182,8 @@ func _create_crystal_collision(transforms: Array[Transform3D]) -> void:
 	add_child(body)
 	var shape := BoxShape3D.new()
 	shape.size = Vector3(0.65, 1.6, 0.65)
-	for transform in transforms:
+	for crystal_transform in transforms:
 		var collision := CollisionShape3D.new()
 		collision.shape = shape
-		collision.transform = transform
+		collision.transform = crystal_transform
 		body.add_child(collision)
