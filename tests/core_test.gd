@@ -23,6 +23,10 @@ func _run_tests() -> void:
 	_test_npc_simulation_layer()
 	_test_npc_simulation_definition_separation()
 	_test_full_game_skeleton_contracts()
+	_test_tree_harvest_visual_contract()
+	_test_house_door_contract()
+	_test_starter_inventory_contract()
+	_test_mobile_action_layout_contract()
 	if failures.is_empty():
 		print("VEYRA CORE TESTS: PASS (20 suites)")
 		quit(0)
