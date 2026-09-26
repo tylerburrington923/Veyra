@@ -21,7 +21,7 @@ func save_current_game(world: Node) -> bool:
     if not world:
         return false
 
-    var player := get_tree().get_first_node_in_group("local_player")
+    var player: Node = get_tree().get_first_node_in_group("local_player")
     if not player or not player.has_method("get_inventory"):
         return false
 
