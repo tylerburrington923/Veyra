@@ -92,8 +92,10 @@ func _query_target() -> Dictionary:
 	var hits := get_world_3d().direct_space_state.intersect_shape(query, 32)
 	var viewport_size := get_viewport().get_visible_rect().size
 	var screen_center := viewport_size * 0.5
-	var best := {}
-	var best_score := INF
+	var best_eligible := {}
+	var best_eligible_score := INF
+	var best_ineligible := {}
+	var best_ineligible_score := INF
 	var seen_handlers: Dictionary = {}
 
 	for hit in hits:
@@ -130,18 +132,29 @@ func _query_target() -> Dictionary:
 		var score := normalized_screen_offset + distance * TARGET_SCORE_DISTANCE_WEIGHT
 		if distance <= NEAR_TARGET_ASSIST_DISTANCE:
 			score -= 0.06
-		if score < best_score:
-			best_score = score
-			best = {
-				"collider": collider,
-				"handler": handler,
-				"position": point,
-				"distance": distance,
-				"screen_score": normalized_screen_offset,
-					"eligible": _is_handler_eligible(handler, player)
-				}
 
-	return best
+		var eligible := _is_handler_eligible(handler, player)
+		var candidate := {
+			"collider": collider,
+			"handler": handler,
+			"position": point,
+			"distance": distance,
+			"screen_score": normalized_screen_offset,
+			"eligible": eligible
+		}
+
+		if eligible:
+			if score < best_eligible_score:
+				best_eligible_score = score
+				best_eligible = candidate
+		elif score < best_ineligible_score:
+			best_ineligible_score = score
+			best_ineligible = candidate
+
+	# Never let an unavailable object consume the interaction request when a
+	# valid candidate is visible. If nothing valid is available, retain the
+	# best ineligible target so the HUD can still explain the requirement.
+	return best_eligible if not best_eligible.is_empty() else best_ineligible
 
 func try_interact() -> void:
 	var hit := _query_target()
