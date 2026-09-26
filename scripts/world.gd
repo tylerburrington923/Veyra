@@ -1,13 +1,16 @@
 extends Node3D
 
 ## Veyra world coordinator.
-## Keeps the world seed authoritative and synchronizes deterministic generators.
+## The world is permanently nocturnal; lunar phase replaces seasons/daylight.
+## The world seed remains authoritative for all deterministic generators.
 
-@export var day_length_seconds: float = 600.0
+@export var lunar_cycle_seconds: float = 900.0
 @export var default_world_seed: int = 47291
 
 var world_time: float = 0.0
 var world_seed: int = 47291
+
+@onready var lunar_cycle: VeyraLunarCycle = get_node_or_null("LunarCycle") as VeyraLunarCycle
 
 
 func _ready() -> void:
@@ -17,14 +20,18 @@ func _ready() -> void:
 		world_seed = GameManager.world_seed
 
 	_apply_seed_to_generators()
-	print("Veyra world initialized. Seed: ", world_seed)
+
+	if lunar_cycle:
+		lunar_cycle.cycle_length_seconds = lunar_cycle_seconds
+		lunar_cycle.configure(world_seed, world_time)
+
+	print("Veyra world initialized. Seed: ", world_seed, " | Lunar phase: ", lunar_cycle.get_phase_name() if lunar_cycle else "Unavailable")
 
 
 func _process(delta: float) -> void:
-	if day_length_seconds <= 0.0:
-		return
-
-	world_time = fmod(world_time + delta, day_length_seconds)
+	if lunar_cycle:
+		lunar_cycle.advance(delta)
+		world_time = lunar_cycle.world_time
 
 
 func _apply_seed_to_generators() -> void:
@@ -45,9 +52,16 @@ func get_world_time() -> float:
 	return world_time
 
 
+func get_lunar_state() -> Dictionary:
+	if lunar_cycle:
+		return lunar_cycle.get_lunar_state()
+	return {}
+
+
 func get_world_state() -> Dictionary:
 	return {
 		"seed": world_seed,
 		"world_time": world_time,
-		"version": 1
+		"lunar": get_lunar_state(),
+		"version": 2
 	}
