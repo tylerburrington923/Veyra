@@ -5,7 +5,6 @@ extends RayCast3D
 ## screen-space relevance, distance, and line of sight so large world objects
 ## do not require the player to stand on an exact invisible interaction point.
 
-const RESOURCE_NODE_SCRIPT = preload("res://scripts/resource_node.gd")
 const INTERACTION_LAYER := 2
 const RAY_DISTANCE := 6.0
 const MAX_TARGET_DISTANCE := 5.5
@@ -222,7 +221,7 @@ func _has_line_of_sight(origin: Vector3, target: Vector3, player: Node3D, handle
 func _classify_target(node: Node) -> String:
 	if not node:
 		return "UNKNOWN"
-	if node.is_in_group("resource_node") or node.get_script() == RESOURCE_NODE_SCRIPT:
+	if node.is_in_group("resource_node"):
 		return "RESOURCE"
 	if node.is_in_group("anomaly"):
 		return "ANOMALY"
