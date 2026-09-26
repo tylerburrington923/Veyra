@@ -85,7 +85,8 @@ func _test_tool_state_contract() -> void:
 	player.queue_free()
 
 func _test_resource_collision_contract() -> void:
-	var resource := VeyraResourceNode.new()
+	var resource_scene := load("res://scenes/resource_node.tscn") as PackedScene
+	var resource := resource_scene.instantiate()
 	root.add_child(resource)
 	resource.resource_id = "TEST-001"
 	resource.resource_type = "Stone"
