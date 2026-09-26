@@ -151,9 +151,9 @@ func _spawn_resources() -> void:
         spawned += 1
 
 func get_required_tool_for_resource(resource_type: String) -> String:
-	if resource_type == "Wood":
-		return VeyraItemCatalog.HANDS_ID
-	return "I02_STONE_PICK"
+    if resource_type == "Wood":
+        return VeyraItemCatalog.HANDS_ID
+    return "I02_STONE_PICK"
 
 func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
     var rng := RandomNumberGenerator.new()
