@@ -51,12 +51,12 @@ func _apply_loaded_state(save_data: Dictionary) -> void:
     if SettlementManager and not settlement_state.is_empty():
         SettlementManager.load_settlement_state(settlement_state)
 
+    var player: Node = get_tree().get_first_node_in_group("local_player")
     var player_state: Dictionary = save_data.get("player", {})
     if player and player.has_method("load_save_state") and player_state is Dictionary:
         player.load_save_state(player_state)
 
     var inventory_state: Dictionary = save_data.get("inventory", {})
-    var player: Node = get_tree().get_first_node_in_group("local_player")
     if player and player.has_method("get_inventory"):
         var inventory: VeyraInventory = player.get_inventory()
         if inventory:
