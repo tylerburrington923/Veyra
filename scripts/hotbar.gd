@@ -6,7 +6,9 @@ const TOOL_ORDER: Array[String] = ["T00_HANDS", "I01_STONE_AXE", "I02_STONE_PICK
 @onready var player: Node = get_parent()
 @onready var inventory: Node = player.get_node_or_null("Inventory") if player else null
 @onready var hotbar_label: Label = get_node_or_null("Hotbar/Label") as Label
-@onready var tool_button: Button = get_node_or_null("ToolButton") as Button
+@onready var hands_slot: Button = get_node_or_null("ToolHotbar/HandsSlot") as Button
+@onready var axe_slot: Button = get_node_or_null("ToolHotbar/AxeSlot") as Button
+@onready var pick_slot: Button = get_node_or_null("ToolHotbar/PickSlot") as Button
 @onready var inventory_panel: Panel = get_node_or_null("InventoryPanel") as Panel
 @onready var inventory_label: Label = get_node_or_null("InventoryPanel/Label") as Label
 @onready var toast: Label = get_node_or_null("PickupToast") as Label
@@ -19,8 +21,12 @@ func _ready() -> void:
 		inventory.inventory_changed.connect(_on_inventory_changed)
 	if player and player.has_signal("tool_changed"):
 		player.tool_changed.connect(_on_tool_changed)
-	if tool_button and not tool_button.pressed.is_connected(_cycle_tool):
-		tool_button.pressed.connect(_cycle_tool)
+	if hands_slot and not hands_slot.pressed.is_connected(_select_hands):
+		hands_slot.pressed.connect(_select_hands)
+	if axe_slot and not axe_slot.pressed.is_connected(_select_axe):
+		axe_slot.pressed.connect(_select_axe)
+	if pick_slot and not pick_slot.pressed.is_connected(_select_pick):
+		pick_slot.pressed.connect(_select_pick)
 	if inventory and inventory.has_method("get_snapshot"):
 		last_snapshot = inventory.get_snapshot()
 	_refresh()
@@ -58,10 +64,31 @@ func _refresh() -> void:
 		hotbar_label.text = _format_hotbar(snapshot)
 	if inventory_label:
 		inventory_label.text = _format_inventory(snapshot)
-	if tool_button and player and player.has_method("get_tool_id"):
-		var tool_id := str(player.get_tool_id())
-		tool_button.text = "TOOL\n%s" % _tool_name(tool_id)
-		tool_button.disabled = false
+	var current := str(player.get_tool_id()) if player and player.has_method("get_tool_id") else "T00_HANDS"
+	if hands_slot:
+		hands_slot.disabled = false
+		hands_slot.text = "1\nHANDS" if current != "T00_HANDS" else "1\nHANDS ✓"
+	if axe_slot:
+		axe_slot.disabled = not (inventory and inventory.has_item("I01_STONE_AXE"))
+		axe_slot.text = "2\nAXE" if current != "I01_STONE_AXE" else "2\nAXE ✓"
+	if pick_slot:
+		pick_slot.disabled = not (inventory and inventory.has_item("I02_STONE_PICK"))
+		pick_slot.text = "3\nPICK" if current != "I02_STONE_PICK" else "3\nPICK ✓"
+
+func _select_hands() -> void:
+	if player and player.has_method("set_tool"):
+		player.set_tool("T00_HANDS")
+		_refresh()
+
+func _select_axe() -> void:
+	if player and player.has_method("set_tool") and player.set_tool("I01_STONE_AXE"):
+		_show_toast("Equipped Stone Axe")
+		_refresh()
+
+func _select_pick() -> void:
+	if player and player.has_method("set_tool") and player.set_tool("I02_STONE_PICK"):
+		_show_toast("Equipped Stone Pick")
+		_refresh()
 
 func _cycle_tool() -> void:
 	if not player or not player.has_method("set_tool") or not inventory:
