@@ -20,6 +20,26 @@ func _ready() -> void:
 	remaining = maxi(0, amount)
 	set_process(false)
 
+func can_interact(player: Node) -> bool:
+	if depleted or remaining <= 0 or interaction_cooldown > 0.0:
+		return false
+	if not player:
+		return false
+	var inventory: Node = player.get_inventory() if player.has_method("get_inventory") else null
+	if not inventory:
+		return false
+	var equipped_tool := "T00_HANDS"
+	if player.has_method("get_tool_id"):
+		equipped_tool = player.get_tool_id()
+	return tool_required == "T00_HANDS" or equipped_tool == tool_required
+
+func get_interaction_requirement(player: Node) -> String:
+	if not can_interact(player):
+		if tool_required != "T00_HANDS":
+			return VeyraItemCatalog.display_name(tool_required)
+		return "NOT AVAILABLE"
+	return ""
+
 func interact() -> void:
 	if depleted or remaining <= 0 or interaction_cooldown > 0.0:
 		return
