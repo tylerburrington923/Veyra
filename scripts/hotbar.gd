@@ -48,17 +48,24 @@ func _refresh() -> void:
         inventory_label.text = _format_inventory(snapshot)
 
 func _format_hotbar(snapshot: Dictionary) -> String:
+    var resources: Dictionary = snapshot.get("resources", snapshot)
     var parts: Array[String] = []
     for resource_type in RESOURCE_TYPES:
-        parts.append("%s  %d" % [_short_name(resource_type), int(snapshot.get(resource_type, 0))])
+        parts.append("%s  %d" % [_short_name(resource_type), int(resources.get(resource_type, 0))])
     return "  |  ".join(parts)
 
 func _format_inventory(snapshot: Dictionary) -> String:
+    var resources: Dictionary = snapshot.get("resources", snapshot)
+    var items: Dictionary = snapshot.get("items", {})
     var lines: Array[String] = ["INVENTORY"]
     for resource_type in RESOURCE_TYPES:
-        lines.append("%-14s %d" % [resource_type, int(snapshot.get(resource_type, 0))])
+        lines.append("%-14s %d" % [resource_type, int(resources.get(resource_type, 0))])
+    for item_id in items.keys():
+        lines.append("%-14s %d" % [VeyraItemCatalog.display_name(str(item_id)), int(items[item_id])])
     var total: int = 0
-    for value in snapshot.values():
+    for value in resources.values():
+        total += int(value)
+    for value in items.values():
         total += int(value)
     var capacity: Dictionary = inventory.get_capacity_state() if inventory.has_method("get_capacity_state") else {}
     lines.append("")
