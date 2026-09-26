@@ -83,8 +83,8 @@ func _generate() -> void:
 
 		crystal_transforms.append(
 			Transform3D(
-				basis,
-				Vector3(x, ground_y + 0.8 * scale, z)
+				crystal_basis,
+				Vector3(x, ground_y + 0.8 * crystal_scale, z)
 			)
 		)
 
