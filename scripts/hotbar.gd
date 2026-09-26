@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-const RESOURCE_TYPES: Array[String] = ["Stone", "Wood", "Metal", "Vitreous Lux"]
+const RESOURCE_TYPES: Array[String] = ["Stone", "Wood", "Metal", "Vitreous Lux", "Echo-Stone"]
 
 @onready var inventory: Node = get_parent().get_node_or_null("Inventory")
 @onready var hotbar_label: Label = get_node_or_null("Hotbar/Label") as Label
