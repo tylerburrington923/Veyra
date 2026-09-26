@@ -32,4 +32,5 @@ static func all_recipe_ids() -> Array[String]:
 	var result: Array[String] = []
 	for key in RECIPES.keys():
 		result.append(str(key))
+	result.sort()
 	return result
