@@ -75,8 +75,8 @@ func _test_tree_harvest_visual_contract() -> void:
 		Transform3D(Basis.IDENTITY, Vector3(0, 2, 0)),
 		false
 	)
-	_check(trunk_mm.get_instance_transform(0).basis.get_scale().is_zero_approx(), "depleted tree trunk visual must hide")
-	_check(canopy_mm.get_instance_transform(0).basis.get_scale().is_zero_approx(), "depleted tree canopy visual must hide")
+	_check(trunk_mm.get_instance_transform(0).origin.y < -9999.0, "depleted tree trunk visual must hide")
+	_check(canopy_mm.get_instance_transform(0).origin.y < -9999.0, "depleted tree canopy visual must hide")
 	_check(collision.disabled, "depleted tree collision must disable")
 
 	foliage._set_tree_visual(
@@ -88,8 +88,8 @@ func _test_tree_harvest_visual_contract() -> void:
 		Transform3D(Basis.IDENTITY, Vector3(0, 2, 0)),
 		true
 	)
-	_check(not trunk_mm.get_instance_transform(0).basis.get_scale().is_zero_approx(), "respawned tree trunk visual must restore")
-	_check(not canopy_mm.get_instance_transform(0).basis.get_scale().is_zero_approx(), "respawned tree canopy visual must restore")
+	_check(absf(trunk_mm.get_instance_transform(0).origin.y - 1.0) < 0.001, "respawned tree trunk visual must restore")
+	_check(absf(canopy_mm.get_instance_transform(0).origin.y - 2.0) < 0.001, "respawned tree canopy visual must restore")
 	_check(not collision.disabled, "respawned tree collision must restore")
 
 	foliage.queue_free()
@@ -105,7 +105,7 @@ func _test_house_door_contract() -> void:
 	house.setup("TEST-HOUSE", "B03_SHELTER", Vector3.ZERO)
 	_check(house.can_interact(null), "house door must be interactable")
 	_check(not house.door_open, "house door must start closed")
-	var door_collision := house.get_node_or_null("Door/CollisionShape3D") as CollisionShape3D
+	var door_collision: CollisionShape3D = house._door_collision
 	_check(door_collision != null and not door_collision.disabled, "closed house door must block the doorway")
 	house.interact()
 	_check(house.door_open, "house door must open on interaction")
