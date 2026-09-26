@@ -166,13 +166,13 @@ func add_resource(resource_type: String, amount: int) -> void:
 
 func _ready() -> void:
 	add_to_group("local_player")
-	# Give a brand-new save a tiny starter cache so the beta loop is testable
+	# Give a brand-new save a generous starter cache so the beta loop is testable
 	# immediately. Loaded saves are left untouched.
 	if GameManager and GameManager.get_loaded_save().is_empty():
 		var starter_inventory := get_inventory()
 		if starter_inventory:
-			starter_inventory.add_resource("Wood", 3)
-			starter_inventory.add_resource("Stone", 2)
+			starter_inventory.add_resource("Wood", 100)
+			starter_inventory.add_resource("Stone", 100)
 	up_direction = Vector3.UP
 	floor_snap_length = ground_snap_distance
 	floor_max_angle = deg_to_rad(max_floor_angle_degrees)
