@@ -58,6 +58,9 @@ func _apply_loaded_state(save_data: Dictionary) -> void:
         if inventory:
             inventory.load_snapshot(inventory_state)
 
+    var player_state: Dictionary = save_data.get("player", {})
+    if player and player.has_method("load_save_state") and player_state is Dictionary:
+        player.load_save_state(player_state)
 
 
 func _apply_seed_to_generators() -> void:
