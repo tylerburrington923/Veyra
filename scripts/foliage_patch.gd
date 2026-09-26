@@ -59,7 +59,7 @@ func _generate() -> void:
 
 		trunk_transforms.append(
 			Transform3D(
-				basis,
+				tree_basis,
 				Vector3(x, ground_y + 0.75 * tree_scale, z)
 			)
 		)
@@ -67,7 +67,7 @@ func _generate() -> void:
 		var leaf_y: float = rng.randf_range(1.6, 2.3) * tree_scale
 		leaf_transforms.append(
 			Transform3D(
-				basis,
+				tree_basis,
 				Vector3(x, ground_y + leaf_y, z)
 			)
 		)
