@@ -51,7 +51,7 @@ func _generate() -> void:
 
 		rock_transforms.append(
 			Transform3D(
-				basis,
+				rock_basis,
 				Vector3(x, ground_y + 0.25, z)
 			)
 		)
