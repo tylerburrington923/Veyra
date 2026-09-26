@@ -87,7 +87,6 @@ func _test_resource_collision_contract() -> void:
 	resource.resource_id = "TEST-001"
 	resource.resource_type = "Stone"
 	resource.amount = 3
-	resource._ready()
 	_check(resource.collision_layer == 4, "resource must remain a collidable interactable on layer 4")
 	_check(resource.collision_mask == 1, "resource should detect terrain layer 1")
 	resource._deplete()
