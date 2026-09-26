@@ -22,8 +22,8 @@ extends CharacterBody3D
 @export var max_pitch_degrees: float = 55.0
 
 @export_category("Camera")
-@export var camera_distance: float = 5.8
-@export var camera_height: float = 3.1
+@export var camera_distance: float = 4.6
+@export var camera_height: float = 2.75
 @export var camera_fov: float = 70.0
 @export var camera_far: float = 140.0
 
