@@ -66,7 +66,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build
-          zip -r "build/Veyra-source-${GITHUB_SHA:0:7}.zip" . -x ".git/*" ".godot/*" "build/*"
+          zip -r "build/Veyra-source-${GITHUB_SHA}.zip" . -x ".git/*" ".godot/*" "build/*"
 
       - name: Upload validation logs and source
         if: always()
@@ -76,5 +76,5 @@ jobs:
           path: |
             godot-editor.log
             build/Veyra-source-${{ github.sha }}.zip
-            build/Veyra-source-${GITHUB_SHA:0:7}.zip
+
           if-no-files-found: warn
