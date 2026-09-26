@@ -198,17 +198,20 @@ func _make_terrain_texture() -> ImageTexture:
     var image := Image.create(128, 128, false, Image.FORMAT_RGBA8)
     var texture_noise := FastNoiseLite.new()
     texture_noise.seed = seed_value + 8000
-    texture_noise.frequency = 0.045
-    texture_noise.fractal_octaves = 3
+    texture_noise.frequency = 0.028
+    texture_noise.fractal_octaves = 2
+
+    var grass := Color(0.25, 0.40, 0.20, 1)
+    var grass_light := Color(0.31, 0.47, 0.24, 1)
+    var soil := Color(0.30, 0.25, 0.16, 1)
 
     for y in range(128):
         for x in range(128):
             var n := texture_noise.get_noise_2d(float(x), float(y))
-            var fine := texture_noise.get_noise_2d(float(x) * 2.7, float(y) * 2.7) * 0.18
-            var v := clampf(0.5 + n * 0.42 + fine, 0.0, 1.0)
-            var grass := Color(0.22, 0.36, 0.18, 1)
-            var soil := Color(0.34, 0.28, 0.18, 1)
-            var color := grass.lerp(soil, clampf((0.48 - v) * 2.4, 0.0, 1.0))
+            var fine := texture_noise.get_noise_2d(float(x) * 3.0, float(y) * 3.0) * 0.06
+            var v := clampf(0.5 + n * 0.30 + fine, 0.0, 1.0)
+            var color := grass.lerp(grass_light, clampf((v - 0.25) * 1.35, 0.0, 1.0))
+            color = color.lerp(soil, clampf((0.34 - v) * 2.0, 0.0, 0.65))
             image.set_pixel(x, y, color)
 
     return ImageTexture.create_from_image(image)
