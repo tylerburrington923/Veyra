@@ -102,7 +102,15 @@ func _refresh() -> void:
     var horizontal := cos(angle)
     var vertical := sin(angle)
 
-    moon_mesh.position = Vector3(horizontal * moon_distance, moon_height + vertical * 10.0, sin(angle) * moon_distance)
+    var moon_origin := Vector3.ZERO
+    var player := get_tree().get_first_node_in_group("local_player")
+    if player is Node3D:
+        moon_origin = player.global_position
+    moon_mesh.global_position = moon_origin + Vector3(
+        horizontal * moon_distance,
+        moon_height + vertical * 10.0,
+        sin(angle) * moon_distance
+    )
     moon_light.rotation_degrees = Vector3(-30.0 - vertical * 22.0, phase * 360.0 - 180.0, 0.0)
 
     # Full moon is brightest; dark/new moon remains dim rather than disappearing.
