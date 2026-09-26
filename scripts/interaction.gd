@@ -109,7 +109,10 @@ func try_interact() -> void:
     elif handler is Node3D:
         collision_point = (handler as Node3D).global_position
     if not handler:
-        _set_target_state("UNKNOWN", target.name if target else "", "", collision_point)
+        var unknown_name: String = ""
+        if target:
+            unknown_name = target.name
+        _set_target_state("UNKNOWN", unknown_name, "", collision_point)
         return
 
     if handler.has_method("interact"):
