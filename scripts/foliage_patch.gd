@@ -55,7 +55,7 @@ func _generate() -> void:
 		var tree_scale: float = rng.randf_range(0.8, 1.25)
 		var yaw: float = rng.randf_range(0.0, TAU)
 
-		var basis := Basis(Vector3.UP, yaw).scaled(Vector3.ONE * tree_scale)
+		var tree_basis := Basis(Vector3.UP, yaw).scaled(Vector3.ONE * tree_scale)
 
 		trunk_transforms.append(
 			Transform3D(
@@ -133,8 +133,8 @@ func _create_tree_collision(transforms: Array[Transform3D]) -> void:
 	var shape := CylinderShape3D.new()
 	shape.radius = 0.16
 	shape.height = 1.5
-	for transform in transforms:
+	for tree_transform in transforms:
 		var collision := CollisionShape3D.new()
 		collision.shape = shape
-		collision.transform = transform
+		collision.transform = tree_transform
 		collision_body.add_child(collision)
