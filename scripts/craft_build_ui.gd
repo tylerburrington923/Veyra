@@ -183,6 +183,7 @@ func _select_building(building_id: String) -> void:
 	if building and building.select_building(building_id):
 		status.text = "Move the camera to position the preview."
 		confirm_button.visible = true
+		confirm_button.disabled = false
 
 func _confirm_build() -> void:
 	if building and building.confirm_build(player, inventory):
