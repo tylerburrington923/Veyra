@@ -125,7 +125,7 @@ func _create_harvest_nodes(prefix: String, transforms: Array[Transform3D], resou
 		collision.shape = shape
 		node.add_child(collision)
 		terrain.add_child(node)
-		var saved_state: Dictionary = terrain.saved_resource_state if "saved_resource_state" in terrain else {}
+		var saved_state: Dictionary = terrain.saved_resource_state
 		if saved_state.has(node.resource_id):
 			node.apply_save_state(saved_state[node.resource_id])
 
