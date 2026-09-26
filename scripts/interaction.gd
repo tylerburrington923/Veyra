@@ -8,7 +8,7 @@ extends RayCast3D
 const INTERACTION_LAYER := 2
 const RAY_DISTANCE := 6.0
 const MAX_TARGET_DISTANCE := 5.5
-const MAX_SCREEN_RADIUS := 0.42
+const MAX_SCREEN_RADIUS := 0.62
 const MAX_HANDLER_DEPTH := 8
 
 @export var interact_distance: float = MAX_TARGET_DISTANCE
