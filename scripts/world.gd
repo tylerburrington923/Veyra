@@ -102,3 +102,8 @@ func save_game() -> bool:
     if not GameManager:
         return false
     return GameManager.save_current_game(self)
+
+
+func _restore_buildings() -> void:
+	if BuildingManager and BuildingManager.has_method("restore_from_settlement"):
+		BuildingManager.restore_from_settlement()
