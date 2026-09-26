@@ -62,6 +62,7 @@ func update_from_camera(player: Node3D, camera: Camera3D, inventory: VeyraInvent
 func evaluate_placement(player: Node3D, position: Vector3, inventory: VeyraInventory) -> bool:
 	placement_position = snap_position(position)
 	placement_valid = false
+	placement_location_valid = false
 
 	if not player or not inventory or selected_building_id.is_empty():
 		_update_preview(false)
