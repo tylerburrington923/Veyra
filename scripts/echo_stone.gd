@@ -38,10 +38,10 @@ func _process(delta: float) -> void:
         _refresh_visual()
 
 func interact() -> void:
-    apply_force(-global_transform.basis.z, 1.0)
+    resonate(1.0)
 
-func apply_force(direction: Vector3, magnitude: float) -> void:
-    var force := maxf(0.0, magnitude)
+func resonate(strength: float) -> void:
+    var force := maxf(0.0, strength)
     stored_energy = minf(release_threshold * 1.5, stored_energy + force / maxf(hardness, 0.1))
     structural_state = clampf(stored_energy / release_threshold, 0.0, 1.0)
     resonance_state = clampf(resonance_state + force * 0.08, 0.0, 1.0)
