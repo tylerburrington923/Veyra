@@ -1,10 +1,9 @@
 extends Node
 
 ## Central runtime state for Veyra.
-## World seed and loaded save data are established before the world generates.
+## Keeps the authoritative world seed and the pending save payload available
+## before the world and its deterministic generators initialize.
 
-var is_host := true
-var local_player_id := 1
 var world_seed: int = 47291
 var loaded_save: Dictionary = {}
 
@@ -15,26 +14,8 @@ func _ready() -> void:
         if not saved_world.is_empty():
             world_seed = int(saved_world.get("seed", world_seed))
 
-func start_host() -> void:
-    is_host = true
-    print("Veyra host started. World seed: ", world_seed)
-
-func start_client() -> void:
-    is_host = false
-    print("Veyra client mode selected.")
-
-func get_session_info() -> Dictionary:
-    return {
-        "is_host": is_host,
-        "local_player_id": local_player_id,
-        "world_seed": world_seed
-    }
-
 func get_loaded_save() -> Dictionary:
     return loaded_save.duplicate(true)
-
-func clear_loaded_save() -> void:
-    loaded_save.clear()
 
 func save_current_game(world: Node) -> bool:
     if not world:
@@ -45,15 +26,12 @@ func save_current_game(world: Node) -> bool:
         return false
 
     var inventory := player.get_inventory()
-    if not inventory:
+    if not inventory or not SaveManager:
         return false
 
     var settlement_state := {}
     if SettlementManager:
         settlement_state = SettlementManager.get_settlement_state()
-
-    if not SaveManager:
-        return false
 
     var saved := SaveManager.save_world(world, inventory.get_snapshot(), settlement_state)
     if saved:
