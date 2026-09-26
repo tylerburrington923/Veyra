@@ -70,9 +70,11 @@ func generate() -> void:
 
     var material := StandardMaterial3D.new()
     material.albedo_texture = _make_terrain_texture()
+    material.albedo_color = Color(0.72, 0.80, 0.62, 1)
     material.roughness = 1.0
     material.cull_mode = BaseMaterial3D.CULL_BACK
     material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+    material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
     mesh.surface_set_material(0, material)
 
     var terrain := MeshInstance3D.new()
