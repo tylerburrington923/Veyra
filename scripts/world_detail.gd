@@ -161,7 +161,7 @@ func _create_rock_collision(transforms: Array[Transform3D]) -> void:
 		return
 	collision_body = StaticBody3D.new()
 	collision_body.name = "RockCollision"
-	collision_body.collision_layer = 1
+	collision_body.collision_layer = 2
 	collision_body.collision_mask = 1
 	add_child(collision_body)
 	var shape := SphereShape3D.new()
@@ -177,7 +177,7 @@ func _create_crystal_collision(transforms: Array[Transform3D]) -> void:
 		return
 	var body := StaticBody3D.new()
 	body.name = "MineralCollision"
-	body.collision_layer = 1
+	body.collision_layer = 2
 	body.collision_mask = 1
 	add_child(body)
 	var shape := BoxShape3D.new()
