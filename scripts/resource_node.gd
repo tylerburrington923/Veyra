@@ -6,6 +6,7 @@ extends StaticBody3D
 @export var tool_efficiency := 1.0
 @export var durability_cost := 1.0
 @export var respawn_seconds := 45.0
+@export var physical_collision := false
 
 var resource_id: String = ""
 var remaining: int = 0
@@ -15,7 +16,7 @@ var interaction_cooldown := 0.0
 
 func _ready() -> void:
 	add_to_group("resource_node")
-	collision_layer = 4
+	collision_layer = 6 if physical_collision else 4
 	collision_mask = 1
 	remaining = maxi(0, amount)
 	set_process(false)
@@ -118,7 +119,7 @@ func _restore() -> void:
 	respawn_time = 0.0
 	set_process(false)
 	visible = true
-	collision_layer = 4
+	collision_layer = 6 if physical_collision else 4
 	collision_mask = 1
 
 func get_save_state() -> Dictionary:
