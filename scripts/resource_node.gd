@@ -159,6 +159,8 @@ func apply_save_state(state: Dictionary) -> void:
 	if depleted:
 		set_process(true)
 		visible = false
+		if _visual_controller.is_valid():
+			_visual_controller.call(false)
 		collision_layer = 0
 		collision_mask = 0
 	else:
