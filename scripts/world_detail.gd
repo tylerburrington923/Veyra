@@ -95,6 +95,8 @@ func _generate() -> void:
 		crystal_transforms
 	)
 
+	_create_crystal_collision(crystal_transforms)
+
 	_make_water()
 
 
