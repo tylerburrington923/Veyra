@@ -14,9 +14,11 @@ var placement_position := Vector3.ZERO
 var placement_valid := false
 var placement_active := false
 var preview: MeshInstance3D
+var building_root: Node3D
 
 func _ready() -> void:
 	add_to_group("building_manager")
+	call_deferred("_initialize_building_root")
 
 func select_building(building_id: String) -> bool:
 	if not VeyraBuildingCatalog.exists(building_id):
@@ -105,6 +107,7 @@ func confirm_build(player: Node3D, inventory: VeyraInventory) -> bool:
 			inventory.add_resource(str(resource_type), int(cost[resource_type]))
 		return false
 
+	_spawn_building_visual(building_id, selected_building_id, placement_position)
 	building_completed.emit(selected_building_id, placement_position)
 	placement_valid = false
 	placement_active = false
@@ -132,7 +135,9 @@ func _is_space_clear(position: Vector3, size: Vector2, player: Node3D) -> bool:
 	var query := PhysicsShapeQueryParameters3D.new()
 	query.shape = shape
 	query.transform = Transform3D(Basis.IDENTITY, position + Vector3.UP * 0.75)
-	query.collision_mask = 1 | 2
+	# Terrain is the placement surface, not an obstacle. Only test existing
+	# world/building bodies on layer 2 for footprint collisions.
+	query.collision_mask = 2
 	query.collide_with_bodies = true
 	query.collide_with_areas = true
 	if player is CollisionObject3D:
@@ -182,6 +187,31 @@ func _next_building_id() -> String:
 		index += 1
 		candidate = "B-%04d" % index
 	return candidate
+
+func _initialize_building_root() -> void:
+	if building_root:
+		return
+	building_root = Node3D.new()
+	building_root.name = "PlacedBuildings"
+	get_tree().current_scene.add_child(building_root)
+
+func restore_from_settlement() -> void:
+	_initialize_building_root()
+	for child in building_root.get_children():
+		child.queue_free()
+	for building_id in SettlementManager.buildings.keys():
+		var record: Dictionary = SettlementManager.buildings[building_id]
+		var position_data = record.get("position", [0.0, 0.0, 0.0])
+		if position_data is Array and position_data.size() >= 3:
+			var position_value := Vector3(float(position_data[0]), float(position_data[1]), float(position_data[2]))
+			_spawn_building_visual(str(building_id), str(record.get("type", "")), position_value)
+
+func _spawn_building_visual(building_id: String, building_type: String, position_value: Vector3) -> void:
+	_initialize_building_root()
+	var instance := VeyraBuildingInstance.new()
+	instance.name = building_id
+	building_root.add_child(instance)
+	instance.setup(building_id, building_type, position_value)
 
 func get_save_state() -> Dictionary:
 	return {
