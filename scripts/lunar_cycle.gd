@@ -11,6 +11,7 @@ class_name VeyraLunarCycle
 @export var moon_height: float = 34.0
 @export var light_energy_min: float = 0.18
 @export var light_energy_max: float = 0.72
+@export var visual_update_interval: float = 0.05
 
 var world_time: float = 0.0
 var world_seed: int = 47291
@@ -18,6 +19,7 @@ var moon_light: DirectionalLight3D
 var moon_mesh: MeshInstance3D
 var phase_index: int = 0
 var phase_name: String = "Dark"
+var _visual_accumulator: float = 0.0
 
 const PHASE_NAMES := ["Dark", "Crescent", "First Quarter", "Gibbous", "Full", "Waning Gibbous", "Last Quarter", "Waning Crescent"]
 
@@ -35,6 +37,10 @@ func advance(delta: float) -> void:
     if cycle_length_seconds <= 0.0:
         return
     world_time = fmod(world_time + delta, cycle_length_seconds)
+    _visual_accumulator += delta
+    if _visual_accumulator < visual_update_interval:
+        return
+    _visual_accumulator = 0.0
     _refresh()
 
 func get_phase() -> float:
@@ -61,7 +67,7 @@ func _build_moon() -> void:
     moon_light = DirectionalLight3D.new()
     moon_light.name = "MoonLight"
     moon_light.rotation_degrees = Vector3(-38.0, -32.0, 0.0)
-    moon_light.shadow_enabled = true
+    moon_light.shadow_enabled = false
     moon_light.directional_shadow_max_distance = 55.0
     moon_light.light_color = Color(0.56, 0.64, 0.82, 1.0)
     add_child(moon_light)
@@ -103,5 +109,7 @@ func _refresh() -> void:
     var illumination := 0.5 + 0.5 * cos((phase - 0.5) * TAU)
     moon_light.light_energy = lerpf(light_energy_min, light_energy_max, illumination)
 
+    # Keep the celestial object lightweight: phase is represented by brightness/scale
+    # for now; a shader-based crescent can be added later without per-frame geometry.
     var scale_factor := lerpf(0.86, 1.05, illumination)
     moon_mesh.scale = Vector3.ONE * scale_factor
