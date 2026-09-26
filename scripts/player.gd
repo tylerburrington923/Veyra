@@ -24,7 +24,7 @@ extends CharacterBody3D
 
 @export_category("Camera")
 @export var camera_distance: float = 0.0
-@export var camera_height: float = 1.55
+@export var camera_height: float = 1.68
 @export var camera_fov: float = 70.0
 @export var camera_far: float = 140.0
 
@@ -33,7 +33,7 @@ extends CharacterBody3D
 @export_range(0.0, 0.5, 0.01) var joystick_deadzone: float = 0.12
 @export_range(0.1, 0.9, 0.01) var left_screen_ratio: float = 0.48
 
-var look_pitch: float = deg_to_rad(-18.0)
+var look_pitch: float = deg_to_rad(-8.0)
 var target_yaw: float = 0.0
 @export_range(0.0, 30.0, 0.5) var camera_yaw_smoothing: float = 18.0
 var move_input: Vector2 = Vector2.ZERO
@@ -59,6 +59,10 @@ var touch_start: Dictionary = {}
 @onready var right_eye: MeshInstance3D = get_node_or_null("RightEye") as MeshInstance3D
 @onready var left_hand: MeshInstance3D = get_node_or_null("LeftHand") as MeshInstance3D
 @onready var right_hand: MeshInstance3D = get_node_or_null("RightHand") as MeshInstance3D
+@onready var viewmodel_left_arm: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftArmFP") as MeshInstance3D
+@onready var viewmodel_right_arm: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightArmFP") as MeshInstance3D
+@onready var viewmodel_left_hand: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftHandFP") as MeshInstance3D
+@onready var viewmodel_right_hand: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightHandFP") as MeshInstance3D
 var walk_time: float = 0.0
 var _debug_hud_accumulator: float = 0.0
 signal tool_changed(tool_id: String, durability: float)
@@ -119,22 +123,19 @@ func load_save_state(state: Dictionary) -> void:
 	_update_equipped_tool_visual()
 
 func _update_equipped_tool_visual() -> void:
-	var tool_visual := get_node_or_null("RightHand/EquippedTool") as MeshInstance3D
+	var tool_visual := get_node_or_null("Camera3D/ViewModel/RightHandFP/EquippedTool") as Node3D
 	if not tool_visual:
 		return
 	tool_visual.visible = selected_tool_id != "T00_HANDS"
 	if not tool_visual.visible:
 		return
-	var tool_mesh := tool_visual.mesh as BoxMesh
-	if not tool_mesh:
-		return
 	match selected_tool_id:
 		"I01_STONE_AXE":
-			tool_mesh.size = Vector3(0.10, 0.62, 0.10)
-			tool_visual.rotation_degrees = Vector3(0, 0, -38)
+			tool_visual.rotation_degrees = Vector3(0, 0, -18)
+			tool_visual.scale = Vector3.ONE
 		"I02_STONE_PICK":
-			tool_mesh.size = Vector3(0.10, 0.62, 0.10)
-			tool_visual.rotation_degrees = Vector3(0, 0, 38)
+			tool_visual.rotation_degrees = Vector3(0, 0, 18)
+			tool_visual.scale = Vector3.ONE
 		_:
 			tool_visual.visible = false
 
@@ -187,17 +188,18 @@ func _configure_camera() -> void:
 
 func _configure_first_person_view() -> void:
 	# Keep the camera inside the player capsule but hide body geometry so it cannot occlude the world.
-	for mesh in [head, hair, left_eye, right_eye, torso, left_leg, right_leg]:
+	for mesh in [head, hair, left_eye, right_eye, left_arm, right_arm, left_hand, right_hand]:
 		if mesh:
 			mesh.visible = false
-	if left_hand:
-		left_hand.visible = true
-	if right_hand:
-		right_hand.visible = true
-	if left_arm:
-		left_arm.visible = true
-	if right_arm:
-		right_arm.visible = true
+	if torso:
+		torso.visible = true
+	if left_leg:
+		left_leg.visible = true
+	if right_leg:
+		right_leg.visible = true
+	for mesh in [viewmodel_left_arm, viewmodel_right_arm, viewmodel_left_hand, viewmodel_right_hand]:
+		if mesh:
+			mesh.visible = true
 
 func _stabilize_spawn() -> void:
 	var world_generator := get_parent().get_node_or_null("WorldGenerator")
