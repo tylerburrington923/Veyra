@@ -187,7 +187,8 @@ func _show_building() -> void:
 	for building_id in VeyraBuildingCatalog.all_building_ids():
 		var definition := VeyraBuildingCatalog.get_building(building_id)
 		var button := Button.new()
-		button.text = "%s  —  %s" % [definition.get("name", building_id), _format_cost(definition.get("cost", {}))]
+		var cost: Dictionary = definition.get("cost", {})
+		button.text = "%s  •  %s%s" % [definition.get("name", building_id), _format_cost(cost), "  ✓" if _has_cost(cost) else ""]
 		button.custom_minimum_size = Vector2(238, 48)
 		button.pressed.connect(_select_building.bind(building_id))
 		option_list.add_child(button)
