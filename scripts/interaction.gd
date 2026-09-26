@@ -5,10 +5,10 @@ extends RayCast3D
 ## targeting is centered on the player instead of requiring a camera ray hit.
 
 const INTERACTION_LAYER := 2
-const PROXIMITY_RADIUS := 5.5
+const PROXIMITY_RADIUS := 3.75
 const MAX_HANDLER_DEPTH := 8
 const MIN_VIEW_DOT := 0.20
-const RAY_DISTANCE := 7.0
+const RAY_DISTANCE := 5.0
 
 @export var interact_distance: float = PROXIMITY_RADIUS
 @export var resonance_strength: float = 1.8
@@ -25,7 +25,8 @@ var _proximity_shape: SphereShape3D
 
 
 func _ready() -> void:
-    target_position = Vector3(0, 0, -interact_distance)
+    interact_distance = PROXIMITY_RADIUS
+    target_position = Vector3(0, 0, -RAY_DISTANCE)
     collision_mask = 1 << (INTERACTION_LAYER - 1)
     collide_with_bodies = true
     collide_with_areas = true
@@ -92,7 +93,10 @@ func _query_target() -> Dictionary:
     var hits := get_world_3d().direct_space_state.intersect_shape(query, 24)
     var best := {}
     var best_score := -INF
+    var camera := get_viewport().get_camera_3d()
     var camera_forward := -global_transform.basis.z
+    if camera:
+        camera_forward = -camera.global_transform.basis.z
     camera_forward.y = 0.0
     if camera_forward.length_squared() < 0.0001:
         camera_forward = Vector3(0.0, 0.0, -1.0)
