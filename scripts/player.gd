@@ -365,9 +365,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _handle_screen_touch(event: InputEventScreenTouch) -> void:
-	if interact_button and interact_button.get_global_rect().has_point(event.position):
-		return
-	if jump_button and jump_button.get_global_rect().has_point(event.position):
+	if _is_camera_blocking_ui_touch(event.position):
 		return
 
 	if event.pressed and event.is_canceled():
@@ -394,6 +392,16 @@ func _handle_screen_touch(event: InputEventScreenTouch) -> void:
 	else:
 		_release_touch(event.index)
 
+
+func _is_camera_blocking_ui_touch(position: Vector2) -> bool:
+	if interact_button and interact_button.get_global_rect().has_point(position):
+		return true
+	if jump_button and jump_button.get_global_rect().has_point(position):
+		return true
+	for control in get_tree().get_nodes_in_group("camera_blocking_ui"):
+		if control is Control and control.visible and control.get_global_rect().has_point(position):
+			return true
+	return false
 
 func _handle_screen_drag(event: InputEventScreenDrag) -> void:
 	if event.index == move_touch_id:
