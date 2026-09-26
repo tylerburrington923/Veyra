@@ -99,7 +99,7 @@ func _restore() -> void:
     collision_mask = 1
 
 func get_save_state() -> Dictionary:
-    if resource_id.is_empty():
+    if resource_id.is_empty() or (not depleted and remaining == amount):
         return {}
     return {
         "remaining": remaining,
