@@ -161,7 +161,8 @@ func _show_crafting() -> void:
 	for recipe_id in VeyraCraftingCatalog.all_recipe_ids():
 		var recipe := VeyraCraftingCatalog.get_recipe(recipe_id)
 		var button := Button.new()
-		button.text = "%s  —  %s" % [recipe.get("name", recipe_id), _format_cost(recipe.get("cost", {}))]
+		var cost: Dictionary = recipe.get("cost", {})
+		button.text = "%s  •  %s%s" % [recipe.get("name", recipe_id), _format_cost(cost), "  ✓" if _has_cost(cost) else ""]
 		button.custom_minimum_size = Vector2(238, 48)
 		button.pressed.connect(_craft.bind(recipe_id))
 		option_list.add_child(button)
