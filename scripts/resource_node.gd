@@ -1,5 +1,4 @@
 extends StaticBody3D
-class_name VeyraResourceNode
 
 @export_enum("Stone", "Wood", "Metal", "Echo-Stone", "Vitreous Lux") var resource_type := "Stone"
 @export var amount := 3
