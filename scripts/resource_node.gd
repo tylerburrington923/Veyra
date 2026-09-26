@@ -59,8 +59,23 @@ func interact() -> void:
         return
 
     remaining -= accepted
+    interaction_cooldown = 0.18
     if remaining <= 0:
         _deplete()
+
+func get_interaction_text() -> String:
+    if depleted or remaining <= 0:
+        return "%s depleted" % resource_type
+    return "Gather %s  [%d]" % [resource_type, remaining]
+
+func _process(delta: float) -> void:
+    if interaction_cooldown > 0.0:
+        interaction_cooldown = maxf(0.0, interaction_cooldown - delta)
+    if not depleted:
+        return
+    respawn_time -= delta
+    if respawn_time <= 0.0:
+        _restore()
 
 func _deplete() -> void:
     remaining = 0
