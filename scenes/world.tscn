@@ -70,6 +70,8 @@ mineral_count = 14
 
 [node name="EchoStone" type="StaticBody3D" parent="."]
 position = Vector3(6, 0, -6)
+collision_layer = 2
+collision_mask = 1
 script = ExtResource("8_echo")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="EchoStone"]
@@ -83,7 +85,11 @@ shape = SubResource("EchoStoneShape")
 position = Vector3(6, 1.0, -9)
 mass = 1.2
 lock_rotation = true
-collision_layer = 1
+collision_layer = 2
+collision_mask = 1
+mass = 1.2
+lock_rotation = true
+collision_layer = 2
 collision_mask = 1
 groups = ["echo_reactive"]
 
@@ -96,6 +102,8 @@ shape = SubResource("ForceTestShape")
 
 [node name="VeyraArtifact" type="StaticBody3D" parent="."]
 position = Vector3(0, 0.85, -4)
+collision_layer = 2
+collision_mask = 1
 script = ExtResource("3_artifact")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="VeyraArtifact"]
