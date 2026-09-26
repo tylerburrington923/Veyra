@@ -134,7 +134,7 @@ func add_item(item_id: String, amount: int) -> int:
     var stack_limit := VeyraItemCatalog.max_stack(item_id)
     var free_slots := maxi(0, max_slots - _used_slots())
     var capacity := free_slots * stack_limit
-    if current > 0:
+    if current > 0 and current % stack_limit != 0:
         capacity += stack_limit - (current % stack_limit)
     var accepted := mini(amount, capacity)
     var item_weight := VeyraItemCatalog.weight(item_id)
