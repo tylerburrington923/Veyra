@@ -10,8 +10,8 @@ var panel: Panel
 var title: Label
 var status: Label
 var action_row: HBoxContainer
-var craft_button: Button
-var build_button: Button
+var tools_button: Button
+var building_button: Button
 var close_button: Button
 var option_panel: Panel
 var option_list: VBoxContainer
@@ -63,7 +63,7 @@ func _build_ui() -> void:
 	panel.add_child(box)
 
 	title = Label.new()
-	title.text = "WORKSHOP"
+	title.text = "CRAFTING"
 	title.add_theme_font_size_override("font_size", 24)
 	box.add_child(title)
 
@@ -75,17 +75,17 @@ func _build_ui() -> void:
 	action_row = HBoxContainer.new()
 	box.add_child(action_row)
 
-	craft_button = Button.new()
-	craft_button.text = "CRAFT"
-	craft_button.custom_minimum_size = Vector2(120, 52)
-	craft_button.pressed.connect(_show_crafting)
-	action_row.add_child(craft_button)
+	tools_button = Button.new()
+	tools_button.text = "TOOLS"
+	tools_button.custom_minimum_size = Vector2(120, 52)
+	tools_button.pressed.connect(_show_crafting)
+	action_row.add_child(tools_button)
 
-	build_button = Button.new()
-	build_button.text = "BUILD"
-	build_button.custom_minimum_size = Vector2(120, 52)
-	build_button.pressed.connect(_show_building)
-	action_row.add_child(build_button)
+	building_button = Button.new()
+	building_button.text = "BUILDING"
+	building_button.custom_minimum_size = Vector2(120, 52)
+	building_button.pressed.connect(_show_building)
+	action_row.add_child(building_button)
 
 	close_button = Button.new()
 	close_button.text = "CLOSE"
@@ -123,7 +123,7 @@ func _build_ui() -> void:
 	workshop_button = Button.new()
 	var open_button := workshop_button
 	open_button.name = "WorkshopButton"
-	open_button.text = "WORKSHOP"
+	open_button.text = "CRAFTING"
 	open_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	open_button.position = Vector2(-190, -185)
 	open_button.size = Vector2(160, 58)
@@ -157,7 +157,7 @@ func _show_crafting() -> void:
 	cancel_button.visible = false
 	set_process(false)
 	_clear_options()
-	status.text = "Select an item to craft."
+	status.text = "Select a tool to craft."
 	for recipe_id in VeyraCraftingCatalog.all_recipe_ids():
 		var recipe := VeyraCraftingCatalog.get_recipe(recipe_id)
 		var button := Button.new()
@@ -186,7 +186,7 @@ func _show_building() -> void:
 	cancel_button.visible = true
 	set_process(true)
 	_clear_options()
-	status.text = "Select a building."
+	status.text = "Select a building to place."
 	for building_id in VeyraBuildingCatalog.all_building_ids():
 		var definition := VeyraBuildingCatalog.get_building(building_id)
 		var button := Button.new()

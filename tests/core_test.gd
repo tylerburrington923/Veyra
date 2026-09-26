@@ -242,6 +242,56 @@ func _test_hand_gathered_wood_contract() -> void:
 	player.queue_free()
 
 
+func _test_tree_harvest_contract() -> void:
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var inventory: VeyraInventory = player.get_inventory()
+	inventory.add_item("I01_STONE_AXE", 1)
+
+	var resource_scene := load("res://scenes/resource_node.tscn") as PackedScene
+	var tree := resource_scene.instantiate()
+	root.add_child(tree)
+	tree.resource_id = "D01-TREE-TEST"
+	tree.resource_type = "Wood"
+	tree.tool_required = "I01_STONE_AXE"
+	tree.amount = 4
+	tree.remaining = 4
+
+	_check(player.set_tool("I01_STONE_AXE"), "tree test axe selection should succeed")
+	_check(tree.can_interact(player), "tree resource must accept the stone axe")
+	_check(player.set_tool(VeyraItemCatalog.HANDS_ID), "tree test hands selection should succeed")
+	_check(not tree.can_interact(player), "tree resource must reject hands")
+
+	tree.queue_free()
+	player.queue_free()
+
+
+func _test_npc_controller_presentation_contract() -> void:
+	var definition := NPCDefinition.new("human_worker", "Worker", "human", 3.5, 1.0, 20, ["BUILD"], "worker_01")
+	var state := NPCState.new("npc_controller_01", "human_worker")
+	state.position = NPCState.make_vector_dict(4.0, 1.0, -3.0)
+	state.rotation = NPCState.make_vector_dict(0.0, 1.2, 0.0)
+
+	var controller_script := load("res://scripts/npc_controller.gd")
+	var controller: Node3D = controller_script.new()
+	root.add_child(controller)
+	controller.configure(definition, state)
+
+	_check(controller.authoritative_state == state, "NPC controller must reference authoritative state")
+	_check(controller.definition == definition, "NPC controller must retain definition reference")
+	_check(controller.global_position.is_equal_approx(Vector3(4.0, 1.0, -3.0)), "NPC controller must initialize from authoritative position")
+	_check(controller.visual != null, "NPC controller must create a presentation visual")
+	_check(controller.visual.get_node_or_null("Body") != null, "NPC visual body missing")
+	_check(controller.visual.get_node_or_null("Head") != null, "NPC visual head missing")
+
+	state.position = NPCState.make_vector_dict(12.0, 1.0, 2.0)
+	controller.apply_authoritative_state(state)
+	_check(controller.authoritative_state == state, "NPC controller must accept updated authoritative state")
+
+	controller.queue_free()
+
+
 func _test_resource_collision_contract() -> void:
 	var resource_scene := load("res://scenes/resource_node.tscn") as PackedScene
 	var resource := resource_scene.instantiate()

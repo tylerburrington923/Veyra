@@ -75,7 +75,32 @@ func _generate() -> void:
 	_create_multimesh("TreeTrunks", trunk_mesh, trunk_material, trunk_transforms)
 	_create_multimesh("TreeCanopies", leaf_mesh, leaf_material, leaf_transforms)
 	_create_tree_collision(trunk_transforms)
+	_create_tree_harvest_nodes(trunk_transforms)
 
+
+func _create_tree_harvest_nodes(transforms: Array[Transform3D]) -> void:
+	if not terrain or transforms.is_empty():
+		return
+	for i in range(transforms.size()):
+		var node := preload("res://scenes/resource_node.tscn").instantiate()
+		node.resource_id = "D01-TREE-%03d" % (i + 1)
+		node.name = node.resource_id
+		node.resource_type = "Wood"
+		node.tool_required = "I01_STONE_AXE"
+		node.amount = 4
+		node.durability_cost = 1.0
+		node.physical_collision = false
+		node.global_transform = transforms[i]
+		var collision := CollisionShape3D.new()
+		var shape := CylinderShape3D.new()
+		shape.radius = 0.28
+		shape.height = 1.7
+		collision.shape = shape
+		node.add_child(collision)
+		terrain.add_child(node)
+		var saved_state: Dictionary = terrain.saved_resource_state
+		if saved_state.has(node.resource_id):
+			node.apply_save_state(saved_state[node.resource_id])
 
 func _create_multimesh(
 	node_name: String,
