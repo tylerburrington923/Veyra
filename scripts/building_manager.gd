@@ -190,7 +190,7 @@ func _clear_preview() -> void:
 
 func _next_building_id() -> String:
     var settlement := _get_settlement_manager()
-    var buildings: Dictionary = settlement.get("buildings", {}) if settlement else {}
+    var buildings: Dictionary = settlement.get("buildings") if settlement else {}
     var index := buildings.size() + 1
     var candidate := "B-%04d" % index
     while buildings.has(candidate):
