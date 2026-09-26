@@ -74,22 +74,39 @@ func get_capacity_state() -> Dictionary:
     }
 
 func get_snapshot() -> Dictionary:
-    return resources.duplicate(true)
+    return {
+        "resources": resources.duplicate(true),
+        "items": items.duplicate(true)
+    }
 
 func load_snapshot(snapshot: Dictionary) -> void:
     resources.clear()
+    items.clear()
     total_weight = 0.0
 
     if snapshot is Dictionary:
-        for key in snapshot.keys():
-            if key is not String or not VeyraResourceCatalog.is_valid(key):
-                continue
-            var value = snapshot[key]
-            if not (value is int or value is float):
-                continue
-            var amount := maxi(0, int(value))
-            if amount > 0:
-                _load_amount(str(key), amount)
+        var resource_snapshot: Dictionary = snapshot.get("resources", snapshot)
+        if resource_snapshot is Dictionary:
+            for key in resource_snapshot.keys():
+                if key is not String or not VeyraResourceCatalog.is_valid(key):
+                    continue
+                var value = resource_snapshot[key]
+                if not (value is int or value is float):
+                    continue
+                var amount := maxi(0, int(value))
+                if amount > 0:
+                    _load_amount(str(key), amount)
+
+        var item_snapshot: Dictionary = snapshot.get("items", {})
+        if item_snapshot is Dictionary:
+            for key in item_snapshot.keys():
+                if key is not String or not VeyraItemCatalog.is_valid(key):
+                    continue
+                var value = item_snapshot[key]
+                if value is int or value is float:
+                    var amount := maxi(0, int(value))
+                    if amount > 0:
+                        add_item(str(key), amount)
 
     inventory_changed.emit(get_snapshot(), "", 0)
 
@@ -109,10 +126,61 @@ func _load_amount(resource_type: String, amount: int) -> int:
         total_weight += accepted * weight
     return accepted
 
+func add_item(item_id: String, amount: int) -> int:
+    if amount <= 0 or not VeyraItemCatalog.is_valid(item_id):
+        return 0
+
+    var current := get_item_amount(item_id)
+    var stack_limit := VeyraItemCatalog.max_stack(item_id)
+    var free_slots := maxi(0, max_slots - _used_slots())
+    var capacity := free_slots * stack_limit
+    if current > 0:
+        capacity += stack_limit - (current % stack_limit)
+    var accepted := mini(amount, capacity)
+    var item_weight := VeyraItemCatalog.weight(item_id)
+    if item_weight > 0.0:
+        accepted = mini(accepted, int(floor(maxf(0.0, max_weight - total_weight) / item_weight)))
+    if accepted <= 0:
+        return 0
+
+    items[item_id] = current + accepted
+    total_weight += accepted * item_weight
+    inventory_changed.emit(get_snapshot(), item_id, accepted)
+    return accepted
+
+func remove_item(item_id: String, amount: int) -> int:
+    if amount <= 0:
+        return 0
+    var current := get_item_amount(item_id)
+    var removed := mini(amount, current)
+    if removed <= 0:
+        return 0
+
+    if current - removed > 0:
+        items[item_id] = current - removed
+    else:
+        items.erase(item_id)
+    total_weight = maxf(0.0, total_weight - removed * VeyraItemCatalog.weight(item_id))
+    inventory_changed.emit(get_snapshot(), item_id, -removed)
+    return removed
+
+func has_item(item_id: String, amount: int = 1) -> bool:
+    return amount > 0 and get_item_amount(item_id) >= amount
+
+func get_item_amount(item_id: String) -> int:
+    return maxi(0, int(items.get(item_id, 0)))
+
+func get_items_snapshot() -> Dictionary:
+    return items.duplicate(true)
+
 func _used_slots() -> int:
     var slots := 0
     for key in resources.keys():
         var amount := int(resources[key])
         if amount > 0:
             slots += int(ceili(float(amount) / float(VeyraResourceCatalog.max_stack(str(key)))))
+    for key in items.keys():
+        var amount := int(items[key])
+        if amount > 0:
+            slots += int(ceili(float(amount) / float(VeyraItemCatalog.max_stack(str(key)))))
     return slots
