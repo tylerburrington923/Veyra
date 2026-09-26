@@ -51,6 +51,7 @@ var touch_start: Dictionary = {}
 @onready var right_arm: MeshInstance3D = get_node_or_null("RightArm") as MeshInstance3D
 @onready var torso: MeshInstance3D = get_node_or_null("Torso") as MeshInstance3D
 var walk_time: float = 0.0
+var _debug_hud_accumulator: float = 0.0
 
 
 func _ready() -> void:
@@ -133,7 +134,10 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	_update_player_visuals(delta, direction)
-	_update_debug_hud(input_vector)
+	_debug_hud_accumulator += delta
+	if _debug_hud_accumulator >= 0.25:
+		_debug_hud_accumulator = 0.0
+		_update_debug_hud(input_vector)
 
 
 func _update_player_visuals(delta: float, direction: Vector3) -> void:
