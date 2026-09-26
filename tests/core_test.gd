@@ -14,8 +14,11 @@ func _run_tests() -> void:
 	_test_tool_catalog_contract()
 	_test_first_person_viewmodel_contract()
 	_test_resource_interaction_matrix()
+	_test_npc_definition_data_layer()
+	_test_npc_state_data_layer()
+	_test_npc_state_validation_vs_sanitization()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (8 suites)")
+		print("VEYRA CORE TESTS: PASS (11 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -199,3 +202,41 @@ func _test_resource_collision_contract() -> void:
 	resource._restore()
 	_check(resource.collision_layer == 4, "restored resource must regain interaction collision")
 	resource.queue_free()
+
+
+func _test_npc_definition_data_layer() -> void:
+	var definition := NPCDefinition.new("human_gatherer", "Gatherer", "human", 4.0, 1.2, 25, ["GATHER", "HAUL"], "villager_01")
+	_check(definition.is_valid(), "valid NPC definition must pass validation")
+	var invalid_definition := NPCDefinition.new("", "", "human", -1.0, -0.5, -10)
+	_check(not invalid_definition.is_valid(), "invalid NPC definition must fail validation")
+	var restored := NPCDefinition.from_dict(definition.to_dict())
+	_check(restored.id == definition.id, "NPC definition ID round trip mismatch")
+	_check(restored.base_movement_speed == definition.base_movement_speed, "NPC definition speed round trip mismatch")
+	_check(restored.preferred_jobs == definition.preferred_jobs, "NPC definition jobs round trip mismatch")
+
+func _test_npc_state_data_layer() -> void:
+	var state := NPCState.new("npc_001", "human_gatherer")
+	state.position = NPCState.make_vector_dict(10.0, 0.0, -5.0)
+	_check(state.is_valid(), "valid initial NPC state must pass validation")
+	var invalid_state := NPCState.new("", "")
+	_check(not invalid_state.is_valid(), "NPC state with empty IDs must fail validation")
+	state.update_needs(10.0)
+	_check(state.hunger < 100.0, "NPC hunger should decay deterministically")
+	_check(state.thirst < 100.0, "NPC thirst should decay deterministically")
+	var restored := NPCState.from_dict(state.to_dict())
+	_check(restored.npc_id == "npc_001", "NPC state ID round trip mismatch")
+	_check(restored.position["x"] == 10.0, "NPC state X position round trip mismatch")
+	_check(restored.position["z"] == -5.0, "NPC state Z position round trip mismatch")
+	_check(restored.is_valid(), "restored NPC state must pass validation")
+
+func _test_npc_state_validation_vs_sanitization() -> void:
+	var corrupted := NPCState.from_dict({
+		"npc_id": "corrupted_01",
+		"definition_id": "human_worker",
+		"health": -50.0
+	})
+	_check(corrupted.health == -50.0, "from_dict must preserve invalid health without clamping")
+	_check(not corrupted.is_valid(), "corrupted NPC state must fail validation")
+	corrupted.sanitize()
+	_check(corrupted.health == 0.0, "sanitize must clamp negative health")
+	_check(not corrupted.alive, "sanitize must mark zero-health NPC dead")
