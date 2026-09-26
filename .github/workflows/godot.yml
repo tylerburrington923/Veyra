@@ -47,6 +47,10 @@ jobs:
         timeout-minutes: 2
         run: godot --headless --path . --quit-after 10 --verbose
 
+      - name: Run core regression tests
+        timeout-minutes: 2
+        run: godot --headless --path . --script res://tests/core_test.gd
+
       - name: Check for import/parser errors
         shell: bash
         run: |
