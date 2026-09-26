@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-## Veyra mobile-first third-person controller.
+## Veyra mobile-first first-person controller.
 ## Left side: dynamic movement joystick.
 ## Right side: camera look.
 ## Desktop: WASD + mouse.
@@ -11,6 +11,7 @@ extends CharacterBody3D
 @export var braking: float = 28.0
 @export var gravity: float = 18.0
 @export var jump_velocity: float = 7.0
+@export var jump_forward_boost: float = 1.35
 @export var ground_snap_distance: float = 0.35
 @export var max_floor_angle_degrees: float = 48.0
 @export var safe_spawn_height: float = 12.0
@@ -22,8 +23,8 @@ extends CharacterBody3D
 @export var max_pitch_degrees: float = 55.0
 
 @export_category("Camera")
-@export var camera_distance: float = 4.6
-@export var camera_height: float = 2.75
+@export var camera_distance: float = 0.0
+@export var camera_height: float = 1.55
 @export var camera_fov: float = 70.0
 @export var camera_far: float = 140.0
 
@@ -52,6 +53,12 @@ var touch_start: Dictionary = {}
 @onready var left_arm: MeshInstance3D = get_node_or_null("LeftArm") as MeshInstance3D
 @onready var right_arm: MeshInstance3D = get_node_or_null("RightArm") as MeshInstance3D
 @onready var torso: MeshInstance3D = get_node_or_null("Torso") as MeshInstance3D
+@onready var head: MeshInstance3D = get_node_or_null("Head") as MeshInstance3D
+@onready var hair: MeshInstance3D = get_node_or_null("Hair") as MeshInstance3D
+@onready var left_eye: MeshInstance3D = get_node_or_null("LeftEye") as MeshInstance3D
+@onready var right_eye: MeshInstance3D = get_node_or_null("RightEye") as MeshInstance3D
+@onready var left_hand: MeshInstance3D = get_node_or_null("LeftHand") as MeshInstance3D
+@onready var right_hand: MeshInstance3D = get_node_or_null("RightHand") as MeshInstance3D
 var walk_time: float = 0.0
 var _debug_hud_accumulator: float = 0.0
 signal tool_changed(tool_id: String, durability: float)
@@ -160,6 +167,7 @@ func _ready() -> void:
 		jump_button.pressed.connect(_on_jump_pressed)
 
 	_configure_camera()
+	_configure_first_person_view()
 	_hide_joystick()
 	_update_equipped_tool_visual()
 
@@ -172,11 +180,24 @@ func _configure_camera() -> void:
 	camera.fov = camera_fov
 	camera.far = camera_far
 	camera.position = Vector3(0.0, camera_height, camera_distance)
-	camera.look_at(Vector3(0.0, 1.0, 0.0), Vector3.UP)
+	camera.rotation = Vector3(look_pitch, 0.0, 0.0)
 	look_pitch = camera.rotation.x
-	camera.rotation.x = look_pitch
 	target_yaw = rotation.y
 
+
+func _configure_first_person_view() -> void:
+	# Keep the camera inside the player capsule but hide body geometry so it cannot occlude the world.
+	for mesh in [head, hair, left_eye, right_eye, torso, left_leg, right_leg]:
+		if mesh:
+			mesh.visible = false
+	if left_hand:
+		left_hand.visible = true
+	if right_hand:
+		right_hand.visible = true
+	if left_arm:
+		left_arm.visible = true
+	if right_arm:
+		right_arm.visible = true
 
 func _stabilize_spawn() -> void:
 	var world_generator := get_parent().get_node_or_null("WorldGenerator")
@@ -223,6 +244,10 @@ func _physics_process(delta: float) -> void:
 		velocity.y -= gravity * delta
 	elif jump_requested:
 		velocity.y = jump_velocity
+		var jump_direction := direction.normalized() if direction.length_squared() > 0.001 else Vector3.ZERO
+		if jump_direction != Vector3.ZERO:
+			velocity.x += jump_direction.x * jump_forward_boost
+			velocity.z += jump_direction.z * jump_forward_boost
 	else:
 		velocity.y = 0.0
 
