@@ -7,6 +7,8 @@ extends RayCast3D
 const INTERACTION_LAYER := 2
 const PROXIMITY_RADIUS := 5.5
 const MAX_HANDLER_DEPTH := 8
+const MIN_VIEW_DOT := 0.20
+const RAY_DISTANCE := 7.0
 
 @export var interact_distance: float = PROXIMITY_RADIUS
 @export var resonance_strength: float = 1.8
@@ -55,6 +57,28 @@ func _query_target() -> Dictionary:
     if not player:
         return {}
 
+    # Prefer exactly what the camera is aiming at. This prevents an object
+    # behind the player from becoming the active target just because it is close.
+    force_raycast_update()
+    if is_colliding():
+        var ray_collider := get_collider() as Node
+        var ray_handler := _find_handler(ray_collider, "interact")
+        if not ray_handler:
+            ray_handler = _find_handler(ray_collider, "resonate")
+        if ray_handler and ray_handler is Node3D:
+            var ray_position := (ray_handler as Node3D).global_position
+            var ray_distance := player.global_position.distance_to(ray_position)
+            if ray_distance <= RAY_DISTANCE:
+                var ray_hit := {
+                    "collider": ray_collider,
+                    "handler": ray_handler,
+                    "position": get_collision_point(),
+                    "distance": ray_distance
+                }
+                return ray_hit
+
+    # Fallback for mobile controls: search nearby interactables, but only in
+    # the player's forward view cone.
     var query := PhysicsShapeQueryParameters3D.new()
     query.shape = _proximity_shape
     query.transform = Transform3D(Basis.IDENTITY, player.global_position)
@@ -67,7 +91,13 @@ func _query_target() -> Dictionary:
 
     var hits := get_world_3d().direct_space_state.intersect_shape(query, 24)
     var best := {}
-    var best_distance := INF
+    var best_score := -INF
+    var camera_forward := -global_transform.basis.z
+    camera_forward.y = 0.0
+    if camera_forward.length_squared() < 0.0001:
+        camera_forward = Vector3(0.0, 0.0, -1.0)
+    else:
+        camera_forward = camera_forward.normalized()
 
     for hit in hits:
         var collider := hit.get("collider") as Node
@@ -77,21 +107,32 @@ func _query_target() -> Dictionary:
         var handler := _find_handler(collider, "interact")
         if not handler:
             handler = _find_handler(collider, "resonate")
-        if not handler:
+        if not handler or not handler is Node3D:
             continue
 
-        var handler_position: Vector3 = player.global_position
-        if handler is Node3D:
-            handler_position = (handler as Node3D).global_position
-        var distance: float = player.global_position.distance_to(handler_position)
-        if distance < best_distance:
-            best_distance = distance
+        var handler_position := (handler as Node3D).global_position
+        var to_target := handler_position - player.global_position
+        var distance := to_target.length()
+        if distance <= 0.01 or distance > PROXIMITY_RADIUS:
+            continue
+
+        to_target.y = 0.0
+        if to_target.length_squared() < 0.0001:
+            continue
+        var view_dot := camera_forward.dot(to_target.normalized())
+        if view_dot < MIN_VIEW_DOT:
+            continue
+
+        # Favor objects that are close and centered in the camera view.
+        var score := view_dot * 2.0 - distance * 0.18
+        if score > best_score:
+            best_score = score
             best = hit.duplicate(true)
             best["handler"] = handler
             best["distance"] = distance
+            best["position"] = handler_position
 
     return best
-
 
 func try_interact() -> void:
     var hit := _query_target()
