@@ -84,6 +84,7 @@ func _test_tool_state_contract() -> void:
 	_check(absf(float(player.get_save_state().get("tool_durability", 0.0)) - 95.0) < 0.001, "tool durability mismatch")
 	var tool_button := player.get_node_or_null("HUDInventory/ToolButton") as Button
 	_check(tool_button != null, "mobile tool selector missing")
+	_check(tool_button.text.contains("STONE AXE"), "equipment HUD did not synchronize after equip")
 	player.queue_free()
 
 func _test_resource_collision_contract() -> void:
@@ -95,6 +96,11 @@ func _test_resource_collision_contract() -> void:
 	resource.amount = 3
 	_check(resource.collision_layer == 4, "resource must remain a collidable interactable on layer 4")
 	_check(resource.collision_mask == 1, "resource should detect terrain layer 1")
+	var test_player_scene := load("res://scenes/player.tscn") as PackedScene
+	var test_player := test_player_scene.instantiate()
+	root.add_child(test_player)
+	_check(resource.can_interact(test_player), "resource should be interactable with hands")
+	test_player.queue_free()
 	resource._deplete()
 	_check(resource.collision_layer == 0, "depleted resource must disable collision")
 	resource._restore()
