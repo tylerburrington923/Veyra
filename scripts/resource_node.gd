@@ -36,11 +36,15 @@ func interact() -> void:
     if required.is_empty():
         required = "T00_HANDS"
 
-    if required != "T00_HANDS":
-        if not player.has_method("get_tool_id") or player.get_tool_id() != required:
-            return
+    # Tools are optional upgrades for the current beta loop. Hands can always
+    # gather basic resources; the matching crafted tool increases the yield.
+    var equipped_tool := "T00_HANDS"
+    if player.has_method("get_tool_id"):
+        equipped_tool = player.get_tool_id()
 
     var yield_amount := maxi(1, int(round(tool_efficiency)))
+    if _is_matching_tool(equipped_tool):
+        yield_amount = maxi(yield_amount + 1, 2)
     yield_amount = mini(yield_amount, remaining)
 
     if not inventory.has_method("add_resource"):
