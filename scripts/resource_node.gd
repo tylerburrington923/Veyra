@@ -147,5 +147,5 @@ func apply_save_state(state: Dictionary) -> void:
 	else:
 		set_process(false)
 		visible = true
-		collision_layer = 4
+		collision_layer = 6 if physical_collision else 4
 		collision_mask = 1
