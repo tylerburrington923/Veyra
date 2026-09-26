@@ -52,7 +52,8 @@ func interact() -> void:
     if accepted <= 0:
         return
 
-    if equipped_tool != "T00_HANDS" and player.has_method("use_tool") and not player.use_tool(durability_cost):
+    var actual_tool_cost := VeyraItemCatalog.durability_cost(equipped_tool, resource_type)
+    if actual_tool_cost > 0.0 and player.has_method("use_tool") and not player.use_tool(actual_tool_cost):
         inventory.remove_resource(resource_type, accepted)
         return
 
