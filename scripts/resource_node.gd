@@ -29,10 +29,14 @@ func can_interact(player: Node) -> bool:
 	var inventory: Node = player.get_inventory() if player.has_method("get_inventory") else null
 	if not inventory:
 		return false
-	var equipped_tool := "T00_HANDS"
+	var equipped_tool := VeyraItemCatalog.HANDS_ID
 	if player.has_method("get_tool_id"):
-		equipped_tool = player.get_tool_id()
-	return tool_required == "T00_HANDS" or equipped_tool == tool_required
+		equipped_tool = str(player.get_tool_id())
+	if not VeyraItemCatalog.is_valid_tool(equipped_tool):
+		return false
+	if not VeyraItemCatalog.is_valid_tool(tool_required):
+		return false
+	return tool_required == VeyraItemCatalog.HANDS_ID or equipped_tool == tool_required
 
 func get_interaction_requirement(player: Node) -> String:
 	if not can_interact(player):
@@ -53,11 +57,15 @@ func interact() -> void:
 	if not inventory:
 		return
 
-	var equipped_tool := "T00_HANDS"
+	var equipped_tool := VeyraItemCatalog.HANDS_ID
 	if player.has_method("get_tool_id"):
 		equipped_tool = player.get_tool_id()
 
-	if tool_required != "T00_HANDS" and equipped_tool != tool_required:
+	if not VeyraItemCatalog.is_valid_tool(equipped_tool):
+		return
+	if not VeyraItemCatalog.is_valid_tool(tool_required):
+		return
+	if tool_required != VeyraItemCatalog.HANDS_ID and equipped_tool != tool_required:
 		return
 
 	var actual_tool_cost: float = VeyraItemCatalog.durability_cost(equipped_tool, resource_type)
