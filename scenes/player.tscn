@@ -39,12 +39,27 @@ roughness = 1.0
 [sub_resource type="StandardMaterial3D" id="Eyes"]
 albedo_color = Color(0.02, 0.02, 0.02, 1)
 roughness = 0.5
-[sub_resource type="BoxMesh" id="ToolMesh"]
-size = Vector3(0.1, 0.62, 0.1)
+[sub_resource type="BoxMesh" id="ToolHandleMesh"]
+size = Vector3(0.07, 0.62, 0.07)
 
-[sub_resource type="StandardMaterial3D" id="ToolMaterial"]
-albedo_color = Color(0.35, 0.38, 0.42, 1)
+[sub_resource type="BoxMesh" id="AxeHeadMesh"]
+size = Vector3(0.30, 0.16, 0.07)
+
+[sub_resource type="BoxMesh" id="PickHeadMesh"]
+size = Vector3(0.34, 0.08, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="ToolWoodMaterial"]
+albedo_color = Color(0.32, 0.16, 0.07, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="ToolStoneMaterial"]
+albedo_color = Color(0.42, 0.45, 0.48, 1)
 roughness = 0.72
+
+[sub_resource type="StandardMaterial3D" id="ToolMetalMaterial"]
+albedo_color = Color(0.62, 0.66, 0.70, 1)
+metallic = 0.65
+roughness = 0.35
 
 [sub_resource type="StyleBoxFlat" id="JoystickStyle"]
 bg_color = Color(0.08, 0.12, 0.16, 0.72)
@@ -129,11 +144,6 @@ material_override = SubResource("Skin")
 position = Vector3(0.42, 0.73, 0)
 mesh = SubResource("HandMesh")
 material_override = SubResource("Skin")
-[node name="EquippedTool" type="MeshInstance3D" parent="RightHand"]
-position = Vector3(0.0, -0.12, -0.08)
-mesh = SubResource("ToolMesh")
-material_override = SubResource("ToolMaterial")
-visible = false
 
 [node name="LeftLeg" type="MeshInstance3D" parent="."]
 position = Vector3(-0.18, 0.48, 0)
@@ -154,9 +164,54 @@ scale = Vector3(1.0, 0.55, 1.25)
 mesh = SubResource("FootMesh")
 material_override = SubResource("Pants")
 [node name="Camera3D" type="Camera3D" parent="."]
-position = Vector3(0, 2.75, 4.6)
-rotation_degrees = Vector3(-16, 0, 0)
+position = Vector3(0, 1.68, 0)
+rotation_degrees = Vector3(-8, 0, 0)
 current = true
+
+[node name="ViewModel" type="Node3D" parent="Camera3D"]
+
+[node name="LeftArmFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+position = Vector3(-0.24, -0.27, -0.48)
+rotation_degrees = Vector3(8, -8, -12)
+mesh = SubResource("LimbMesh")
+material_override = SubResource("Skin")
+
+[node name="RightArmFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+position = Vector3(0.24, -0.27, -0.48)
+rotation_degrees = Vector3(8, 8, 12)
+mesh = SubResource("LimbMesh")
+material_override = SubResource("Skin")
+
+[node name="LeftHandFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+position = Vector3(-0.28, -0.49, -0.62)
+mesh = SubResource("HandMesh")
+material_override = SubResource("Skin")
+
+[node name="RightHandFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+position = Vector3(0.28, -0.49, -0.62)
+mesh = SubResource("HandMesh")
+material_override = SubResource("Skin")
+
+[node name="EquippedTool" type="Node3D" parent="Camera3D/ViewModel/RightHandFP"]
+position = Vector3(0.0, -0.08, -0.08)
+visible = false
+
+[node name="Handle" type="MeshInstance3D" parent="Camera3D/ViewModel/RightHandFP/EquippedTool"]
+position = Vector3(0.0, 0.28, 0.0)
+mesh = SubResource("ToolHandleMesh")
+material_override = SubResource("ToolWoodMaterial")
+
+[node name="AxeHead" type="MeshInstance3D" parent="Camera3D/ViewModel/RightHandFP/EquippedTool"]
+position = Vector3(0.0, 0.60, 0.0)
+mesh = SubResource("AxeHeadMesh")
+material_override = SubResource("ToolStoneMaterial")
+visible = false
+
+[node name="PickHead" type="MeshInstance3D" parent="Camera3D/ViewModel/RightHandFP/EquippedTool"]
+position = Vector3(0.0, 0.60, 0.0)
+mesh = SubResource("PickHeadMesh")
+material_override = SubResource("ToolMetalMaterial")
+visible = false
 [node name="InteractionRay" type="RayCast3D" parent="Camera3D"]
 collision_mask = 2
 exclude_parent = true
