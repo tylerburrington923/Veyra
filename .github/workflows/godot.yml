@@ -58,9 +58,11 @@ jobs:
           fi
 
       - name: Package source snapshot
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p build
-          zip -r "build/Veyra-source-${GITHUB_SHA::7}.zip" .             -x ".git/*" ".godot/*" "build/*"
+          zip -r "build/Veyra-source-${GITHUB_SHA:0:7}.zip" . -x ".git/*" ".godot/*" "build/*"
 
       - name: Upload validation logs and source
         if: always()
