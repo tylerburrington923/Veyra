@@ -6,7 +6,7 @@ extends RayCast3D
 const INTERACTION_LAYER := 2
 
 @export var interact_distance: float = 6.0
-@export var echo_force: float = 1.8
+@export var resonance_strength: float = 1.8
 
 var target_label: Label
 var interact_button: Button
@@ -81,10 +81,10 @@ func try_interact() -> void:
         _set_target_state(_classify_target(interactable), interactable.name, "interact()", collision_point)
         return
 
-    var physics_target: Node = _find_handler(target, "apply_force")
-    if physics_target:
-        physics_target.apply_force(-global_transform.basis.z, echo_force)
-        _set_target_state(_classify_target(physics_target), physics_target.name, "apply_force()", collision_point)
+    var resonance_target: Node = _find_handler(target, "resonate")
+    if resonance_target:
+        resonance_target.resonate(echo_force)
+        _set_target_state(_classify_target(resonance_target), resonance_target.name, "resonate()", collision_point)
         return
 
     _set_target_state(_classify_target(target), target.name, "NONE", collision_point)
@@ -106,9 +106,9 @@ func _update_target_debug() -> void:
         _set_target_state(_classify_target(interactable), interactable.name, "interact()", collision_point)
         return
 
-    var physics_target: Node = _find_handler(target, "apply_force")
-    if physics_target:
-        _set_target_state("PHYSICS", physics_target.name, "apply_force()", collision_point)
+    var resonance_target: Node = _find_handler(target, "resonate")
+    if resonance_target:
+        _set_target_state(_classify_target(resonance_target), resonance_target.name, "resonate()", collision_point)
         return
 
     _set_target_state(_classify_target(target), target.name, "NONE", collision_point)
