@@ -62,15 +62,6 @@ func interact() -> void:
     if remaining <= 0:
         _deplete()
 
-func _is_matching_tool(tool_id: String) -> bool:
-    match resource_type:
-        "Wood":
-            return tool_id == "I01_STONE_AXE"
-        "Stone", "Metal":
-            return tool_id == "I02_STONE_PICK"
-        _:
-            return false
-
 func get_interaction_point() -> Vector3:
 	return global_position + Vector3.UP * 0.75
 
