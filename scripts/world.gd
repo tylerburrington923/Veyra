@@ -41,6 +41,10 @@ func _apply_loaded_state(save_data: Dictionary) -> void:
     var saved_world: Dictionary = save_data.get("world", {})
     if not saved_world.is_empty():
         world_time = maxf(0.0, float(saved_world.get("world_time", 0.0)))
+        var generator := get_node_or_null("WorldGenerator")
+        var resource_state = saved_world.get("resources", {})
+        if generator and resource_state is Dictionary and generator.has_method("set_saved_resource_state"):
+            generator.set_saved_resource_state(resource_state)
 
     var settlement_state: Dictionary = save_data.get("settlement", {})
     if SettlementManager and not settlement_state.is_empty():
@@ -84,8 +88,15 @@ func get_world_state() -> Dictionary:
         "seed": world_seed,
         "world_time": world_time,
         "lunar": get_lunar_state(),
-        "version": 3
+        "resources": _get_resource_state(),
+        "version": 4
     }
+
+func _get_resource_state() -> Dictionary:
+    var generator := get_node_or_null("WorldGenerator")
+    if generator and generator.has_method("get_resource_state"):
+        return generator.get_resource_state()
+    return {}
 
 func save_game() -> bool:
     if not GameManager:
