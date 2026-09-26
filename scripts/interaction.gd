@@ -22,6 +22,7 @@ var last_target_type: String = "NONE"
 var last_handler_name: String = ""
 var last_collision_point: Vector3 = Vector3.ZERO
 var _target_update_accumulator := 0.0
+var _locked_handler_id := 0
 
 func _ready() -> void:
 	interact_distance = MAX_TARGET_DISTANCE
