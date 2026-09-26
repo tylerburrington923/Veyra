@@ -111,7 +111,7 @@ func get_resource_state() -> Dictionary:
     for child in get_children():
         if child.get_script() == RESOURCE_NODE_SCRIPT:
             var resource: Node = child
-            var saved := resource.get_save_state()
+            var saved: Dictionary = resource.get_save_state()
             if not saved.is_empty():
                 state[resource.resource_id] = saved
     return state
