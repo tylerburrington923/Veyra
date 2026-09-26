@@ -172,6 +172,9 @@ func try_interact() -> void:
 
 	if handler.has_method("interact"):
 		handler.interact()
+		var player := get_tree().get_first_node_in_group("local_player")
+		if player and player.has_method("play_tool_use"):
+			player.play_tool_use()
 		_set_target_state(_classify_target(handler), handler.name, "interact()", collision_point)
 		return
 
