@@ -108,6 +108,7 @@ func confirm_build(player: Node3D, inventory: VeyraInventory) -> bool:
 	_spawn_building_visual(building_id, selected_building_id, placement_position)
 	building_completed.emit(selected_building_id, placement_position)
 	placement_valid = false
+	placement_location_valid = false
 	placement_active = false
 	_clear_preview()
 	return true
