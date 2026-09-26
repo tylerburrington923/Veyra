@@ -33,6 +33,8 @@ extends CharacterBody3D
 @export_range(0.1, 0.9, 0.01) var left_screen_ratio: float = 0.48
 
 var look_pitch: float = deg_to_rad(-18.0)
+var target_yaw: float = 0.0
+@export_range(0.0, 30.0, 0.5) var camera_yaw_smoothing: float = 18.0
 var move_input: Vector2 = Vector2.ZERO
 var jump_requested := false
 var move_touch_id: int = -1
@@ -108,6 +110,7 @@ func _configure_camera() -> void:
 	camera.look_at(Vector3(0.0, 1.0, 0.0), Vector3.UP)
 	look_pitch = camera.rotation.x
 	camera.rotation.x = look_pitch
+	target_yaw = rotation.y
 
 
 func _stabilize_spawn() -> void:
@@ -120,6 +123,7 @@ func _stabilize_spawn() -> void:
 
 func _physics_process(delta: float) -> void:
 	_recover_from_fall()
+	rotation.y = lerp_angle(rotation.y, target_yaw, 1.0 - exp(-camera_yaw_smoothing * delta))
 	var input_vector: Vector2 = move_input
 
 	if input_vector.length_squared() < 0.0001:
@@ -337,7 +341,7 @@ func _joystick_vector(offset: Vector2) -> Vector2:
 
 
 func _apply_look(delta: Vector2) -> void:
-	rotate_y(-delta.x * mouse_sensitivity)
+	target_yaw -= delta.x * mouse_sensitivity
 
 	look_pitch = clamp(
 		look_pitch - delta.y * mouse_sensitivity,
