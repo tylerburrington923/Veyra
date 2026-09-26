@@ -217,7 +217,11 @@ func _update_debug_hud(input_vector: Vector2) -> void:
 		var lunar: Dictionary = world.get_lunar_state()
 		lunar_text = "MOON: %s" % str(lunar.get("phase_name", "--"))
 		seed_text = "SEED: VE-%05d" % int(lunar.get("world_seed", 0))
-	debug_hud.text = "%s  •  %s" % [seed_text, lunar_text]
+	var tool_text := "HANDS"
+	match selected_tool_id:
+		"I01_STONE_AXE": tool_text = "AXE"
+		"I02_STONE_PICK": tool_text = "PICK"
+	debug_hud.text = "%s  •  %s  •  %s" % [seed_text, lunar_text, tool_text]
 
 
 func _recover_from_fall() -> void:
