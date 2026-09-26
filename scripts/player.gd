@@ -61,8 +61,17 @@ var tool_durability: float = 100.0
 func get_tool_id() -> String:
 	return selected_tool_id
 
-func set_tool(tool_id: String) -> void:
-	selected_tool_id = tool_id if tool_id != "" else "T00_HANDS"
+func set_tool(tool_id: String) -> bool:
+	var next_tool := tool_id if tool_id != "" else "T00_HANDS"
+	if next_tool != "T00_HANDS" and not VeyraItemCatalog.is_valid(next_tool):
+		return false
+	if next_tool != "T00_HANDS" and next_tool not in ["I01_STONE_AXE", "I02_STONE_PICK"]:
+		return false
+	if next_tool == selected_tool_id:
+		return true
+	selected_tool_id = next_tool
+	tool_durability = 100.0
+	return true
 
 func can_use_tool(durability_cost: float = 1.0) -> bool:
 	return selected_tool_id == "T00_HANDS" or (tool_durability > 0.0 and durability_cost >= 0.0)
@@ -73,6 +82,24 @@ func use_tool(durability_cost: float = 1.0) -> bool:
 	if selected_tool_id != "T00_HANDS":
 		tool_durability = maxf(0.0, tool_durability - maxf(0.0, durability_cost))
 	return true
+
+func get_save_state() -> Dictionary:
+	return {
+		"tool_id": selected_tool_id,
+		"tool_durability": clampf(tool_durability, 0.0, 100.0)
+	}
+
+func load_save_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	var tool_id := str(state.get("tool_id", "T00_HANDS"))
+	var inventory := get_inventory()
+	if tool_id != "T00_HANDS" and (not inventory or not inventory.has_item(tool_id)):
+		tool_id = "T00_HANDS"
+	selected_tool_id = tool_id
+	tool_durability = clampf(float(state.get("tool_durability", 100.0)), 0.0, 100.0)
+	if selected_tool_id == "T00_HANDS":
+		tool_durability = 100.0
 
 func get_inventory() -> VeyraInventory:
 	return get_node_or_null("Inventory") as VeyraInventory
