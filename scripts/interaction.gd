@@ -14,6 +14,8 @@ var last_target_name: String = ""
 var last_target_type: String = "NONE"
 var last_handler_name: String = ""
 var last_collision_point: Vector3 = Vector3.ZERO
+var _target_update_accumulator: float = 0.0
+@export var target_update_interval: float = 0.1
 
 func _ready() -> void:
     target_position = Vector3(0, 0, -interact_distance)
@@ -25,7 +27,11 @@ func _ready() -> void:
     interact_button = get_node_or_null("../../MobileControls/InteractButton") as Button
     _update_target_debug()
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
+    _target_update_accumulator += delta
+    if _target_update_accumulator < target_update_interval:
+        return
+    _target_update_accumulator = 0.0
     _update_target_debug()
 
 func _unhandled_input(event: InputEvent) -> void:
