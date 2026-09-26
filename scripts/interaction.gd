@@ -70,7 +70,8 @@ func _query_target() -> Dictionary:
 					"handler": ray_handler,
 					"position": point,
 					"distance": player.global_position.distance_to(point),
-					"screen_score": 0.0
+					"screen_score": 0.0,
+					"eligible": _is_handler_eligible(ray_handler, player)
 				}
 
 	# Fallback: gather interactables around the player, but choose by where
@@ -134,8 +135,9 @@ func _query_target() -> Dictionary:
 				"handler": handler,
 				"position": point,
 				"distance": distance,
-				"screen_score": normalized_screen_offset
-			}
+				"screen_score": normalized_screen_offset,
+					"eligible": _is_handler_eligible(handler, player)
+				}
 
 	return best
 
@@ -146,6 +148,8 @@ func try_interact() -> void:
 		return
 
 	var handler := hit.get("handler") as Node
+	if not bool(hit.get("eligible", true)):
+		return
 	var collision_point: Vector3 = hit.get("position", Vector3.ZERO)
 	if not handler:
 		_set_target_state("UNKNOWN", "", "", collision_point)
@@ -183,6 +187,10 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 
 	if interact_button:
 		var actionable := handler != ""
+	if actionable:
+		var player := get_tree().get_first_node_in_group("local_player") as Node3D
+		var target := _query_target()
+		actionable = bool(target.get("eligible", true)) if not target.is_empty() else false
 		interact_button.disabled = not actionable
 		interact_button.text = _get_action_label(target_type)
 
@@ -224,6 +232,11 @@ func _has_line_of_sight(origin: Vector3, target: Vector3, player: Node3D, handle
 		return true
 	var blocker := result.get("collider") as Node
 	return blocker == handler or _find_handler(blocker, "interact") == handler or _find_handler(blocker, "resonate") == handler
+
+func _is_handler_eligible(handler: Node, player: Node) -> bool:
+	if handler.has_method("can_interact"):
+		return bool(handler.can_interact(player))
+	return true
 
 func _classify_target(node: Node) -> String:
 	if not node:
