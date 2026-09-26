@@ -52,6 +52,31 @@ var touch_start: Dictionary = {}
 @onready var torso: MeshInstance3D = get_node_or_null("Torso") as MeshInstance3D
 var walk_time: float = 0.0
 var _debug_hud_accumulator: float = 0.0
+var selected_tool_id: String = "T00_HANDS"
+var tool_durability: float = 100.0
+
+
+func get_tool_id() -> String:
+	return selected_tool_id
+
+func set_tool(tool_id: String) -> void:
+	selected_tool_id = tool_id if tool_id != "" else "T00_HANDS"
+
+func use_tool(durability_cost: float = 1.0) -> bool:
+	if selected_tool_id == "T00_HANDS":
+		return true
+	if tool_durability <= 0.0:
+		return false
+	tool_durability = maxf(0.0, tool_durability - maxf(0.0, durability_cost))
+	return true
+
+func get_inventory() -> VeyraInventory:
+	return get_node_or_null("Inventory") as VeyraInventory
+
+func add_resource(resource_type: String, amount: int) -> void:
+	var inventory := get_inventory()
+	if inventory:
+		inventory.add_resource(resource_type, amount)
 
 
 func _ready() -> void:
