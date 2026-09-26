@@ -25,7 +25,7 @@ func interact() -> void:
     if depleted or remaining <= 0 or interaction_cooldown > 0.0:
         return
 
-    var player := get_tree().get_first_node_in_group("local_player")
+    var player: Node = get_tree().get_first_node_in_group("local_player")
     if not player:
         return
 
