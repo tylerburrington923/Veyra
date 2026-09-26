@@ -222,10 +222,14 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 			var distance_text := "--"
 			if player:
 				distance_text = "%.1f m" % player.global_position.distance_to(collision_point)
-			target_label.text = "%s  •  %s\\n%s" % [
+			var requirement_text := ""
+			if not eligible and last_requirement != "":
+				requirement_text = "\\nREQUIRES: %s" % last_requirement
+			target_label.text = "%s  •  %s\\n%s%s" % [
 				_get_action_label(target_type),
 				target_name if target_name != "" else "Unknown",
-				distance_text
+				distance_text,
+				requirement_text
 			]
 
 func _find_handler_from_name(handler_name: String) -> Node:
