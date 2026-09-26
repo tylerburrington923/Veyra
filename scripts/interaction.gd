@@ -185,12 +185,11 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 	last_handler_name = handler
 	last_collision_point = collision_point
 
+	var player := get_tree().get_first_node_in_group("local_player") as Node3D
+	var current_target := _query_target() if handler != "" else {}
+	var actionable := handler != "" and bool(current_target.get("eligible", true))
+
 	if interact_button:
-		var actionable := handler != ""
-	if actionable:
-		var player := get_tree().get_first_node_in_group("local_player") as Node3D
-		var target := _query_target()
-		actionable = bool(target.get("eligible", true)) if not target.is_empty() else false
 		interact_button.disabled = not actionable
 		interact_button.text = _get_action_label(target_type)
 
@@ -198,15 +197,15 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 		var has_target := target_type != "NONE" and handler != ""
 		target_label.visible = has_target
 		if has_target:
-			var player := get_tree().get_first_node_in_group("local_player") as Node3D
 			var distance_text := "--"
 			if player:
 				distance_text = "%.1f m" % player.global_position.distance_to(collision_point)
-			target_label.text = "%s  •  %s\n%s" % [
+			target_label.text = "%s  •  %s\\n%s" % [
 				_get_action_label(target_type),
 				target_name if target_name != "" else "Unknown",
 				distance_text
 			]
+
 func _get_action_label(target_type: String) -> String:
 	match target_type:
 		"RESOURCE":
