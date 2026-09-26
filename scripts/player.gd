@@ -129,6 +129,12 @@ func _update_equipped_tool_visual() -> void:
 	tool_visual.visible = selected_tool_id != "T00_HANDS"
 	if not tool_visual.visible:
 		return
+	var axe_head := get_node_or_null("Camera3D/ViewModel/RightHandFP/EquippedTool/AxeHead") as MeshInstance3D
+	var pick_head := get_node_or_null("Camera3D/ViewModel/RightHandFP/EquippedTool/PickHead") as MeshInstance3D
+	if axe_head:
+		axe_head.visible = selected_tool_id == "I01_STONE_AXE"
+	if pick_head:
+		pick_head.visible = selected_tool_id == "I02_STONE_PICK"
 	match selected_tool_id:
 		"I01_STONE_AXE":
 			tool_visual.rotation_degrees = Vector3(0, 0, -18)
