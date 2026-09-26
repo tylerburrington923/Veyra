@@ -108,7 +108,8 @@ func confirm_build(player: Node3D, inventory: VeyraInventory) -> bool:
             return false
 
     var building_id := _next_building_id()
-    if not SettlementManager.add_building(building_id, selected_building_id, placement_position):
+    var settlement := _get_settlement_manager()
+    if not settlement or not bool(settlement.call("add_building", building_id, selected_building_id, placement_position)):
         for resource_type in cost.keys():
             inventory.add_resource(str(resource_type), int(cost[resource_type]))
         return false
@@ -188,9 +189,11 @@ func _clear_preview() -> void:
         preview = null
 
 func _next_building_id() -> String:
-    var index := SettlementManager.buildings.size() + 1
+    var settlement := _get_settlement_manager()
+    var buildings: Dictionary = settlement.get("buildings", {}) if settlement else {}
+    var index := buildings.size() + 1
     var candidate := "B-%04d" % index
-    while SettlementManager.buildings.has(candidate):
+    while buildings.has(candidate):
         index += 1
         candidate = "B-%04d" % index
     return candidate
@@ -209,8 +212,12 @@ func restore_from_settlement() -> void:
     _initialize_building_root()
     for child in building_root.get_children():
         child.queue_free()
-    for building_id in SettlementManager.buildings.keys():
-        var record: Dictionary = SettlementManager.buildings[building_id]
+    var settlement := _get_settlement_manager()
+    if not settlement:
+        return
+    var buildings: Dictionary = settlement.get("buildings", {})
+    for building_id in buildings.keys():
+        var record: Dictionary = buildings[building_id]
         var position_data = record.get("position", [0.0, 0.0, 0.0])
         if position_data is Array and position_data.size() >= 3:
             var position_value := Vector3(float(position_data[0]), float(position_data[1]), float(position_data[2]))
@@ -235,8 +242,13 @@ func _spawn_building_visual(
     instance.door_state_changed.connect(_on_door_state_changed)
 
 func _on_door_state_changed(building_id: String, open: bool) -> void:
-    if SettlementManager:
-        SettlementManager.set_building_door_state(building_id, open)
+    var settlement := _get_settlement_manager()
+    if settlement:
+        settlement.call("set_building_door_state", building_id, open)
+
+func _get_settlement_manager() -> Node:
+    return get_node_or_null("/root/SettlementManager")
+
 
 func get_save_state() -> Dictionary:
     return {
