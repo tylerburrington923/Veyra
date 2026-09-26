@@ -89,6 +89,15 @@ func evaluate_placement(player: Node3D, position: Vector3, inventory: VeyraInven
 	placement_changed.emit(selected_building_id, placement_valid, placement_position)
 	return placement_valid
 
+func has_required_materials(inventory: VeyraInventory) -> bool:
+	if not inventory or selected_building_id.is_empty():
+		return false
+	var definition := get_selected_building()
+	for resource_type in definition.get("cost", {}).keys():
+		if not inventory.has_resource(str(resource_type), int(definition["cost"][resource_type])):
+			return false
+	return true
+
 func confirm_build(player: Node3D, inventory: VeyraInventory) -> bool:
 	if not placement_valid or selected_building_id.is_empty():
 		return false
