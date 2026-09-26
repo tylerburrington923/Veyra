@@ -64,6 +64,9 @@ func interact() -> void:
     if remaining <= 0:
         _deplete()
 
+func get_interaction_point() -> Vector3:
+	return global_position + Vector3.UP * 0.75
+
 func get_interaction_text() -> String:
     if depleted or remaining <= 0:
         return "%s depleted" % resource_type
