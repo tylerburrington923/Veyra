@@ -1,6 +1,5 @@
 extends Node3D
 
-const RESOURCE_NODE_SCRIPT = preload("res://scripts/resource_node.gd")
 
 ## Deterministic terrain and resource generation for Veyra.
 ## Visuals stay procedural so the mobile build does not depend on large texture assets.
@@ -109,7 +108,7 @@ func set_saved_resource_state(state: Dictionary) -> void:
 func get_resource_state() -> Dictionary:
     var state := {}
     for child in get_children():
-        if child.get_script() == RESOURCE_NODE_SCRIPT:
+        if child.is_in_group("resource_node"):
             var resource: Node = child
             var saved: Dictionary = resource.get_save_state()
             if not saved.is_empty():
@@ -155,7 +154,7 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
     var types := ["Stone", "Wood", "Metal", "Vitreous Lux"]
     var resource_type: String = types[rng.randi_range(0, types.size() - 1)]
 
-    var node: Node = RESOURCE_NODE_SCRIPT.new()
+    var node: Node = load("res://scripts/resource_node.gd").new()
     node.resource_id = "R01-%03d" % (index + 1)
     node.name = node.resource_id
     node.position = spawn_position
