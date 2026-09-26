@@ -15,7 +15,7 @@ var interaction_cooldown := 0.0
 
 func _ready() -> void:
     add_to_group("resource_node")
-    collision_layer = 2
+    collision_layer = 4
     collision_mask = 1
     remaining = maxi(0, amount)
     set_process(false)
@@ -138,5 +138,5 @@ func apply_save_state(state: Dictionary) -> void:
     else:
         set_process(false)
         visible = true
-        collision_layer = 2
+        collision_layer = 4
         collision_mask = 1
