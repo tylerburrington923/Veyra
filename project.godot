@@ -8,6 +8,8 @@ config/version="0.1.1"
 SettlementManager="*res://scripts/settlement_manager.gd"
 GameManager="*res://scripts/game_manager.gd"
 SaveManager="*res://scripts/save_manager.gd"
+CraftingManager="*res://scripts/crafting_manager.gd"
+BuildingManager="*res://scripts/building_manager.gd"
 
 [display]
 window/size/viewport_width=1280
