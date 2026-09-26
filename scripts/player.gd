@@ -135,6 +135,8 @@ func _update_equipped_tool_visual() -> void:
 	if not tool_visual:
 		return
 	tool_visual.visible = selected_tool_id != "T00_HANDS"
+	_tool_swing_active = false
+	_tool_swing_time = 0.0
 	if not tool_visual.visible:
 		return
 	var axe_head := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeHead") as MeshInstance3D
