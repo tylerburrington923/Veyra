@@ -26,10 +26,11 @@ func _run_tests() -> void:
 	_test_tree_harvest_visual_contract()
 	_test_house_door_contract()
 	_test_house_geometry_contract()
+	_test_townhall_contract()
 	_test_starter_inventory_contract()
 	_test_mobile_action_layout_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (21 suites)")
+		print("VEYRA CORE TESTS: PASS (22 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -139,6 +140,22 @@ func _test_house_geometry_contract() -> void:
 		_check(not back_wall.disabled, "house back wall collision must be enabled")
 		_check(back_wall.position.z > 2.0, "house back wall collision must sit on the rear wall")
 	house.queue_free()
+
+
+func _test_townhall_contract() -> void:
+	var definition := VeyraBuildingCatalog.get_building("B05_TOWNHALL")
+	_check(not definition.is_empty(), "town hall catalog entry must exist")
+	_check(str(definition.get("name", "")) == "Town Hall", "town hall display name must be Town Hall")
+	_check(definition.get("size", Vector2.ZERO) == Vector2(8.0, 7.0), "town hall footprint must be 8x7")
+	_check(int(definition.get("cost", {}).get("Wood", 0)) == 60, "town hall wood cost must be 60")
+	_check(int(definition.get("cost", {}).get("Stone", 0)) == 40, "town hall stone cost must be 40")
+
+	var hall := VeyraBuildingInstance.new()
+	root.add_child(hall)
+	hall.setup("TEST-TOWNHALL", "B05_TOWNHALL", Vector3.ZERO)
+	_check(hall.get_node_or_null("CollisionShape3D") != null, "town hall must have solid collision")
+	_check(hall.get_child_count() >= 10, "town hall must have a substantial civic visual assembly")
+	hall.queue_free()
 
 
 func _test_starter_inventory_contract() -> void:
