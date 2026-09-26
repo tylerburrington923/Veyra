@@ -25,6 +25,12 @@ const BUILDINGS := {
 		"name": "Well",
 		"size": Vector2(3.0, 3.0),
 		"cost": {"Stone": 20, "Wood": 10}
+	},
+	"B05_TOWNHALL": {
+		"id": "B05_TOWNHALL",
+		"name": "Town Hall",
+		"size": Vector2(8.0, 7.0),
+		"cost": {"Wood": 60, "Stone": 40}
 	}
 }
 
