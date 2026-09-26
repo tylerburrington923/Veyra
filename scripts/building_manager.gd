@@ -144,7 +144,7 @@ func _is_space_clear(position: Vector3, size: Vector2, player: Node3D) -> bool:
 	query.transform = Transform3D(Basis.IDENTITY, position + Vector3.UP * 0.75)
 	# Terrain is the placement surface, not an obstacle. Only test existing
 	# world/building bodies on layer 2 for footprint collisions.
-	query.collision_mask = 2
+	query.collision_mask = 2 | 4
 	query.collide_with_bodies = true
 	query.collide_with_areas = true
 	if player is CollisionObject3D:
