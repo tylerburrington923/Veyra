@@ -292,6 +292,51 @@ func _test_npc_controller_presentation_contract() -> void:
 	controller.queue_free()
 
 
+func _test_resource_respawn_contract() -> void:
+	var resource_scene := load("res://scenes/resource_node.tscn") as PackedScene
+	var resource := resource_scene.instantiate()
+	root.add_child(resource)
+	resource.resource_id = "RESPAWN-TEST"
+	resource.resource_type = "Stone"
+	resource.amount = 1
+	resource.respawn_seconds = 1.0
+	resource.remaining = 1
+	_check(not resource.depleted, "resource should begin active")
+	resource._deplete()
+	_check(resource.depleted and not resource.visible, "depleted resource must hide")
+	_check(resource.collision_layer == 0, "depleted resource collision must disable")
+	resource._process(0.5)
+	_check(resource.depleted, "resource must remain depleted before respawn timer")
+	resource._process(0.6)
+	_check(not resource.depleted and resource.visible, "resource must respawn after timer")
+	_check(resource.remaining == 1, "respawn must restore full amount")
+	_check(resource.collision_layer == 4, "respawn must restore interaction collision")
+	resource.queue_free()
+
+
+func _test_npc_job_execution_contract() -> void:
+	var definition := NPCDefinition.new("worker", "Worker", "human", 2.0, 1.0, 20, ["GATHER"], [], [], 2.0, "")
+	var state := NPCState.new("npc_job_01", "worker")
+	var job := JobState.new("job_01", "worker")
+	job.active = true
+	_check(NPCJobSimulation.assign_job(state, definition, NPCState.make_vector_dict(4.0, 0.0, 0.0)), "NPC job assignment must succeed")
+	_check(state.current_job == "worker", "NPC current job must be set")
+	_check(state.current_task == "MOVE_TO_WORK", "NPC must begin by moving to work")
+
+	_check(NPCJobSimulation.process_tick(state, definition, job, 1.0), "NPC movement tick must succeed")
+	_check(float(state.position.get("x", 0.0)) > 0.0, "NPC must move toward job target")
+	_check(state.current_task == "MOVE_TO_WORK", "NPC should still be travelling after first movement tick")
+
+	_check(NPCJobSimulation.process_tick(state, definition, job, 2.0), "NPC arrival tick must succeed")
+	_check(state.current_task == "WORK" or job.completed, "NPC should arrive and begin work")
+
+	if not job.completed:
+		_check(NPCJobSimulation.process_tick(state, definition, job, 2.0), "NPC work tick must succeed")
+	_check(job.completed, "NPC job must complete at deterministic work duration")
+	_check(not job.active, "completed job must become inactive")
+	_check(state.current_task == "COMPLETE", "NPC task must report completion")
+
+
 func _test_resource_collision_contract() -> void:
 	var resource_scene := load("res://scenes/resource_node.tscn") as PackedScene
 	var resource := resource_scene.instantiate()
