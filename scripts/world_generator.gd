@@ -14,8 +14,12 @@ var detail_noise := FastNoiseLite.new()
 var generated := false
 var terrain_collision: StaticBody3D
 var resource_textures: Dictionary = {}
+var resource_meshes: Dictionary = {}
+var resource_materials: Dictionary = {}
+var resource_collision_shape := SphereShape3D.new()
 
 func _ready() -> void:
+    resource_collision_shape.radius = 0.58
     call_deferred("generate")
 
 func generate() -> void:
@@ -150,14 +154,15 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> VeyraResourceNo
     node.add_child(visual)
 
     var collision := CollisionShape3D.new()
-    var shape := SphereShape3D.new()
-    shape.radius = 0.58
-    collision.shape = shape
+    collision.shape = resource_collision_shape
     node.add_child(collision)
 
     return node
 
 func _resource_mesh(resource_type: String) -> Mesh:
+    if resource_meshes.has(resource_type):
+        return resource_meshes[resource_type]
+    var mesh: Mesh
     match resource_type:
         "Stone":
             var stone := SphereMesh.new()
@@ -165,28 +170,31 @@ func _resource_mesh(resource_type: String) -> Mesh:
             stone.height = 0.9
             stone.radial_segments = 8
             stone.rings = 4
-            return stone
+            mesh = stone
         "Wood":
             var wood := CylinderMesh.new()
             wood.top_radius = 0.45
             wood.bottom_radius = 0.58
             wood.height = 0.85
             wood.radial_segments = 8
-            return wood
+            mesh = wood
         "Metal":
             var metal := PrismMesh.new()
             metal.size = Vector3(0.95, 1.0, 0.95)
-            return metal
+            mesh = metal
         _:
             var lux := PrismMesh.new()
             lux.size = Vector3(0.72, 1.45, 0.72)
-            return lux
+            mesh = lux
+    resource_meshes[resource_type] = mesh
+    return mesh
 
 func _resource_material(resource_type: String) -> StandardMaterial3D:
+    if resource_materials.has(resource_type):
+        return resource_materials[resource_type]
     var material := StandardMaterial3D.new()
     material.albedo_texture = _make_resource_texture(resource_type)
     material.roughness = 0.82
-
     match resource_type:
         "Stone":
             material.albedo_color = Color(0.72, 0.75, 0.70, 1)
@@ -201,7 +209,7 @@ func _resource_material(resource_type: String) -> StandardMaterial3D:
             material.emission_enabled = true
             material.emission = Color(0.02, 0.34, 0.38, 1)
             material.emission_energy_multiplier = 1.25
-
+    resource_materials[resource_type] = material
     return material
 
 func _make_terrain_texture() -> ImageTexture:
@@ -293,14 +301,3 @@ func _spawn_landmark() -> void:
     ring.material_override = lux
     add_child(ring)
 
-func _resource_color(resource_type: String) -> Color:
-    match resource_type:
-        "Stone":
-            return Color(0.35, 0.38, 0.36, 1)
-        "Wood":
-            return Color(0.34, 0.22, 0.10, 1)
-        "Metal":
-            return Color(0.35, 0.40, 0.44, 1)
-        "Vitreous Lux":
-            return Color(0.10, 0.55, 0.60, 1)
-    return Color.WHITE
