@@ -301,6 +301,19 @@ func _spawn_landmark() -> void:
     material.albedo_color = Color(0.28, 0.25, 0.22, 1)
     material.roughness = 0.92
     base.material_override = material
+
+    var landmark_body := StaticBody3D.new()
+    landmark_body.name = "LandmarkCollision"
+    landmark_body.collision_layer = 2
+    landmark_body.collision_mask = 1
+    var landmark_shape := CollisionShape3D.new()
+    var landmark_collision := CylinderShape3D.new()
+    landmark_collision.radius = 1.45
+    landmark_collision.height = 5.5
+    landmark_shape.shape = landmark_collision
+    landmark_shape.position = base.position
+    landmark_body.add_child(landmark_shape)
+    add_child(landmark_body)
     add_child(base)
 
     var ring := MeshInstance3D.new()
