@@ -10,6 +10,8 @@ var respawn_time := 0.0
 
 func _ready() -> void:
     add_to_group("resource_node")
+    collision_layer = 2
+    collision_mask = 1
 
 func _process(delta: float) -> void:
     if not depleted:
@@ -35,5 +37,5 @@ func _restore() -> void:
     depleted = false
     respawn_time = 0.0
     visible = true
-    collision_layer = 1
+    collision_layer = 2
     collision_mask = 1
