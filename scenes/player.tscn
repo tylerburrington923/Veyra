@@ -43,10 +43,13 @@ roughness = 0.5
 size = Vector3(0.07, 0.62, 0.07)
 
 [sub_resource type="BoxMesh" id="AxeHeadMesh"]
-size = Vector3(0.30, 0.16, 0.07)
+size = Vector3(0.34, 0.20, 0.09)
 
 [sub_resource type="BoxMesh" id="PickHeadMesh"]
-size = Vector3(0.34, 0.08, 0.08)
+size = Vector3(0.34, 0.10, 0.10)
+
+[sub_resource type="BoxMesh" id="FPBeltMesh"]
+size = Vector3(0.58, 0.12, 0.38)
 
 [sub_resource type="StandardMaterial3D" id="ToolWoodMaterial"]
 albedo_color = Color(0.32, 0.16, 0.07, 1)
@@ -196,48 +199,94 @@ near = 0.05
 
 [node name="ViewModel" type="Node3D" parent="Camera3D"]
 
+[node name="ChestFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+layers = 2
+position = Vector3(0, -0.82, -0.78)
+scale = Vector3(0.78, 0.72, 0.56)
+mesh = SubResource("TorsoMesh")
+material_override = SubResource("Shirt")
+
+[node name="BeltFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+layers = 2
+position = Vector3(0, -1.12, -0.72)
+mesh = SubResource("FPBeltMesh")
+material_override = SubResource("Pants")
+
+[node name="LeftLegFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+layers = 2
+position = Vector3(-0.17, -1.30, -0.48)
+scale = Vector3(0.82, 1.05, 0.82)
+mesh = SubResource("LimbMesh")
+material_override = SubResource("Pants")
+
+[node name="RightLegFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+layers = 2
+position = Vector3(0.17, -1.30, -0.48)
+scale = Vector3(0.82, 1.05, 0.82)
+mesh = SubResource("LimbMesh")
+material_override = SubResource("Pants")
+
+[node name="LeftBootFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+layers = 2
+position = Vector3(-0.17, -1.70, -0.40)
+scale = Vector3(1.0, 0.55, 1.25)
+mesh = SubResource("FootMesh")
+material_override = SubResource("Pants")
+
+[node name="RightBootFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+layers = 2
+position = Vector3(0.17, -1.70, -0.40)
+scale = Vector3(1.0, 0.55, 1.25)
+mesh = SubResource("FootMesh")
+material_override = SubResource("Pants")
+
 [node name="LeftArmFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
 layers = 2
-position = Vector3(-0.24, -0.24, -0.78)
-rotation_degrees = Vector3(8, -8, -12)
+position = Vector3(-0.34, -0.38, -0.82)
+rotation_degrees = Vector3(12, -8, -18)
+scale = Vector3(0.72, 0.72, 0.72)
 mesh = SubResource("LimbMesh")
 material_override = SubResource("FPSkinMaterial")
 
 [node name="RightArmFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
 layers = 2
-position = Vector3(0.24, -0.24, -0.78)
-rotation_degrees = Vector3(8, 8, 12)
+position = Vector3(0.34, -0.38, -0.82)
+rotation_degrees = Vector3(12, 8, 18)
+scale = Vector3(0.72, 0.72, 0.72)
 mesh = SubResource("LimbMesh")
 material_override = SubResource("FPSkinMaterial")
 
 [node name="LeftHandFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
 layers = 2
-position = Vector3(-0.30, -0.42, -0.92)
+position = Vector3(-0.37, -0.61, -0.96)
+scale = Vector3(0.82, 0.82, 0.82)
 mesh = SubResource("HandMesh")
 material_override = SubResource("FPSkinMaterial")
 
 [node name="RightHandFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
 layers = 2
-position = Vector3(0.30, -0.42, -0.92)
+position = Vector3(0.37, -0.61, -0.96)
+scale = Vector3(0.82, 0.82, 0.82)
 mesh = SubResource("HandMesh")
 material_override = SubResource("FPSkinMaterial")
 
 [node name="ToolHolder" type="Node3D" parent="Camera3D/ViewModel"]
-position = Vector3(0.30, -0.39, -0.86)
-rotation_degrees = Vector3(15, -10, -8)
+position = Vector3(0.48, -0.56, -0.90)
+rotation_degrees = Vector3(18, -12, -6)
+scale = Vector3(0.82, 0.82, 0.82)
 
 [node name="EquippedTool" type="Node3D" parent="Camera3D/ViewModel/ToolHolder"]
 visible = false
 
 [node name="Handle" type="MeshInstance3D" parent="Camera3D/ViewModel/ToolHolder/EquippedTool"]
 layers = 2
-position = Vector3(0.0, 0.28, 0.0)
+position = Vector3(0.0, 0.31, 0.0)
 mesh = SubResource("ToolHandleMesh")
 material_override = SubResource("FPToolWoodMaterial")
 
 [node name="AxeHead" type="MeshInstance3D" parent="Camera3D/ViewModel/ToolHolder/EquippedTool"]
 layers = 2
-position = Vector3(0.0, 0.60, 0.0)
+position = Vector3(0.0, 0.67, 0.0)
 mesh = SubResource("AxeHeadMesh")
 material_override = SubResource("FPToolStoneMaterial")
 visible = false
@@ -330,10 +379,12 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -400.0
-offset_top = -225.0
-offset_right = -40.0
-offset_bottom = -140.0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -174.0
+offset_top = -125.0
+offset_right = 174.0
+offset_bottom = -40.0
 theme_override_constants/separation = 6
 
 [node name="HandsSlot" type="Button" parent="HUDInventory/ToolHotbar" groups=["camera_blocking_ui"]]
