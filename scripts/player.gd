@@ -140,11 +140,22 @@ func _update_equipped_tool_visual() -> void:
 	if not tool_visual.visible:
 		return
 	var axe_head := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeHead") as MeshInstance3D
+	var axe_blade := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeBlade") as MeshInstance3D
 	var pick_head := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickHead") as MeshInstance3D
+	var pick_spike_left := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickSpikeLeft") as MeshInstance3D
+	var pick_spike_right := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickSpikeRight") as MeshInstance3D
+	var axe_equipped := selected_tool_id == "I01_STONE_AXE"
+	var pick_equipped := selected_tool_id == "I02_STONE_PICK"
 	if axe_head:
-		axe_head.visible = selected_tool_id == "I01_STONE_AXE"
+		axe_head.visible = axe_equipped
+	if axe_blade:
+		axe_blade.visible = axe_equipped
 	if pick_head:
-		pick_head.visible = selected_tool_id == "I02_STONE_PICK"
+		pick_head.visible = pick_equipped
+	if pick_spike_left:
+		pick_spike_left.visible = pick_equipped
+	if pick_spike_right:
+		pick_spike_right.visible = pick_equipped
 	match selected_tool_id:
 		"I01_STONE_AXE":
 			tool_visual.rotation_degrees = Vector3(0, 0, -12)
