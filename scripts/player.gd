@@ -210,15 +210,7 @@ func _update_debug_hud(input_vector: Vector2) -> void:
 		var lunar: Dictionary = world.get_lunar_state()
 		lunar_text = "MOON: %s" % str(lunar.get("phase_name", "--"))
 		seed_text = "SEED: VE-%05d" % int(lunar.get("world_seed", 0))
-	debug_hud.text = "%s | %s | MOVE: %.2f, %.2f | GROUND: %s | Y: %.1f | VY: %.1f" % [
-		seed_text,
-		lunar_text,
-		input_vector.x,
-		input_vector.y,
-		"YES" if is_on_floor() else "NO",
-		global_position.y,
-		velocity.y
-	]
+	debug_hud.text = "%s  •  %s" % [seed_text, lunar_text]
 
 
 func _recover_from_fall() -> void:
