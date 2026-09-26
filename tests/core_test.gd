@@ -206,14 +206,14 @@ func _test_resource_interaction_matrix() -> void:
 	player.queue_free()
 
 func _test_world_resource_tool_contract() -> void:
-    var world_generator = load("res://scripts/world_generator.gd").new()
+	var world_generator = load("res://scripts/world_generator.gd").new()
 
-    _check(world_generator.get_required_tool_for_resource("Wood") == VeyraItemCatalog.HANDS_ID, "world-generated ground wood must require hands")
-    _check(world_generator.get_required_tool_for_resource("Stone") == "I02_STONE_PICK", "world-generated stone must require the stone pick")
-    _check(world_generator.get_required_tool_for_resource("Metal") == "I02_STONE_PICK", "world-generated metal must require the stone pick")
-    _check(world_generator.get_required_tool_for_resource("Vitreous Lux") == "I02_STONE_PICK", "world-generated lux must require the stone pick")
+	_check(world_generator.get_required_tool_for_resource("Wood") == VeyraItemCatalog.HANDS_ID, "world-generated ground wood must require hands")
+	_check(world_generator.get_required_tool_for_resource("Stone") == "I02_STONE_PICK", "world-generated stone must require the stone pick")
+	_check(world_generator.get_required_tool_for_resource("Metal") == "I02_STONE_PICK", "world-generated metal must require the stone pick")
+	_check(world_generator.get_required_tool_for_resource("Vitreous Lux") == "I02_STONE_PICK", "world-generated lux must require the stone pick")
 
-    world_generator.free()
+	world_generator.free()
 
 
 func _test_hand_gathered_wood_contract() -> void:
