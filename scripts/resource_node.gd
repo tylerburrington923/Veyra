@@ -3,6 +3,9 @@ class_name VeyraResourceNode
 
 @export_enum("Stone", "Wood", "Metal", "Echo-Stone", "Vitreous Lux") var resource_type := "Stone"
 @export var amount := 1
+@export var tool_required := "T00_HANDS"
+@export var tool_efficiency := 1.0
+@export var durability_cost := 1.0
 
 var depleted := false
 var respawn_time := 0.0
@@ -25,9 +28,19 @@ func interact() -> void:
         return
 
     var player := get_tree().get_first_node_in_group("local_player")
-    if player and player.has_method("add_resource"):
-        player.add_resource(resource_type, amount)
-        depleted = true
+    if not player or not player.has_method("add_resource"):
+        return
+
+    if tool_required != "T00_HANDS" and player.has_method("get_tool_id"):
+        if player.get_tool_id() != tool_required:
+            return
+
+    if player.has_method("use_tool") and not player.use_tool(durability_cost):
+        return
+
+    var yield_amount := maxi(1, int(round(float(amount) * tool_efficiency)))
+    player.add_resource(resource_type, yield_amount)
+    depleted = true
         respawn_time = maxf(1.0, respawn_seconds)
         visible = false
         collision_layer = 0
