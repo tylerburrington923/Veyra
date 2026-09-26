@@ -288,19 +288,33 @@ script = ExtResource("5_craft_build")
 [node name="HUDInventory" type="CanvasLayer" parent="."]
 script = ExtResource("4_hotbar")
 
-[node name="ToolButton" type="Button" parent="HUDInventory"]
+[node name="ToolHotbar" type="HBoxContainer" parent="HUDInventory"]
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -350.0
+offset_left = -400.0
 offset_top = -225.0
-offset_right = -200.0
+offset_right = -40.0
 offset_bottom = -140.0
-grow_horizontal = 0
-grow_vertical = 0
-text = "TOOL\nHANDS"
-theme_override_font_sizes/font_size = 18
+theme_override_constants/separation = 6
+
+[node name="HandsSlot" type="Button" parent="HUDInventory/ToolHotbar" groups=["camera_blocking_ui"]]
+custom_minimum_size = Vector2(112, 78)
+text = "1\nHANDS"
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("InteractStyle")
+
+[node name="AxeSlot" type="Button" parent="HUDInventory/ToolHotbar" groups=["camera_blocking_ui"]]
+custom_minimum_size = Vector2(112, 78)
+text = "2\nAXE"
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("InteractStyle")
+
+[node name="PickSlot" type="Button" parent="HUDInventory/ToolHotbar" groups=["camera_blocking_ui"]]
+custom_minimum_size = Vector2(112, 78)
+text = "3\nPICK"
+theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("InteractStyle")
 
 [node name="Hotbar" type="Panel" parent="HUDInventory"]
