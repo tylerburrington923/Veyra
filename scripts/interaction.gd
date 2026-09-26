@@ -5,7 +5,7 @@ extends RayCast3D
 ## screen-space relevance, distance, and line of sight so large world objects
 ## do not require the player to stand on an exact invisible interaction point.
 
-const INTERACTION_LAYER := 2
+const INTERACTION_LAYER_MASK := 2 | 4
 const RAY_DISTANCE := 6.0
 const MAX_TARGET_DISTANCE := 5.5
 const MAX_SCREEN_RADIUS := 0.62
@@ -26,7 +26,7 @@ var _target_update_accumulator := 0.0
 func _ready() -> void:
 	interact_distance = MAX_TARGET_DISTANCE
 	target_position = Vector3(0, 0, -RAY_DISTANCE)
-	collision_mask = 1 << (INTERACTION_LAYER - 1)
+	collision_mask = INTERACTION_LAYER_MASK
 	collide_with_bodies = true
 	collide_with_areas = true
 	enabled = true
@@ -77,7 +77,7 @@ func _query_target() -> Dictionary:
 	var query := PhysicsShapeQueryParameters3D.new()
 	query.shape = shape
 	query.transform = Transform3D(Basis.IDENTITY, player.global_position)
-	query.collision_mask = 1 << (INTERACTION_LAYER - 1)
+	query.collision_mask = INTERACTION_LAYER_MASK
 	query.collide_with_bodies = true
 	query.collide_with_areas = true
 	if player is CollisionObject3D:
@@ -210,7 +210,7 @@ func _get_interaction_point(handler: Node, fallback: Vector3) -> Vector3:
 	return fallback
 
 func _has_line_of_sight(origin: Vector3, target: Vector3, player: Node3D, handler: Node) -> bool:
-	var query := PhysicsRayQueryParameters3D.create(origin, target, 1 | 2)
+	var query := PhysicsRayQueryParameters3D.create(origin, target, INTERACTION_LAYER_MASK)
 	if player is CollisionObject3D:
 		query.exclude = [player.get_rid()]
 	var result := get_world_3d().direct_space_state.intersect_ray(query)
