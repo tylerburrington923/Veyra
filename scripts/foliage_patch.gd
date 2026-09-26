@@ -12,6 +12,12 @@ extends Node3D
 var terrain: Node
 var collision_body: StaticBody3D
 
+# Authoritative per-tree presentation state. This remains testable in headless CI;
+# the MultiMesh is only the rendering projection of this state.
+var _tree_visual_active: Array[bool] = []
+var _tree_trunk_visual_transforms: Array[Transform3D] = []
+var _tree_leaf_visual_transforms: Array[Transform3D] = []
+
 
 func _ready() -> void:
     terrain = get_parent().get_node_or_null("WorldGenerator")
@@ -75,6 +81,13 @@ func _generate() -> void:
     var trunk_instances := _create_multimesh("TreeTrunks", trunk_mesh, trunk_material, trunk_transforms)
     var leaf_instances := _create_multimesh("TreeCanopies", leaf_mesh, leaf_material, leaf_transforms)
     var tree_collisions := _create_tree_collision(trunk_transforms)
+    _tree_visual_active.resize(trunk_transforms.size())
+    _tree_trunk_visual_transforms.resize(trunk_transforms.size())
+    _tree_leaf_visual_transforms.resize(trunk_transforms.size())
+    for i in range(trunk_transforms.size()):
+        _tree_visual_active[i] = true
+        _tree_trunk_visual_transforms[i] = trunk_transforms[i]
+        _tree_leaf_visual_transforms[i] = leaf_transforms[i]
     _create_tree_harvest_nodes(trunk_transforms, trunk_instances, leaf_instances, tree_collisions)
 
 
@@ -148,6 +161,11 @@ func _set_tree_visual(
     var trunk_target := trunk_transform if active else _hidden_transform(trunk_transform)
     var leaf_target := leaf_transform if active else _hidden_transform(leaf_transform)
 
+    if index >= 0 and index < _tree_visual_active.size():
+        _tree_visual_active[index] = active
+        _tree_trunk_visual_transforms[index] = trunk_target
+        _tree_leaf_visual_transforms[index] = leaf_target
+
     _set_multimesh_instance_transform(trunk_instances, index, trunk_target)
     _set_multimesh_instance_transform(leaf_instances, index, leaf_target)
 
@@ -161,15 +179,21 @@ func _set_multimesh_instance_transform(instance: MultiMeshInstance3D, index: int
     if index < 0 or index >= instance.multimesh.instance_count:
         return
 
-    # Update the authoritative MultiMesh resource and the RenderingServer RID.
-    # The latter avoids renderer-side stale instance data on headless/mobile paths.
+    # MultiMesh.set_instance_transform is the engine-supported projection path.
+    # Do not call RenderingServer directly here: headless mode intentionally
+    # disables most rendering-server behavior, while the authoritative arrays
+    # above keep gameplay/save tests deterministic.
     instance.multimesh.set_instance_transform(index, transform)
-    RenderingServer.multimesh_instance_set_transform(
-        instance.multimesh.get_rid(),
-        index,
-        transform
-    )
-    instance.multimesh.emit_changed()
+
+
+func get_tree_visual_state(index: int) -> Dictionary:
+    if index < 0 or index >= _tree_visual_active.size():
+        return {}
+    return {
+        "active": _tree_visual_active[index],
+        "trunk_transform": _tree_trunk_visual_transforms[index],
+        "leaf_transform": _tree_leaf_visual_transforms[index]
+    }
 
 
 func _hidden_transform(original: Transform3D) -> Transform3D:
