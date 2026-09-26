@@ -57,7 +57,7 @@ func _generate() -> void:
 		)
 
 	_create_multimesh("Rocks", rock_mesh, rock_material, rock_transforms)
-	_create_rock_collision(rock_transforms)
+	_create_harvest_nodes("SMALL_STONE", rock_transforms, "Stone", "T00_HANDS", 1, 0.0)
 
 	var crystal_mesh := PrismMesh.new()
 	crystal_mesh.size = Vector3(0.65, 1.6, 0.65)
@@ -94,10 +94,37 @@ func _generate() -> void:
 		crystal_material,
 		crystal_transforms
 	)
+	_create_harvest_nodes("PURPLE_LUX", crystal_transforms, "Vitreous Lux", "I02_STONE_PICK", 1, 1.0)
 
-	_create_crystal_collision(crystal_transforms)
 
 	_make_water()
+
+
+func _create_harvest_nodes(prefix: String, transforms: Array[Transform3D], resource_type: String, required_tool: String, amount: int, durability_cost: float) -> void:
+	if not terrain or transforms.is_empty():
+		return
+	for i in range(transforms.size()):
+		var node := preload("res://scenes/resource_node.tscn").instantiate()
+		node.resource_id = "D01-%s-%03d" % [prefix, i + 1]
+		node.name = node.resource_id
+		node.resource_type = resource_type
+		node.tool_required = required_tool
+		node.amount = amount
+		node.durability_cost = durability_cost
+		node.physical_collision = true
+		node.global_transform = transforms[i]
+		var collision := CollisionShape3D.new()
+		var shape: Shape3D
+		if prefix == "TREE":
+			shape = CylinderShape3D.new()
+			shape.radius = 0.16
+			shape.height = 1.5
+		else:
+			shape = SphereShape3D.new()
+			shape.radius = 0.48
+		collision.shape = shape
+		node.add_child(collision)
+		terrain.add_child(node)
 
 
 func _create_multimesh(
@@ -156,34 +183,3 @@ func _make_water() -> void:
 	add_child(water)
 
 
-func _create_rock_collision(transforms: Array[Transform3D]) -> void:
-	if transforms.is_empty():
-		return
-	collision_body = StaticBody3D.new()
-	collision_body.name = "RockCollision"
-	collision_body.collision_layer = 2
-	collision_body.collision_mask = 1
-	add_child(collision_body)
-	var shape := SphereShape3D.new()
-	shape.radius = 0.48
-	for rock_transform in transforms:
-		var collision := CollisionShape3D.new()
-		collision.shape = shape
-		collision.transform = rock_transform
-		collision_body.add_child(collision)
-
-func _create_crystal_collision(transforms: Array[Transform3D]) -> void:
-	if transforms.is_empty():
-		return
-	var body := StaticBody3D.new()
-	body.name = "MineralCollision"
-	body.collision_layer = 2
-	body.collision_mask = 1
-	add_child(body)
-	var shape := BoxShape3D.new()
-	shape.size = Vector3(0.65, 1.6, 0.65)
-	for crystal_transform in transforms:
-		var collision := CollisionShape3D.new()
-		collision.shape = shape
-		collision.transform = crystal_transform
-		body.add_child(collision)
