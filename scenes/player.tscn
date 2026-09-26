@@ -227,6 +227,12 @@ text = "USE"
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("InteractStyle")
 
+[node name="CraftBuildUI" type="CanvasLayer" parent="."]
+script = ExtResource("5_craft_build")
+
+[node name="HUDInventory" type="CanvasLayer" parent="."]
+script = ExtResource("4_hotbar")
+
 [node name="ToolButton" type="Button" parent="HUDInventory"]
 anchor_left = 1.0
 anchor_top = 1.0
@@ -241,12 +247,6 @@ grow_vertical = 0
 text = "TOOL\nHANDS"
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("InteractStyle")
-
-[node name="CraftBuildUI" type="CanvasLayer" parent="."]
-script = ExtResource("5_craft_build")
-
-[node name="HUDInventory" type="CanvasLayer" parent="."]
-script = ExtResource("4_hotbar")
 
 [node name="Hotbar" type="Panel" parent="HUDInventory"]
 offset_left = 28.0
