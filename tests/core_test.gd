@@ -11,6 +11,9 @@ func _run_tests() -> void:
 	_test_collision_contract()
 	_test_tool_state_contract()
 	_test_resource_collision_contract()
+	_test_tool_catalog_contract()
+	_test_first_person_viewmodel_contract()
+	_test_resource_interaction_matrix()
 	if failures.is_empty():
 		print("VEYRA CORE TESTS: PASS (5 suites)")
 		quit(0)
@@ -86,6 +89,95 @@ func _test_tool_state_contract() -> void:
 	_check(axe_slot != null, "mobile axe hotbar slot missing")
 	_check(axe_slot.text.contains("AXE"), "axe hotbar slot label missing")
 	_check(not axe_slot.disabled, "axe hotbar slot should be enabled after crafting/equipping")
+	player.queue_free()
+
+
+func _test_tool_catalog_contract() -> void:
+	_check(VeyraItemCatalog.is_valid_tool(VeyraItemCatalog.HANDS_ID), "hands must be a valid tool")
+	_check(VeyraItemCatalog.is_valid_tool("I01_STONE_AXE"), "axe must be a valid tool")
+	_check(VeyraItemCatalog.is_valid_tool("I02_STONE_PICK"), "pick must be a valid tool")
+	_check(not VeyraItemCatalog.is_valid_tool("NOT_A_TOOL"), "unknown tool must be rejected")
+	_check(VeyraItemCatalog.is_tool_for_resource("I01_STONE_AXE", "Wood"), "axe must gather wood")
+	_check(not VeyraItemCatalog.is_tool_for_resource(VeyraItemCatalog.HANDS_ID, "Wood"), "hands must not gather wood")
+	_check(VeyraItemCatalog.is_tool_for_resource("I02_STONE_PICK", "Stone"), "pick must gather stone")
+	_check(VeyraItemCatalog.is_tool_for_resource("I02_STONE_PICK", "Vitreous Lux"), "pick must gather Vitreous Lux")
+	_check(VeyraItemCatalog.is_tool_for_resource("I02_STONE_PICK", "Echo-Stone"), "pick must gather Echo-Stone")
+
+func _test_first_person_viewmodel_contract() -> void:
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+
+	var camera := player.get_node_or_null("Camera3D") as Camera3D
+	var viewmodel := player.get_node_or_null("Camera3D/ViewModel") as Node3D
+	var left_arm := player.get_node_or_null("Camera3D/ViewModel/LeftArmFP") as MeshInstance3D
+	var right_arm := player.get_node_or_null("Camera3D/ViewModel/RightArmFP") as MeshInstance3D
+	var left_hand := player.get_node_or_null("Camera3D/ViewModel/LeftHandFP") as MeshInstance3D
+	var right_hand := player.get_node_or_null("Camera3D/ViewModel/RightHandFP") as MeshInstance3D
+	var holder := player.get_node_or_null("Camera3D/ViewModel/ToolHolder") as Node3D
+	var tool := player.get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool") as Node3D
+
+	_check(camera != null, "first-person camera missing")
+	_check(camera != null and camera.current, "first-person camera must be current")
+	_check(viewmodel != null, "viewmodel missing")
+	_check(left_arm != null and right_arm != null, "first-person arms missing")
+	_check(left_hand != null and right_hand != null, "first-person hands missing")
+	_check(holder != null and tool != null, "tool holder hierarchy missing")
+	_check(left_arm != null and left_arm.layers == 2, "left arm must use viewmodel render layer")
+	_check(right_arm != null and right_arm.layers == 2, "right arm must use viewmodel render layer")
+	_check(left_hand != null and left_hand.layers == 2, "left hand must use viewmodel render layer")
+	_check(right_hand != null and right_hand.layers == 2, "right hand must use viewmodel render layer")
+	_check(camera != null and (camera.cull_mask & 2) != 0, "camera must render viewmodel layer")
+	_check(right_hand != null and right_hand.position.z < -0.5, "right hand must be in front of camera")
+	_check(holder != null and holder.position.z < -0.5, "tool holder must be in front of camera")
+	player.queue_free()
+
+func _test_resource_interaction_matrix() -> void:
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var inventory: VeyraInventory = player.get_inventory()
+	inventory.add_item("I01_STONE_AXE", 1)
+	inventory.add_item("I02_STONE_PICK", 1)
+
+	var resource_scene := load("res://scenes/resource_node.tscn") as PackedScene
+	var tree := resource_scene.instantiate()
+	root.add_child(tree)
+	tree.resource_type = "Wood"
+	tree.tool_required = "I01_STONE_AXE"
+	tree.amount = 3
+	tree.remaining = 3
+
+	var stone := resource_scene.instantiate()
+	root.add_child(stone)
+	stone.resource_type = "Stone"
+	stone.tool_required = "I02_STONE_PICK"
+	stone.amount = 3
+	stone.remaining = 3
+
+	var lux := resource_scene.instantiate()
+	root.add_child(lux)
+	lux.resource_type = "Vitreous Lux"
+	lux.tool_required = "I02_STONE_PICK"
+	lux.amount = 1
+	lux.remaining = 1
+
+	_check(player.set_tool(VeyraItemCatalog.HANDS_ID), "hands selection should succeed")
+	_check(not tree.can_interact(player), "tree must reject hands")
+	_check(not stone.can_interact(player), "stone must reject hands when pick is required")
+
+	_check(player.set_tool("I01_STONE_AXE"), "axe selection should succeed")
+	_check(tree.can_interact(player), "tree must accept stone axe")
+	_check(not stone.can_interact(player), "stone must reject stone axe")
+
+	_check(player.set_tool("I02_STONE_PICK"), "pick selection should succeed")
+	_check(not tree.can_interact(player), "tree must reject stone pick")
+	_check(stone.can_interact(player), "stone must accept stone pick")
+	_check(lux.can_interact(player), "Vitreous Lux must accept stone pick")
+
+	tree.queue_free()
+	stone.queue_free()
+	lux.queue_free()
 	player.queue_free()
 
 func _test_resource_collision_contract() -> void:
