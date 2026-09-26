@@ -97,7 +97,7 @@ func _restore() -> void:
     respawn_time = 0.0
     set_process(false)
     visible = true
-    collision_layer = 2
+    collision_layer = 4
     collision_mask = 1
 
 func get_save_state() -> Dictionary:
