@@ -42,6 +42,10 @@ func load_world() -> Dictionary:
         data["inventory"] = {}
     data["inventory"] = _sanitize_inventory(data["inventory"])
 
+    if not (data.get("player", {}) is Dictionary):
+        data["player"] = {}
+    data["player"] = _sanitize_player_state(data["player"])
+
     if not (data.get("settlement", {}) is Dictionary):
         data["settlement"] = {}
     data["settlement"] = _sanitize_settlement(data["settlement"])
