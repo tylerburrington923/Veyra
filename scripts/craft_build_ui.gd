@@ -44,6 +44,19 @@ func _build_ui() -> void:
 	panel.visible = false
 	add_child(panel)
 
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.035, 0.055, 0.08, 0.94)
+	panel_style.border_width_left = 1
+	panel_style.border_width_top = 1
+	panel_style.border_width_right = 1
+	panel_style.border_width_bottom = 1
+	panel_style.border_color = Color(0.30, 0.55, 0.60, 0.65)
+	panel_style.corner_radius_top_left = 18
+	panel_style.corner_radius_top_right = 18
+	panel_style.corner_radius_bottom_right = 18
+	panel_style.corner_radius_bottom_left = 18
+	panel.add_theme_stylebox_override("panel", panel_style)
+
 	var box := VBoxContainer.new()
 	box.position = Vector2(16, 16)
 	box.size = Vector2(258, 388)
