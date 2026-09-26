@@ -15,12 +15,11 @@ func add_resource(resource_type: String, amount: int) -> int:
 
     var current := get_amount(resource_type)
     var stack_limit := VeyraResourceCatalog.max_stack(resource_type)
-    var free_stack := maxi(0, stack_limit - current)
     var free_slots := maxi(0, max_slots - _used_slots())
-    var accepted := mini(amount, free_stack)
-
-    if current <= 0:
-        accepted = mini(accepted, free_slots * stack_limit)
+    var capacity_by_slots := free_slots * stack_limit
+    if current > 0:
+        capacity_by_slots += stack_limit - (current % stack_limit)
+    var accepted := mini(amount, capacity_by_slots)
 
     var per_item_weight := VeyraResourceCatalog.weight(resource_type)
     if per_item_weight > 0.0:
@@ -95,25 +94,17 @@ func load_snapshot(snapshot: Dictionary) -> void:
 
 func _load_amount(resource_type: String, amount: int) -> int:
     var current := get_amount(resource_type)
+    var stack_limit := VeyraResourceCatalog.max_stack(resource_type)
+    var free_slots := maxi(0, max_slots - _used_slots())
+    var capacity_by_slots := free_slots * stack_limit
     if current > 0:
-        var accepted := mini(amount, maxi(0, VeyraResourceCatalog.max_stack(resource_type) - current))
-        var weight := VeyraResourceCatalog.weight(resource_type)
-        if weight > 0.0:
-            accepted = mini(accepted, int(floor(maxf(0.0, max_weight - total_weight) / weight)))
-        if accepted > 0:
-            resources[resource_type] = current + accepted
-            total_weight += accepted * weight
-        return accepted
-
-    if _used_slots() >= max_slots:
-        return 0
-
-    var accepted := mini(amount, VeyraResourceCatalog.max_stack(resource_type))
+        capacity_by_slots += stack_limit - (current % stack_limit)
+    var accepted := mini(amount, capacity_by_slots)
     var weight := VeyraResourceCatalog.weight(resource_type)
     if weight > 0.0:
         accepted = mini(accepted, int(floor(maxf(0.0, max_weight - total_weight) / weight)))
     if accepted > 0:
-        resources[resource_type] = accepted
+        resources[resource_type] = current + accepted
         total_weight += accepted * weight
     return accepted
 
