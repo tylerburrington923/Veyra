@@ -33,7 +33,7 @@ func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_I:
         _toggle_inventory()
 
-func _on_inventory_changed(snapshot: Dictionary, changed_type: String, changed_amount: int) -> void:
+func _on_inventory_changed(_snapshot: Dictionary, changed_type: String, changed_amount: int) -> void:
     _refresh()
     if changed_amount > 0:
         _show_toast("Picked up %s x%d" % [changed_type, changed_amount])
