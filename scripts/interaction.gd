@@ -181,17 +181,18 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 		interact_button.text = _get_action_label(target_type)
 
 	if target_label:
-		var distance_text := "--"
-		if target_type != "NONE":
+		var has_target := target_type != "NONE" and handler != ""
+		target_label.visible = has_target
+		if has_target:
 			var player := get_tree().get_first_node_in_group("local_player") as Node3D
+			var distance_text := "--"
 			if player:
 				distance_text = "%.1f m" % player.global_position.distance_to(collision_point)
-		target_label.text = "TARGET: %s\nNAME: %s\nDIST: %s" % [
-			target_type,
-			target_name if target_name != "" else "--",
-			distance_text
-		]
-
+			target_label.text = "%s  •  %s\n%s" % [
+				_get_action_label(target_type),
+				target_name if target_name != "" else "Unknown",
+				distance_text
+			]
 func _get_action_label(target_type: String) -> String:
 	match target_type:
 		"RESOURCE":
