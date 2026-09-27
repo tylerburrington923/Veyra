@@ -37,9 +37,11 @@ func _run_tests() -> void:
 	_test_mobile_backpack_contract()
 	_test_building_interaction_contract()
 	_test_building_storage_contract()
+	_test_campfire_and_townhall_contract()
+	_test_settlement_water_contract()
 	_test_multiplayer_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (31 suites)")
+		print("VEYRA CORE TESTS: PASS (33 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -783,6 +785,63 @@ func _test_wildlife_beta_contract() -> void:
 	_check(not manager.states.has("deer_test_01"), "wildlife despawn must remove authoritative state")
 	manager.queue_free()
 
+
+
+func _test_campfire_and_townhall_contract() -> void:
+	var settlement: Node = root.get_node_or_null("/root/SettlementManager")
+	_check(settlement != null, "settlement manager must exist for civic building tests")
+	if not settlement:
+		return
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var inventory: VeyraInventory = player.get_inventory()
+	inventory.resources.clear()
+	inventory.items.clear()
+	inventory.total_weight = 0.0
+	_check(inventory.add_resource("Wood", 3) == 3, "campfire test must seed wood")
+	var campfire := VeyraBuildingInstance.new()
+	root.add_child(campfire)
+	campfire.setup("CAMPFIRE-TEST", "B01_CAMPFIRE", Vector3.ZERO)
+	_check(campfire.get_interaction_text() == "Open Campfire", "campfire must expose furnace-style interaction")
+	_check(campfire.add_campfire_fuel(player, 1), "campfire should accept wood fuel")
+	_check(inventory.get_amount("Wood") == 2, "campfire fuel must consume one wood")
+	_check(campfire.get_campfire_heat() >= 29.0, "campfire fuel must create heat")
+	_check(player.get_node_or_null("BuildingUI") == null, "campfire fuel API should not silently open UI")
+	campfire.interact(player)
+	_check(player.get_node_or_null("BuildingUI") != null, "campfire interaction must open building UI")
+	campfire.queue_free()
+	var townhall := VeyraBuildingInstance.new()
+	root.add_child(townhall)
+	townhall.setup("TOWNHALL-TEST", "B05_TOWNHALL", Vector3.ZERO)
+	_check(townhall.get_interaction_text() == "Open Town Hall", "town hall must expose civic UI interaction")
+	_check(townhall.deposit_civic_materials(player, 1), "town hall should accept civic material deposits")
+	_check(settlement.wood_stock > 0, "town hall deposit must increase settlement wood stock")
+	townhall.queue_free()
+	player.queue_free()
+
+func _test_settlement_water_contract() -> void:
+	var settlement: Node = root.get_node_or_null("/root/SettlementManager")
+	_check(settlement != null, "settlement manager must exist for water contract")
+	if not settlement:
+		return
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	settlement.water_stock = 0
+	settlement.villagers.clear()
+	settlement.add_villager("water_villager_01", "Water Test Villager")
+	_check(settlement.get_active_player_count() >= 1, "water demand must count active players")
+	_check(settlement.get_active_villager_count() == 1, "water demand must count villagers without NPC visuals")
+	_check(settlement.get_water_demand() >= 2, "water demand must include player and villager")
+	settlement.add_stock("Water", 10)
+	var demand: int = settlement.get_water_demand()
+	settlement._water_clock_initialized = true
+	settlement._last_world_time = 899.0
+	settlement.process_water_cycle(0.0, 900.0)
+	_check(settlement.water_stock == 10 - demand, "lunar cycle must consume one water unit per resident")
+	player.queue_free()
+	settlement.villagers.clear()
 
 func _test_multiplayer_contract() -> void:
 	var network_script := load("res://scripts/network_manager.gd")
