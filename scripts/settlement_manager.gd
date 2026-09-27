@@ -34,7 +34,8 @@ func add_building(building_id: String, building_type: String, position: Vector3)
         "type": building_type,
         "position": [position.x, position.y, position.z],
         "condition": 1.0,
-        "door_open": false
+        "door_open": false,
+        "storage": {}
     }
     settlement_changed.emit()
     return true
@@ -47,6 +48,27 @@ func set_building_door_state(building_id: String, open: bool) -> bool:
     buildings[building_id] = record
     settlement_changed.emit()
     return true
+
+
+func get_building_storage(building_id: String) -> Dictionary:
+	if not buildings.has(building_id):
+		return {}
+	var record: Dictionary = buildings[building_id]
+	var storage = record.get("storage", {})
+	return storage.duplicate(true) if storage is Dictionary else {}
+
+func set_building_storage(building_id: String, storage: Dictionary) -> bool:
+	if not buildings.has(building_id):
+		return false
+	var record: Dictionary = buildings[building_id]
+	record["storage"] = storage.duplicate(true)
+	buildings[building_id] = record
+	settlement_changed.emit()
+	return true
+
+func get_building_record(building_id: String) -> Dictionary:
+	var record = buildings.get(building_id, {})
+	return record.duplicate(true) if record is Dictionary else {}
 
 func add_villager(villager_id: String, name_value: String = "Villager") -> bool:
     if villager_id.is_empty() or villagers.has(villager_id):
