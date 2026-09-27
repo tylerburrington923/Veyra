@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-const RESOURCE_TYPES: Array[String] = ["Stone", "Wood", "Metal", "Vitreous Lux", "Echo-Stone"]
+const RESOURCE_TYPES: Array[String] = ["Stone", "Wood", "Metal", "Vitreous Lux", "Echo-Stone", "Meat", "Hide"]
 const TOOL_ORDER: Array[String] = ["T00_HANDS", "I01_STONE_AXE", "I02_STONE_PICK"]
 
 @onready var player: Node = get_parent()
