@@ -947,7 +947,7 @@ func _test_wildlife_combat_contract() -> void:
 	var result := manager.damage_animal("combat_test_01", 999.0, player)
 	_check(not state.alive and state.health == 0.0, "wildlife must die at zero health")
 	_check(result.contains("died"), "wildlife death must report a death event")
-	_check(inventory.get_amount("Stone") == 2, "wildlife death must produce a resource drop")
+	_check(inventory.get_amount("Meat") == 3 and inventory.get_amount("Hide") == 1, "wildlife death must produce meat and hide")
 	_check((animal as Node3D).visible == false, "dead wildlife must become non-visible")
 	manager.despawn_animal("combat_test_01")
 	manager.queue_free()
