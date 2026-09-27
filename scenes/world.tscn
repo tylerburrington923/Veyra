@@ -1,24 +1,15 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/world.gd" id="1_world"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
-[ext_resource type="Script" path="res://scripts/strange_object.gd" id="3_artifact"]
 [ext_resource type="Script" path="res://scripts/world_generator.gd" id="4_generator"]
 [ext_resource type="Environment" path="res://scenes/default_environment.tres" id="5_environment"]
 [ext_resource type="Script" path="res://scripts/foliage_patch.gd" id="6_foliage"]
-[ext_resource type="Script" path="res://scripts/world_detail.gd" id="7_detail"]
 [ext_resource type="Script" path="res://scripts/lunar_cycle.gd" id="9_lunar"]
 [ext_resource type="Script" path="res://scripts/echo_stone.gd" id="8_echo"]
 [ext_resource type="Script" path="res://scripts/water_system.gd" id="10_water"]
 [ext_resource type="Script" path="res://scripts/npc_manager.gd" id="11_npc"]
 [ext_resource type="Script" path="res://scripts/pause_menu.gd" id="12_pause"]
-
-[sub_resource type="SphereMesh" id="ArtifactMesh"]
-radius = 0.75
-height = 1.5
-
-[sub_resource type="SphereShape3D" id="ArtifactShape"]
-radius = 0.75
 
 [sub_resource type="CylinderMesh" id="EchoStoneMesh"]
 top_radius = 0.65
@@ -59,11 +50,6 @@ seed_value = 47291
 script = ExtResource("6_foliage")
 count = 55
 radius = 80.0
-
-[node name="WorldDetail" type="Node3D" parent="."]
-script = ExtResource("7_detail")
-rock_count = 45
-mineral_count = 14
 
 [node name="EchoStone" type="StaticBody3D" parent="."]
 position = Vector3(6, 0, -6)
@@ -129,19 +115,6 @@ material_override = SubResource("EchoStoneMaterial")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="EchoStone5"]
 shape = SubResource("EchoStoneShape")
-
-[node name="VeyraArtifact" type="StaticBody3D" parent="."]
-position = Vector3(0, 0.85, -4)
-collision_layer = 2
-collision_mask = 1
-script = ExtResource("3_artifact")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="VeyraArtifact"]
-mesh = SubResource("ArtifactMesh")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="VeyraArtifact"]
-shape = SubResource("ArtifactShape")
-
 
 [node name="NPCManager" type="Node3D" parent="."]
 script = ExtResource("11_npc")
