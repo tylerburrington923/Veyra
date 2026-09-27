@@ -24,6 +24,7 @@ var _visual_accumulator: float = 0.0
 const PHASE_NAMES := ["Dark", "Crescent", "First Quarter", "Gibbous", "Full", "Waning Gibbous", "Last Quarter", "Waning Crescent"]
 
 func _ready() -> void:
+    add_to_group("lunar_cycle")
     _build_moon()
     _refresh()
 
