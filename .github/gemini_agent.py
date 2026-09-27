@@ -243,139 +243,152 @@ def call_with_fallback(model, payload, label):
                 print("Gemini " + label + ": " + candidate + " unavailable; falling back to " + models[index + 1], flush=True)
     raise SystemExit(last_error or f"Gemini {label} failed")
 
-url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={API_KEY}"
-payload = {
-    "system_instruction": {"parts": [{"text": system}]},
-    "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-    "generationConfig": {
-        "temperature": 0.1,
-        "responseMimeType": "application/json",
-        "maxOutputTokens": 50000
-    }
-}
-implementation_model, raw = call_with_fallback(MODEL, payload, "implementation")
-
-try:
-    text = raw["candidates"][0]["content"]["parts"][0]["text"]
-except (KeyError, IndexError, TypeError) as e:
-    raise SystemExit(f"Gemini response contained no usable candidate: {e}")
-
-try:
-    result = json.loads(text)
-except json.JSONDecodeError as e:
-    raise SystemExit(f"Gemini returned invalid JSON: {e}")
-
-if not isinstance(result.get("files"), list):
-    raise SystemExit("Gemini response has no files array.")
-
-report = {
-    "task": TASK,
-    "model": implementation_model,
-    "context_files": file_count,
-    "context_chars": context_chars,
-    "summary": result.get("summary", ""),
-    "files": []
-}
-
-for item in result["files"]:
-    path = str(item.get("path", "")).replace("\\", "/").lstrip("/")
-    operation = item.get("operation")
-    content = item.get("content")
-    if not path or operation not in {"create", "update"} or not isinstance(content, str):
-        raise SystemExit(f"Invalid Gemini file operation: {item}")
-    if not allowed(path):
-        raise SystemExit(f"Gemini attempted forbidden path: {path}")
-    target = ROOT / path
-    if operation == "create" and target.exists():
-        raise SystemExit(f"Gemini marked existing file as create: {path}")
-    if operation == "update" and not target.exists():
-        raise SystemExit(f"Gemini marked missing file as update: {path}")
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content, encoding="utf-8")
-    report["files"].append({"path": path, "operation": operation})
-
-
-# Independent self-review gate: review only the generated diff plus bounded relevant context.
-import subprocess
-
-def git_diff():
-    proc = subprocess.run(
-        ["git", "diff", "--", "scripts/", "scenes/", "tests/", ".github/", "docs/"],
-        capture_output=True, text=True, check=False,
-    )
-    if proc.returncode != 0:
-        raise SystemExit(f"git diff failed: {proc.stderr}")
-    return proc.stdout
-
-def review_generated_changes(diff_text):
-    review_model = os.environ.get("GEMINI_REVIEW_MODEL", MODEL)
-    changed_blocks = []
-    used = 0
-    for item in report["files"]:
-        path = item["path"]
-        data = read_text(ROOT / path)
-        if data is None:
-            continue
-        block = f"\n===== CHANGED FILE: {path} =====\n{data}\n"
-        if used + len(block) > 90000:
-            continue
-        changed_blocks.append(block)
-        used += len(block)
-
-    architecture = read_text(CONTEXT_FILE) if CONTEXT_FILE.exists() else ""
-    review_prompt = f"""Review this generated Veyra change as an independent senior Godot engineer.
-
-TASK:
-{TASK}
-
-ARCHITECTURE CONTEXT:
-{architecture}
-
-GENERATED DIFF:
-{diff_text}
-
-CHANGED FILE CONTENT:
-{"".join(changed_blocks)}
-
-Check for:
-- duplicate authorities, catalogs, managers, or state
-- save/load contract changes or unsanitized persisted data
-- changed/broken resource IDs
-- interaction authority or eligibility bypasses
-- future multiplayer authority violations
-- unbounded per-frame/distant simulation
-- excessive nodes, materials, physics bodies, allocations, or expensive mobile work
-- unrelated file modifications
-- missing/weak regression coverage
-- likely Godot 4.7.2 parser/runtime/API errors
-- invented APIs or contracts unsupported by the supplied repository
-- changes that look complete but do not materially implement the task
-
-Return ONLY JSON:
-{{
-  "approved": true,
-  "risk_level": "low|medium|high|critical",
-  "findings": [{{"severity":"info|warning|error|critical","path":"path","issue":"specific finding"}}],
-  "required_changes": ["specific change required before PR"],
-  "summary": "short audit summary"
-}}
-Set approved=false for any error/critical finding or required architectural correction."""
-
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{review_model}:generateContent?key={API_KEY}"
+if os.environ.get("GEMINI_REVIEW_ONLY", "").lower() not in {"1", "true", "yes"}:
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={API_KEY}"
     payload = {
-        "system_instruction": {"parts": [{"text": "You are Veyra's independent code-review gate. Do not rewrite code. Judge only supplied evidence. Do not invent repository facts. Approval is not a device-test claim."}]},
-        "contents": [{"role": "user", "parts": [{"text": review_prompt}]}],
-        "generationConfig": {"temperature": 0.0, "responseMimeType": "application/json", "maxOutputTokens": 16000},
+        "system_instruction": {"parts": [{"text": system}]},
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": 0.1,
+            "responseMimeType": "application/json",
+            "maxOutputTokens": 50000
+        }
     }
-    review_model_used, raw = call_with_fallback(review_model, payload, "review")
+    implementation_model, raw = call_with_fallback(MODEL, payload, "implementation")
+    
     try:
         text = raw["candidates"][0]["content"]["parts"][0]["text"]
-        review = json.loads(text)
-    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as e:
-        raise SystemExit(f"Gemini reviewer returned unusable JSON: {e}")
-    if not isinstance(review.get("approved"), bool):
-        raise SystemExit("Gemini reviewer did not return a boolean approved field.")
-    return review_model_used, review
+    except (KeyError, IndexError, TypeError) as e:
+        raise SystemExit(f"Gemini response contained no usable candidate: {e}")
+    
+    try:
+        result = json.loads(text)
+    except json.JSONDecodeError as e:
+        raise SystemExit(f"Gemini returned invalid JSON: {e}")
+    
+    if not isinstance(result.get("files"), list):
+        raise SystemExit("Gemini response has no files array.")
+    
+    report = {
+        "task": TASK,
+        "model": implementation_model,
+        "context_files": file_count,
+        "context_chars": context_chars,
+        "summary": result.get("summary", ""),
+        "files": []
+    }
+    
+    for item in result["files"]:
+        path = str(item.get("path", "")).replace("\\", "/").lstrip("/")
+        operation = item.get("operation")
+        content = item.get("content")
+        if not path or operation not in {"create", "update"} or not isinstance(content, str):
+            raise SystemExit(f"Invalid Gemini file operation: {item}")
+        if not allowed(path):
+            raise SystemExit(f"Gemini attempted forbidden path: {path}")
+        target = ROOT / path
+        if operation == "create" and target.exists():
+            raise SystemExit(f"Gemini marked existing file as create: {path}")
+        if operation == "update" and not target.exists():
+            raise SystemExit(f"Gemini marked missing file as update: {path}")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+        report["files"].append({"path": path, "operation": operation})
+    
+    
+    # Independent self-review gate: review only the generated diff plus bounded relevant context.
+    import subprocess
+    
+    def git_diff():
+        proc = subprocess.run(
+            ["git", "diff", "--", "scripts/", "scenes/", "tests/", ".github/", "docs/"],
+            capture_output=True, text=True, check=False,
+        )
+        if proc.returncode != 0:
+            raise SystemExit(f"git diff failed: {proc.stderr}")
+        return proc.stdout
+    
+    def review_generated_changes(diff_text):
+        review_model = os.environ.get("GEMINI_REVIEW_MODEL", MODEL)
+        changed_blocks = []
+        used = 0
+        for item in report["files"]:
+            path = item["path"]
+            data = read_text(ROOT / path)
+            if data is None:
+                continue
+            block = f"\n===== CHANGED FILE: {path} =====\n{data}\n"
+            if used + len(block) > 90000:
+                continue
+            changed_blocks.append(block)
+            used += len(block)
+    
+        architecture = read_text(CONTEXT_FILE) if CONTEXT_FILE.exists() else ""
+        review_prompt = f"""Review this generated Veyra change as an independent senior Godot engineer.
+    
+    TASK:
+    {TASK}
+    
+    ARCHITECTURE CONTEXT:
+    {architecture}
+    
+    GENERATED DIFF:
+    {diff_text}
+    
+    CHANGED FILE CONTENT:
+    {"".join(changed_blocks)}
+    
+    Check for:
+    - duplicate authorities, catalogs, managers, or state
+    - save/load contract changes or unsanitized persisted data
+    - changed/broken resource IDs
+    - interaction authority or eligibility bypasses
+    - future multiplayer authority violations
+    - unbounded per-frame/distant simulation
+    - excessive nodes, materials, physics bodies, allocations, or expensive mobile work
+    - unrelated file modifications
+    - missing/weak regression coverage
+    - likely Godot 4.7.2 parser/runtime/API errors
+    - invented APIs or contracts unsupported by the supplied repository
+    - changes that look complete but do not materially implement the task
+    
+    Return ONLY JSON:
+    {{
+      "approved": true,
+      "risk_level": "low|medium|high|critical",
+      "findings": [{{"severity":"info|warning|error|critical","path":"path","issue":"specific finding"}}],
+      "required_changes": ["specific change required before PR"],
+      "summary": "short audit summary"
+    }}
+    Set approved=false for any error/critical finding or required architectural correction."""
+    
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{review_model}:generateContent?key={API_KEY}"
+        payload = {
+            "system_instruction": {"parts": [{"text": "You are Veyra's independent code-review gate. Do not rewrite code. Judge only supplied evidence. Do not invent repository facts. Approval is not a device-test claim."}]},
+            "contents": [{"role": "user", "parts": [{"text": review_prompt}]}],
+            "generationConfig": {"temperature": 0.0, "responseMimeType": "application/json", "maxOutputTokens": 16000},
+        }
+        review_model_used, raw = call_with_fallback(review_model, payload, "review")
+        try:
+            text = raw["candidates"][0]["content"]["parts"][0]["text"]
+            review = json.loads(text)
+        except (KeyError, IndexError, TypeError, json.JSONDecodeError) as e:
+            raise SystemExit(f"Gemini reviewer returned unusable JSON: {e}")
+        if not isinstance(review.get("approved"), bool):
+            raise SystemExit("Gemini reviewer did not return a boolean approved field.")
+        return review_model_used, review
+    
+    
+else:
+    report_path = pathlib.Path("gemini_agent_output.json")
+    if not report_path.exists():
+        raise SystemExit("Gemini review-only phase requires gemini_agent_output.json.")
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise SystemExit(f"Existing Gemini report is invalid JSON: {e}")
+    if not isinstance(report.get("files"), list):
+        raise SystemExit("Existing Gemini report has no files array.")
 
 diff_text = git_diff()
 
