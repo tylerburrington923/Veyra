@@ -417,6 +417,18 @@ func _build_lobby_ui() -> void:
 	ip_field.position = Vector2(16, 88)
 	ip_field.size = Vector2(210, 42)
 	ip_field.add_to_group("camera_blocking_ui")
+	var input_style := StyleBoxFlat.new()
+	input_style.bg_color = Color(0.035, 0.065, 0.08, 0.98)
+	input_style.border_width_left = 1
+	input_style.border_width_top = 1
+	input_style.border_width_right = 1
+	input_style.border_width_bottom = 1
+	input_style.border_color = Color(0.24, 0.48, 0.52, 0.70)
+	input_style.corner_radius_top_left = 8
+	input_style.corner_radius_top_right = 8
+	input_style.corner_radius_bottom_left = 8
+	input_style.corner_radius_bottom_right = 8
+	ip_field.add_theme_stylebox_override("normal", input_style)
 	panel.add_child(ip_field)
 
 	host_button = Button.new()
@@ -458,8 +470,8 @@ func _build_lobby_ui() -> void:
 	close_lobby_button = Button.new()
 	close_lobby_button.name = "CLOSE"
 	close_lobby_button.text = "CLOSE"
-	close_lobby_button.position = Vector2(16, 184)
-	close_lobby_button.size = Vector2(320, 30)
+	close_lobby_button.position = Vector2(16, 180)
+	close_lobby_button.size = Vector2(320, 40)
 	close_lobby_button.add_to_group("camera_blocking_ui")
 	close_lobby_button.pressed.connect(close_lobby_ui)
 	_style_lobby_button(close_lobby_button)
