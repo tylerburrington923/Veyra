@@ -6,6 +6,7 @@ import re
 import urllib.request
 import urllib.error
 import time
+import subprocess
 
 ROOT = pathlib.Path(".").resolve()
 API_KEY = os.environ["GEMINI_API_KEY"]
@@ -242,6 +243,15 @@ def call_with_fallback(model, payload, label):
             if index + 1 < len(models):
                 print("Gemini " + label + ": " + candidate + " unavailable; falling back to " + models[index + 1], flush=True)
     raise SystemExit(last_error or f"Gemini {label} failed")
+
+def git_diff():
+    proc = subprocess.run(
+        ["git", "diff", "--", "scripts/", "scenes/", "tests/", ".github/", "docs/"],
+        capture_output=True, text=True, check=False,
+    )
+    if proc.returncode != 0:
+        raise SystemExit(f"git diff failed: {proc.stderr}")
+    return proc.stdout
 
 if os.environ.get("GEMINI_REVIEW_ONLY", "").lower() not in {"1", "true", "yes"}:
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={API_KEY}"
