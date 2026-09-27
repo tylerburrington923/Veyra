@@ -68,7 +68,10 @@ func spawn_animal(animal_id: String, definition_id: String, position: Vector3) -
 	states[animal_id] = state
 	var visual := _make_visual(definition_id)
 	visual.name = "Animal_" + animal_id
+	visual.set_script(ANIMAL_ACTOR_SCRIPT)
 	add_child(visual)
+	if visual.has_method("configure"):
+		visual.configure(self, animal_id)
 	var collision := CollisionShape3D.new()
 	var capsule := CapsuleShape3D.new()
 	capsule.radius = 0.38
