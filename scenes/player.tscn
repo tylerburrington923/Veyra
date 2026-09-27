@@ -342,6 +342,7 @@ exclude_parent = true
 script = ExtResource("2_interaction")
 
 [node name="MobileControls" type="CanvasLayer" parent="."]
+layer = 15
 [node name="TargetHUD" type="Label" parent="MobileControls"]
 offset_left = 24.0
 offset_top = 86.0
