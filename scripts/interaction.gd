@@ -246,18 +246,19 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 		interact_button.text = action_label
 
 	if target_label:
-		var has_target := target_type != "NONE" and handler != ""
 		target_label.visible = false
 		if target_panel:
-			target_panel.visible = has_target
-		if has_target:
-			var distance_text := "--"
-			if player:
-				distance_text = "%.1f m" % player.global_position.distance_to(collision_point)
-			if target_action:
-				target_action.text = action_label.to_upper()
-			if target_detail:
-				var detail := target_name if target_name != "" else "Unknown"
+			target_panel.visible = true
+		if target_action:
+			target_action.text = action_label.to_upper() if handler != "" else "LOOK TO INTERACT"
+		if target_detail:
+			if handler == "":
+				target_detail.text = "CENTER YOUR VIEW"
+			else:
+				var distance_text := "--"
+				if player:
+					distance_text = "%.1f m" % player.global_position.distance_to(collision_point)
+				var detail := target_name if target_name != "" else "UNKNOWN"
 				if not eligible and last_requirement != "":
 					detail += "  •  REQUIRES " + last_requirement.to_upper()
 				detail += "  •  " + distance_text
@@ -358,6 +359,7 @@ func _interaction_hud_style() -> void:
 	panel_style.content_margin_left = 12.0
 	panel_style.content_margin_right = 12.0
 	target_panel.add_theme_stylebox_override("panel", panel_style)
+	target_panel.custom_minimum_size = Vector2(260.0, 48.0)
 	if target_action:
 		target_action.add_theme_font_size_override("font_size", 14)
 		target_action.add_theme_color_override("font_color", Color(0.42, 0.88, 0.90, 1.0))
