@@ -254,5 +254,106 @@ for item in result["files"]:
     target.write_text(content, encoding="utf-8")
     report["files"].append({"path": path, "operation": operation})
 
+
+# Independent self-review gate: review only the generated diff plus bounded relevant context.
+import subprocess
+
+def git_diff():
+    proc = subprocess.run(
+        ["git", "diff", "--", "scripts/", "scenes/", "tests/", ".github/", "docs/"],
+        capture_output=True, text=True, check=False,
+    )
+    if proc.returncode != 0:
+        raise SystemExit(f"git diff failed: {proc.stderr}")
+    return proc.stdout
+
+def review_generated_changes(diff_text):
+    review_model = os.environ.get("GEMINI_REVIEW_MODEL", MODEL)
+    changed_blocks = []
+    used = 0
+    for item in report["files"]:
+        path = item["path"]
+        data = read_text(ROOT / path)
+        if data is None:
+            continue
+        block = f"\n===== CHANGED FILE: {path} =====\n{data}\n"
+        if used + len(block) > 90000:
+            continue
+        changed_blocks.append(block)
+        used += len(block)
+
+    architecture = read_text(CONTEXT_FILE) if CONTEXT_FILE.exists() else ""
+    review_prompt = f"""Review this generated Veyra change as an independent senior Godot engineer.
+
+TASK:
+{TASK}
+
+ARCHITECTURE CONTEXT:
+{architecture}
+
+GENERATED DIFF:
+{diff_text}
+
+CHANGED FILE CONTENT:
+{"".join(changed_blocks)}
+
+Check for:
+- duplicate authorities, catalogs, managers, or state
+- save/load contract changes or unsanitized persisted data
+- changed/broken resource IDs
+- interaction authority or eligibility bypasses
+- future multiplayer authority violations
+- unbounded per-frame/distant simulation
+- excessive nodes, materials, physics bodies, allocations, or expensive mobile work
+- unrelated file modifications
+- missing/weak regression coverage
+- likely Godot 4.7.2 parser/runtime/API errors
+- invented APIs or contracts unsupported by the supplied repository
+- changes that look complete but do not materially implement the task
+
+Return ONLY JSON:
+{{
+  "approved": true,
+  "risk_level": "low|medium|high|critical",
+  "findings": [{{"severity":"info|warning|error|critical","path":"path","issue":"specific finding"}}],
+  "required_changes": ["specific change required before PR"],
+  "summary": "short audit summary"
+}}
+Set approved=false for any error/critical finding or required architectural correction."""
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{review_model}:generateContent?key={API_KEY}"
+    payload = {
+        "system_instruction": {"parts": [{"text": "You are Veyra's independent code-review gate. Do not rewrite code. Judge only supplied evidence. Do not invent repository facts. Approval is not a device-test claim."}]},
+        "contents": [{"role": "user", "parts": [{"text": review_prompt}]}],
+        "generationConfig": {"temperature": 0.0, "responseMimeType": "application/json", "maxOutputTokens": 16000},
+    }
+    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"),
+                                 headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=300) as resp:
+            raw = json.load(resp)
+    except urllib.error.HTTPError as e:
+        raise SystemExit(f"Gemini review API HTTP {e.code}: {e.read().decode('utf-8', 'replace')}")
+    try:
+        text = raw["candidates"][0]["content"]["parts"][0]["text"]
+        review = json.loads(text)
+    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as e:
+        raise SystemExit(f"Gemini reviewer returned unusable JSON: {e}")
+    if not isinstance(review.get("approved"), bool):
+        raise SystemExit("Gemini reviewer did not return a boolean approved field.")
+    return review_model, review
+
+diff_text = git_diff()
+review_model, review = review_generated_changes(diff_text)
+report["review"] = {
+    "model": review_model,
+    "approved": review["approved"],
+    "risk_level": review.get("risk_level", "unknown"),
+    "findings": review.get("findings", []),
+    "required_changes": review.get("required_changes", []),
+    "summary": review.get("summary", ""),
+}
 pathlib.Path("gemini_agent_output.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
 print(json.dumps(report, indent=2))
+if not review["approved"]:
+    raise SystemExit("Gemini self-review rejected the generated change; no PR will be created.")
