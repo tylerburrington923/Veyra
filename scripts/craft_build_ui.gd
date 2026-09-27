@@ -21,6 +21,9 @@ var selected_id := ""
 var crafting_button: Button
 
 func _ready() -> void:
+	add_to_group("modal_ui")
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	layer = 100
 	player = get_parent() as Node3D
 	inventory = player.get_node_or_null("Inventory") as VeyraInventory
 	crafting = get_node_or_null("/root/CraftingManager") as VeyraCraftingManager
@@ -144,6 +147,13 @@ func _build_ui() -> void:
 	crafting_button.offset_bottom = -140
 	crafting_button.pressed.connect(_toggle_panel)
 	add_child(crafting_button)
+
+func _input(event: InputEvent) -> void:
+	if not panel.visible:
+		return
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+		_close_panel()
+		get_viewport().set_input_as_handled()
 
 func _toggle_panel() -> void:
 	panel.visible = not panel.visible
