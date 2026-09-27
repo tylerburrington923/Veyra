@@ -155,7 +155,10 @@ func apply_network_snapshot(snapshot: Array) -> void:
 			if not visuals.has(animal_id):
 				var visual := _make_visual(definition_id)
 				visual.name = "Animal_" + animal_id
+				visual.set_script(ANIMAL_ACTOR_SCRIPT)
 				add_child(visual)
+				if visual.has_method("configure"):
+					visual.configure(self, animal_id)
 				visuals[animal_id] = visual
 	for animal_id in states.keys():
 		if not incoming.has(animal_id):
