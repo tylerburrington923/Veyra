@@ -8,7 +8,7 @@ class_name VeyraNetworkManager
 
 const PORT: int = 24567
 const MAX_PLAYERS: int = 4
-const SNAPSHOT_INTERVAL: float = 0.05
+const SNAPSHOT_INTERVAL: float = 0.08
 
 var session_active: bool = false
 var is_host: bool = false
@@ -48,7 +48,7 @@ func _process(delta: float) -> void:
 	if _snapshot_accumulator >= SNAPSHOT_INTERVAL:
 		_snapshot_accumulator = 0.0
 		_broadcast_snapshot()
-	if _state_sync_accumulator >= 0.25:
+	if _state_sync_accumulator >= 0.5:
 		_state_sync_accumulator = 0.0
 		_broadcast_game_state()
 
