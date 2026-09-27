@@ -245,9 +245,14 @@ func _move_state_toward(state: NPCState, target: Vector3, delta: float) -> void:
 		state.position = _vector_dict(_ground_position(target))
 		return
 	var step := minf(3.0 * delta, distance)
-	var next := _ground_position(current + offset.normalized() * step)
+	var move_direction := offset.normalized()
+	var next := _ground_position(current + move_direction * step)
 	state.position = _vector_dict(next)
 	state.target_position = _vector_dict(target)
+	# NPC visuals use Godot's conventional -Z forward axis. Keep the
+	# authoritative facing aligned with actual travel so villagers never
+	# appear to walk backward.
+	state.rotation = _vector_dict(Vector3(0.0, atan2(-move_direction.x, -move_direction.z), 0.0))
 
 func _state_position(data: Dictionary) -> Vector3:
 	return Vector3(float(data.get("x", 0.0)), float(data.get("y", 0.0)), float(data.get("z", 0.0)))
