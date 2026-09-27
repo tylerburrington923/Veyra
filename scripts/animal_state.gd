@@ -15,6 +15,7 @@ var thirst: float = 100.0
 var stamina: float = 100.0
 var alive: bool = true
 var behavior_state: String = "IDLE"
+var behavior_timer: float = 0.0
 
 func _init(p_animal_id: String = "", p_definition_id: String = "") -> void:
 	animal_id = p_animal_id
@@ -38,7 +39,7 @@ func sanitize() -> void:
 		alive = false
 
 func to_dict() -> Dictionary:
-	return {"animal_id": animal_id, "definition_id": definition_id, "position": position.duplicate(), "rotation": rotation.duplicate(), "target_position": target_position.duplicate(), "health": health, "hunger": hunger, "thirst": thirst, "stamina": stamina, "alive": alive, "behavior_state": behavior_state}
+	return {"animal_id": animal_id, "definition_id": definition_id, "position": position.duplicate(), "rotation": rotation.duplicate(), "target_position": target_position.duplicate(), "health": health, "hunger": hunger, "thirst": thirst, "stamina": stamina, "alive": alive, "behavior_state": behavior_state, "behavior_timer": behavior_timer}
 
 static func from_dict(data: Dictionary) -> AnimalState:
 	var state := AnimalState.new()
@@ -53,6 +54,7 @@ static func from_dict(data: Dictionary) -> AnimalState:
 	state.stamina = float(data.get("stamina", 100.0))
 	state.alive = bool(data.get("alive", true))
 	state.behavior_state = str(data.get("behavior_state", "IDLE"))
+	state.behavior_timer = float(data.get("behavior_timer", 0.0))
 	return state
 
 static func _vector_dict(value: Variant) -> Dictionary:
