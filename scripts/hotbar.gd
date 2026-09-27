@@ -142,7 +142,7 @@ func _refresh_resonance() -> void:
 	if not resonance_label or not inventory:
 		return
 	var charge: float = float(player.get_resonance()) if player and player.has_method("get_resonance") else 0.0
-	var discovered: bool = bool(player.get("resonance_discovered")) if player else false
+	var discovered: bool = (player.get("resonance_discovered") == true) if player else false
 	if discovered:
 		resonance_seen = true
 	var lux: int = int(inventory.get_amount("Vitreous Lux"))
