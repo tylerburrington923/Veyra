@@ -76,6 +76,41 @@ func get_building_record(building_id: String) -> Dictionary:
     var record = buildings.get(building_id, {})
     return record.duplicate(true) if record is Dictionary else {}
 
+func get_active_player_count() -> int:
+    return get_tree().get_nodes_in_group("player").size()
+
+func get_active_villager_count() -> int:
+    return villagers.size()
+
+func get_water_demand() -> int:
+    return get_active_player_count() * PLAYER_WATER_PER_CYCLE + get_active_villager_count() * VILLAGER_WATER_PER_CYCLE
+
+func get_water_days_remaining() -> float:
+    var demand: int = get_water_demand()
+    if demand <= 0:
+        return 0.0
+    return float(water_stock) / float(demand)
+
+func process_water_cycle(world_time: float, cycle_length_seconds: float) -> void:
+    if cycle_length_seconds <= 0.0:
+        return
+    var normalized_time: float = fmod(maxf(0.0, world_time), cycle_length_seconds)
+    if not _water_clock_initialized:
+        _last_world_time = normalized_time
+        _water_clock_initialized = true
+        return
+    if normalized_time >= _last_world_time:
+        _last_world_time = normalized_time
+        return
+    _last_world_time = normalized_time
+    water_cycle_index += 1
+    var demand: int = get_water_demand()
+    var required: int = demand
+    var consumed: int = mini(water_stock, required)
+    water_stock -= consumed
+    last_water_shortage = maxi(0, required - consumed)
+    settlement_changed.emit()
+
 func add_villager(villager_id: String, name_value: String = "Villager") -> bool:
     if villager_id.is_empty() or villagers.has(villager_id):
         return false
