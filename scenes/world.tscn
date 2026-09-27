@@ -31,11 +31,11 @@ radius = 0.7
 height = 1.8
 
 [sub_resource type="StandardMaterial3D" id="EchoStoneMaterial"]
-albedo_color = Color(0.30, 0.25, 0.38, 1)
-roughness = 0.9
+albedo_color = Color(0.12, 0.28, 0.32, 1)
+roughness = 0.78
 emission_enabled = true
-emission = Color(0.03, 0.01, 0.06, 1)
-emission_energy_multiplier = 0.15
+emission = Color(0.04, 0.42, 0.48, 1)
+emission_energy_multiplier = 0.55
 
 [node name="Veyra" type="Node3D"]
 script = ExtResource("1_world")
