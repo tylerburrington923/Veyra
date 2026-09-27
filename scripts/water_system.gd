@@ -1,4 +1,5 @@
 extends Node3D
+class_name VeyraWaterSystem
 
 ## Deterministic presentation-only water. Terrain remains authoritative.
 @export var seed_value: int = 47291
@@ -11,6 +12,7 @@ var generated := false
 var terrain_generator: Node
 var lake_center := Vector3.ZERO
 var lake_level := 0.0
+var stream_path := PackedVector3Array()
 var water_material: StandardMaterial3D
 var shore_material: StandardMaterial3D
 
@@ -23,10 +25,17 @@ func configure(world_seed: int) -> void:
 func generate() -> void:
     if generated:
         return
-    terrain_generator = get_parent().get_node_or_null("WorldGenerator")
+    if terrain_generator == null and get_parent() != null:
+        terrain_generator = get_parent().get_node_or_null("WorldGenerator")
+        if terrain_generator == null or not terrain_generator.has_method("get_height_at_world"):
+            for child in get_parent().get_children():
+                if child != self and child.has_method("get_height_at_world"):
+                    terrain_generator = child
+                    break
     if terrain_generator == null or not terrain_generator.has_method("get_height_at_world"):
         return
     generated = true
+    stream_path.clear()
     lake_center = _find_low_point(Vector2(-32.0 + float(posmod(seed_value, 11)), 12.0 + float(posmod(seed_value / 11, 9))))
     lake_level = float(terrain_generator.get_height_at_world(lake_center.x, lake_center.z)) + 0.32
     _make_lake()
@@ -40,6 +49,52 @@ func get_lake_center() -> Vector3:
 
 func get_lake_level() -> float:
     return lake_level
+
+func get_lake_radius() -> float:
+    return lake_radius
+
+func get_stream_path() -> PackedVector3Array:
+    return stream_path
+
+func is_point_in_water(world_pos: Vector3) -> bool:
+    if not generated:
+        return false
+    var xz_dist_sq := (world_pos.x - lake_center.x) * (world_pos.x - lake_center.x) + (world_pos.z - lake_center.z) * (world_pos.z - lake_center.z)
+    if xz_dist_sq <= lake_radius * lake_radius:
+        if world_pos.y <= lake_level + 0.5 and world_pos.y >= lake_level - 8.0:
+            return true
+    var stream_half_width := stream_width * 0.7
+    for pt in stream_path:
+        var dx := world_pos.x - pt.x
+        var dz := world_pos.z - pt.z
+        if (dx * dx + dz * dz) <= stream_half_width * stream_half_width:
+            if absf(world_pos.y - pt.y) <= 1.2:
+                return true
+    return false
+
+func get_water_height_at(world_x: float, world_z: float) -> float:
+    if not generated:
+        return -INF
+    var xz_dist_sq := (world_x - lake_center.x) * (world_x - lake_center.x) + (world_z - lake_center.z) * (world_z - lake_center.z)
+    if xz_dist_sq <= lake_radius * lake_radius:
+        return lake_level
+    var stream_half_width := stream_width * 0.7
+    for pt in stream_path:
+        var dx := world_x - pt.x
+        var dz := world_z - pt.z
+        if (dx * dx + dz * dz) <= stream_half_width * stream_half_width:
+            return pt.y
+    return -INF
+
+func get_water_state() -> Dictionary:
+    return {
+        "seed": seed_value,
+        "generated": generated,
+        "lake_center": [lake_center.x, lake_center.y, lake_center.z],
+        "lake_level": lake_level,
+        "lake_radius": lake_radius,
+        "stream_point_count": stream_path.size()
+    }
 
 func _find_low_point(origin: Vector2) -> Vector3:
     var best := Vector3(origin.x, 0.0, origin.y)
@@ -105,13 +160,15 @@ func _make_stream() -> void:
     var previous := start
     var rng := RandomNumberGenerator.new()
     rng.seed = seed_value + 1703
+    stream_path.resize(stream_points)
     for i in range(stream_points):
         var t := float(i) / float(stream_points - 1)
-        var p := start + dir * (3.0 + 2.0 * t) * i + side * (sin(t * 8.0 + seed_value % 13) * 1.7 + rng.randf_range(-0.3, 0.3))
+        var p := start + dir * (3.0 + 2.0 * t) * i + side * (sin(t * 8.0 + float(seed_value % 13)) * 1.7 + rng.randf_range(-0.3, 0.3))
         if i > 0 and p.distance_to(previous) > 5.0:
             p = previous + (p - previous).normalized() * 5.0
         previous = p
         var h: float = terrain_generator.get_height_at_world(p.x, p.y) + 0.12
+        stream_path[i] = Vector3(p.x, h, p.y)
         var w := lerpf(stream_width * 0.72, stream_width * 1.15, t)
         v.append(Vector3(p.x + side.x * w, h, p.y + side.y * w))
         v.append(Vector3(p.x - side.x * w, h, p.y - side.y * w))

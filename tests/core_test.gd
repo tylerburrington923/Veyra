@@ -31,7 +31,7 @@ func _run_tests() -> void:
 	_test_mobile_action_layout_contract()
 	_test_water_system_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (23 suites)")
+		print("VEYRA CORE TESTS: PASS (24 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -643,10 +643,21 @@ func _test_npc_state_validation_vs_sanitization() -> void:
 func _test_water_system_contract() -> void:
 	var generator_script := load("res://scripts/world_generator.gd")
 	var water_script := load("res://scripts/water_system.gd")
+
+	# Missing terrain generator contract: must safely handle lack of terrain generator
+	var orphan_water: Node3D = water_script.new()
+	orphan_water.generate()
+	_check(not orphan_water.is_generated(), "orphan water must not generate without terrain generator")
+	orphan_water.queue_free()
+
+	# Generate terrain
 	var generator: Node3D = generator_script.new()
+	generator.name = "WorldGenerator"
 	generator.seed_value = 47291
 	root.add_child(generator)
 	generator.generate()
+
+	# Primary water instance with default seed
 	var water: Node3D = water_script.new()
 	root.add_child(water)
 	water.configure(47291)
@@ -657,5 +668,45 @@ func _test_water_system_contract() -> void:
 	_check(water.get_node_or_null("StreamSurface") != null, "stream surface missing")
 	_check(water.get_lake_center().distance_to(Vector3.ZERO) < 120.0, "water must remain inside terrain bounds")
 	_check(water.get_lake_level() > -100.0 and water.get_lake_level() < 100.0, "water level out of bounds")
+	_check(water.get_lake_radius() > 0.0, "water must report positive lake radius")
+
+	# Idempotency contract: calling generate again must not duplicate child nodes
+	var child_count_before := water.get_child_count()
+	water.generate()
+	_check(water.get_child_count() == child_count_before, "generate() must be idempotent")
+
+	# Interface contracts for ecology, wildlife, and gathering queries
+	var lake_pos := Vector3(water.get_lake_center().x, water.get_lake_level(), water.get_lake_center().z)
+	_check(water.is_point_in_water(lake_pos), "lake center at water level must be detected as in water")
+	_check(not water.is_point_in_water(Vector3(300.0, 50.0, 300.0)), "distant point must not be detected as in water")
+	_check(is_equal_approx(water.get_water_height_at(lake_pos.x, lake_pos.z), water.get_lake_level()), "water height at lake center must match lake level")
+	_check(water.get_water_height_at(300.0, 300.0) == -INF, "water height far from water must return -INF")
+
+	var stream_path: PackedVector3Array = water.get_stream_path()
+	_check(stream_path.size() == water.stream_points, "stream path must contain configured point count")
+	if stream_path.size() > 0:
+		_check(water.is_point_in_water(stream_path[stream_path.size() - 1]), "last stream point must be detected as in water")
+
+	# Determinism contract: identical seed must produce identical outputs
+	var water2: Node3D = water_script.new()
+	root.add_child(water2)
+	water2.configure(47291)
+	water2.generate()
+	_check(water.get_lake_center() == water2.get_lake_center(), "identical seed must produce identical lake center")
+	_check(is_equal_approx(water.get_lake_level(), water2.get_lake_level()), "identical seed must produce identical lake level")
+	_check(water.get_stream_path() == water2.get_stream_path(), "identical seed must produce identical stream path")
+	var state1: Dictionary = water.get_water_state()
+	var state2: Dictionary = water2.get_water_state()
+	_check(state1 == state2, "identical seed must produce identical water state snapshot")
+	water2.queue_free()
+
+	# Seed differentiation contract: differing seed must alter lake placement
+	var water_diff: Node3D = water_script.new()
+	root.add_child(water_diff)
+	water_diff.configure(99999)
+	water_diff.generate()
+	_check(water_diff.get_lake_center() != water.get_lake_center(), "different seed must produce different lake center")
+	water_diff.queue_free()
+
 	water.queue_free()
 	generator.queue_free()
