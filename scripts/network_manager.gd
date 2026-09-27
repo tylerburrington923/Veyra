@@ -245,7 +245,7 @@ func request_interaction(resource_path: NodePath) -> void:
 		_server_interaction_locks.erase(peer_id)
 		return
 	if target.has_method("interact"):
-		target.interact()
+		target.interact(player)
 		broadcast_interaction_feedback.rpc(peer_id, str(target.name))
 	_server_interaction_locks.erase(peer_id)
 
