@@ -866,7 +866,7 @@ func _test_settlement_water_contract() -> void:
 	settlement._water_clock_initialized = true
 	settlement._last_world_time = 899.0
 	settlement.process_water_cycle(0.0, 900.0)
-	_check(settlement.water_stock == 10 - demand, "lunar cycle must consume one water unit per resident")
+	_check(settlement.water_stock == 10 - demand, "lunar cycle water mismatch: before=10 demand=%d after=%d cycle_index=%d" % [demand, settlement.water_stock, settlement.water_cycle_index])
 	player.queue_free()
 	settlement.villagers.clear()
 
