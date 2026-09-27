@@ -59,38 +59,77 @@ func _build_base() -> void:
 	panel = Panel.new()
 	panel.name = "BuildingPanel"
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	panel.size = Vector2(430, 430)
+	panel.size = Vector2(440, 400)
 	panel.position -= panel.size * 0.5
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.025, 0.045, 0.06, 0.97)
+	panel_style.border_width_left = 1
+	panel_style.border_width_top = 1
+	panel_style.border_width_right = 1
+	panel_style.border_width_bottom = 1
+	panel_style.border_color = Color(0.24, 0.62, 0.66, 0.72)
+	panel_style.corner_radius_top_left = 16
+	panel_style.corner_radius_top_right = 16
+	panel_style.corner_radius_bottom_left = 16
+	panel_style.corner_radius_bottom_right = 16
+	panel.add_theme_stylebox_override("panel", panel_style)
 	add_child(panel)
 
 	title_label = Label.new()
 	title_label.position = Vector2(24, 18)
-	title_label.size = Vector2(382, 42)
+	title_label.size = Vector2(392, 42)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", 28)
+	title_label.add_theme_font_size_override("font_size", 24)
+	title_label.add_theme_color_override("font_color", Color(0.42, 0.82, 0.84, 1))
 	panel.add_child(title_label)
 
 	body_label = Label.new()
-	body_label.position = Vector2(28, 76)
-	body_label.size = Vector2(374, 250)
-	body_label.add_theme_font_size_override("font_size", 19)
+	body_label.position = Vector2(32, 72)
+	body_label.size = Vector2(376, 230)
+	body_label.add_theme_font_size_override("font_size", 16)
+	body_label.add_theme_color_override("font_color", Color(0.78, 0.84, 0.85, 1))
 	body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	panel.add_child(body_label)
 
 	action_button = Button.new()
-	action_button.position = Vector2(28, 340)
-	action_button.size = Vector2(174, 54)
-	action_button.add_theme_font_size_override("font_size", 18)
+	action_button.position = Vector2(28, 326)
+	action_button.size = Vector2(184, 50)
+	action_button.add_theme_font_size_override("font_size", 16)
 	action_button.pressed.connect(_on_action_pressed)
+	_style_button(action_button)
 	panel.add_child(action_button)
 
 	close_button = Button.new()
-	close_button.position = Vector2(228, 340)
-	close_button.size = Vector2(174, 54)
+	close_button.position = Vector2(228, 326)
+	close_button.size = Vector2(184, 50)
 	close_button.text = "CLOSE"
-	close_button.add_theme_font_size_override("font_size", 18)
+	close_button.add_theme_font_size_override("font_size", 16)
 	close_button.pressed.connect(close_ui)
+	_style_button(close_button)
 	panel.add_child(close_button)
+
+func _style_button(button: Button) -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.07, 0.16, 0.18, 0.98)
+	normal.border_width_left = 1
+	normal.border_width_top = 1
+	normal.border_width_right = 1
+	normal.border_width_bottom = 1
+	normal.border_color = Color(0.30, 0.65, 0.68, 0.62)
+	normal.corner_radius_top_left = 10
+	normal.corner_radius_top_right = 10
+	normal.corner_radius_bottom_left = 10
+	normal.corner_radius_bottom_right = 10
+	var hover := normal.duplicate()
+	hover.bg_color = Color(0.11, 0.24, 0.26, 1.0)
+	var pressed := normal.duplicate()
+	pressed.bg_color = Color(0.16, 0.34, 0.36, 1.0)
+	var disabled := normal.duplicate()
+	disabled.bg_color = Color(0.05, 0.08, 0.09, 0.65)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("disabled", disabled)
 
 func _refresh_campfire() -> void:
 	if not _building:
@@ -116,7 +155,7 @@ func _refresh_townhall() -> void:
 	var villagers: int = settlement.get_active_villager_count() if settlement.has_method("get_active_villager_count") else 0
 	var demand: int = settlement.get_water_demand() if settlement.has_method("get_water_demand") else 0
 	var days: float = settlement.get_water_days_remaining() if settlement.has_method("get_water_days_remaining") else 0.0
-	body_label.text = "SETTLEMENT: %s\n\nPOPULATION: %d\nPlayers: %d   Villagers: %d\n\nWATER RESERVE: %d\nDaily demand: %d\nCoverage: %.1f days\n\nFOOD: %d\nWOOD: %d\nSTONE: %d\n\nThe Well adds Water to the town reserve.\nWater is consumed for each player and villager each lunar cycle." % [
+	body_label.text = "%s\n\nPOPULATION   %d   •   PLAYERS %d   •   VILLAGERS %d\n\nWATER RESERVE   %d\nDAILY DEMAND   %d   •   COVERAGE %.1f DAYS\n\nFOOD   %d\nWOOD   %d\nSTONE   %d\n\nThe Well feeds the settlement reserve. Each player and villager consumes one Water per lunar cycle." % [
 		str(state.get("name", "New Settlement")),
 		population, players, villagers,
 		int(stock.get("water", 0)), demand, float(days),
