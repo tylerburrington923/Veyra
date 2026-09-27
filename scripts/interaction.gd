@@ -125,16 +125,20 @@ func _query_target() -> Dictionary:
 		if normalized_screen_offset > allowed_screen_radius:
 			continue
 
-		if not _has_line_of_sight(camera.global_position, point, player, handler):
-			continue
-
 		# Screen center dominates. Distance breaks ties without forcing
-		# the player into an exact interaction position.
+		# the player into an exact interaction position. Score first so the
+		# fallback does not perform line-of-sight raycasts for candidates that
+		# cannot beat the current best target.
 		var score := normalized_screen_offset + distance * TARGET_SCORE_DISTANCE_WEIGHT
 		if distance <= NEAR_TARGET_ASSIST_DISTANCE:
 			score -= 0.06
 
 		var eligible := _is_handler_eligible(handler, player)
+		var current_best_score := best_eligible_score if eligible else best_ineligible_score
+		if score >= current_best_score:
+			continue
+		if not _has_line_of_sight(camera.global_position, point, player, handler):
+			continue
 		var candidate := {
 			"collider": collider,
 			"handler": handler,
