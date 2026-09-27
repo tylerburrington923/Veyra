@@ -145,7 +145,8 @@ func _sanitize_settlement(settlement: Dictionary) -> Dictionary:
                 "door_open": bool(record.get("door_open", false)),
                 "storage": {
                     "resources": {},
-                    "items": {}
+                    "items": {},
+                    "campfire_heat": 0.0
                 }
             }
             var position = record.get("position", [])
@@ -160,6 +161,7 @@ func _sanitize_settlement(settlement: Dictionary) -> Dictionary:
 
             var storage = record.get("storage", {})
             if storage is Dictionary:
+                clean_record["storage"]["campfire_heat"] = maxf(0.0, float(storage.get("campfire_heat", 0.0)))
                 var stored_resources = storage.get("resources", {})
                 if stored_resources is Dictionary:
                     for key in stored_resources.keys():
