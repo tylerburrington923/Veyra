@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scripts/world.gd" id="1_world"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
@@ -11,6 +11,7 @@
 [ext_resource type="Script" path="res://scripts/echo_stone.gd" id="8_echo"]
 [ext_resource type="Script" path="res://scripts/water_system.gd" id="10_water"]
 [ext_resource type="Script" path="res://scripts/npc_manager.gd" id="11_npc"]
+[ext_resource type="Script" path="res://scripts/pause_menu.gd" id="12_pause"]
 
 [sub_resource type="SphereMesh" id="ArtifactMesh"]
 radius = 0.75
@@ -92,6 +93,9 @@ shape = SubResource("ArtifactShape")
 
 [node name="NPCManager" type="Node3D" parent="."]
 script = ExtResource("11_npc")
+
+[node name="PauseMenu" type="CanvasLayer" parent="."]
+script = ExtResource("12_pause")
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector3(0, 4, 0)
