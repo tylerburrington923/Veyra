@@ -158,7 +158,7 @@ func _spawn_resources() -> void:
         if Vector2(x, z).length() < 10.0:
             continue
 
-        var y: float = get_height_at_world(x, z) + 0.82
+        var y: float = get_height_at_world(x, z)
         add_child(_make_resource_node(spawned, Vector3(x, y, z)))
         spawned += 1
 
@@ -176,7 +176,8 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
     var node = RESOURCE_NODE_SCENE.instantiate()
     node.resource_id = "R01-%03d" % (index + 1)
     node.name = node.resource_id
-    node.position = spawn_position
+    var ground_y := get_height_at_world(spawn_position.x, spawn_position.z)
+    node.position = Vector3(spawn_position.x, ground_y, spawn_position.z)
     node.resource_type = resource_type
     node.amount = 3
     node.tool_required = get_required_tool_for_resource(resource_type)
@@ -184,10 +185,8 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
     node.collision_mask = 1
 
     if resource_type == "Wood":
-        # Hand-gathered wood is represented as loose sticks lying on the ground,
-        # not as an upright stump/block. Keep the node itself at ground level so
-        # interaction and collision stay centered on the visible pickup.
-        node.position.y -= 0.70
+        # Hand-gathered wood is represented as loose sticks lying on the ground.
+        node.position.y += 0.04
         var stick_mesh := _wood_stick_mesh()
         var stick_material := _resource_material(resource_type)
         for stick_index in range(3):
@@ -212,7 +211,15 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
         visual.mesh = _resource_mesh(resource_type)
         visual.material_override = _resource_material(resource_type)
         visual.rotation.y = rng.randf_range(0.0, TAU)
-        visual.scale = Vector3.ONE * rng.randf_range(0.85, 1.15)
+        var visual_scale := rng.randf_range(0.85, 1.15)
+        visual.scale = Vector3.ONE * visual_scale
+        var half_height := 0.45
+        match resource_type:
+            "Metal":
+                half_height = 0.50
+            "Vitreous Lux":
+                half_height = 0.725
+        node.position.y += half_height * visual_scale + 0.03
         node.add_child(visual)
 
     var collision := CollisionShape3D.new()
