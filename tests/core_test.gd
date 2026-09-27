@@ -998,6 +998,7 @@ func _test_blacksmith_contract() -> void:
 	var player := player_scene.instantiate()
 	root.add_child(player)
 	var inventory := player.get_node_or_null("Inventory") as VeyraInventory
+	inventory.clear()
 	inventory.add_resource("Metal", 4)
 	inventory.add_resource("Wood", 4)
 	_check(instance.blacksmith_refine(player), "blacksmith should refine raw metal")
