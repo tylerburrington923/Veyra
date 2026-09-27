@@ -214,10 +214,15 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 
 	var player := get_tree().get_first_node_in_group("local_player") as Node3D
 	var actionable := handler != "" and eligible
+	var action_label := _get_action_label(target_type)
+	if handler_node and handler_node.has_method("get_interaction_text"):
+		var custom_action := str(handler_node.get_interaction_text())
+		if not custom_action.is_empty():
+			action_label = custom_action
 
 	if interact_button:
 		interact_button.disabled = not actionable
-		interact_button.text = _get_action_label(target_type)
+		interact_button.text = action_label
 
 	if target_label:
 		var has_target := target_type != "NONE" and handler != ""
@@ -230,7 +235,7 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 			if not eligible and last_requirement != "":
 				requirement_text = "\\nREQUIRES: %s" % last_requirement
 			target_label.text = "%s  •  %s\\n%s%s" % [
-				_get_action_label(target_type),
+				action_label,
 				target_name if target_name != "" else "Unknown",
 				distance_text,
 				requirement_text
