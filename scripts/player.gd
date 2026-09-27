@@ -24,8 +24,8 @@ extends CharacterBody3D
 
 @export_category("Camera")
 @export var camera_distance: float = 0.0
-@export var camera_height: float = 1.68
-@export var camera_fov: float = 68.0
+@export var camera_height: float = 1.72
+@export var camera_fov: float = 66.0
 @export var camera_far: float = 140.0
 
 @export_category("Mobile Joystick")
@@ -33,7 +33,7 @@ extends CharacterBody3D
 @export_range(0.0, 0.5, 0.01) var joystick_deadzone: float = 0.12
 @export_range(0.1, 0.9, 0.01) var left_screen_ratio: float = 0.48
 
-var look_pitch: float = deg_to_rad(-6.0)
+var look_pitch: float = deg_to_rad(-5.0)
 var target_yaw: float = 0.0
 @export_range(0.0, 30.0, 0.5) var camera_yaw_smoothing: float = 18.0
 var move_input: Vector2 = Vector2.ZERO
@@ -58,6 +58,10 @@ var touch_start: Dictionary = {}
 @onready var right_eye: MeshInstance3D = get_node_or_null("RightEye") as MeshInstance3D
 @onready var left_hand: MeshInstance3D = get_node_or_null("LeftHand") as MeshInstance3D
 @onready var right_hand: MeshInstance3D = get_node_or_null("RightHand") as MeshInstance3D
+@onready var fp_left_arm: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftArmFP") as MeshInstance3D
+@onready var fp_right_arm: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightArmFP") as MeshInstance3D
+@onready var fp_left_hand: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftHandFP") as MeshInstance3D
+@onready var fp_right_hand: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightHandFP") as MeshInstance3D
 @onready var tool_holder: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder") as Node3D
 @onready var equipped_tool_visual: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool") as Node3D
 var walk_time: float = 0.0
@@ -65,6 +69,9 @@ var _tool_swing_time: float = 0.0
 var _tool_swing_duration: float = 0.22
 var _tool_swing_active: bool = false
 var _tool_base_rotation: Vector3 = Vector3.ZERO
+var _punch_time: float = 0.0
+var _punch_active: bool = false
+const PUNCH_DURATION := 0.20
 signal tool_changed(tool_id: String, durability: float)
 
 var selected_tool_id: String = "T00_HANDS"
@@ -304,7 +311,7 @@ func _configure_camera() -> void:
 	camera.current = true
 	camera.fov = camera_fov
 	camera.far = camera_far
-	camera.position = Vector3(0.0, camera_height, 0.035 + camera_distance)
+	camera.position = Vector3(0.0, camera_height, 0.08 + camera_distance)
 	camera.rotation = Vector3(look_pitch, 0.0, 0.0)
 	look_pitch = camera.rotation.x
 	target_yaw = rotation.y
@@ -314,11 +321,14 @@ func _configure_first_person_view() -> void:
 	# Preserve the real body for shadows, third-person presentation, and the future multiplayer/NPC
 	# character pipeline. Only the head/face is hidden from the near-camera view; the lower body
 	# remains coherent beneath the camera instead of being replaced by a disconnected FPS body.
-	for mesh in [head, hair, left_eye, right_eye]:
+	for mesh in [head, hair, left_eye, right_eye, left_arm, right_arm, left_hand, right_hand]:
 		if mesh:
 			mesh.visible = false
-	# Keep the coherent world-body presentation. Dedicated FP arm/hand meshes were removed
-	# because they produced disconnected geometry at the near camera.
+	for mesh in [fp_left_arm, fp_right_arm, fp_left_hand, fp_right_hand]:
+		if mesh:
+			mesh.visible = true
+	# The world body remains authoritative for shadows/multiplayer. A dedicated lightweight
+	# first-person arm/hand rig prevents the camera from intersecting the full body.
 
 func _stabilize_spawn() -> void:
 	var world_generator := get_parent().get_node_or_null("WorldGenerator")
@@ -557,12 +567,17 @@ func _disable_local_presentation() -> void:
 		viewmodel.visible = false
 
 func play_tool_use() -> void:
-	if selected_tool_id == VeyraItemCatalog.HANDS_ID or not equipped_tool_visual or not equipped_tool_visual.visible:
+	if selected_tool_id == VeyraItemCatalog.HANDS_ID:
+		_punch_time = 0.0
+		_punch_active = true
+		return
+	if not equipped_tool_visual or not equipped_tool_visual.visible:
 		return
 	_tool_swing_time = 0.0
 	_tool_swing_active = true
 
 func _update_tool_animation(delta: float) -> void:
+	_update_punch_animation(delta)
 	if not tool_holder:
 		return
 	if not _tool_swing_active:
@@ -576,10 +591,40 @@ func _update_tool_animation(delta: float) -> void:
 	var side := 18.0 * arc
 	tool_holder.rotation_degrees = _tool_base_rotation + Vector3(lift, side, -10.0 * arc)
 	tool_holder.position = Vector3(0.25 + 0.035 * arc, -0.73 - 0.035 * arc, -1.02 + 0.07 * arc)
-	if progress >= 1.0:
+if progress >= 1.0:
 		_tool_swing_active = false
 		tool_holder.position = Vector3(0.25, -0.73, -1.02)
 		tool_holder.rotation_degrees = _tool_base_rotation
+
+func _update_punch_animation(delta: float) -> void:
+	if not _punch_active:
+		return
+	_punch_time += delta
+	var progress := clampf(_punch_time / PUNCH_DURATION, 0.0, 1.0)
+	var arc := sin(progress * PI)
+	var thrust := sin(progress * PI * 0.5)
+	if fp_left_arm:
+		fp_left_arm.rotation = Vector3(deg_to_rad(-18.0 - 28.0 * arc), deg_to_rad(-8.0), deg_to_rad(-7.0 + 10.0 * arc))
+		fp_left_arm.position = Vector3(-0.24, -0.48 - 0.05 * thrust, -0.66 - 0.22 * thrust)
+	if fp_right_arm:
+		fp_right_arm.rotation = Vector3(deg_to_rad(-18.0 - 62.0 * arc), deg_to_rad(6.0), deg_to_rad(8.0 - 18.0 * arc))
+		fp_right_arm.position = Vector3(0.24, -0.48 - 0.08 * thrust, -0.66 - 0.34 * thrust)
+	if fp_left_hand:
+		fp_left_hand.position = Vector3(-0.24, -0.93 - 0.04 * thrust, -0.94 - 0.22 * thrust)
+	if fp_right_hand:
+		fp_right_hand.position = Vector3(0.24, -0.93 - 0.06 * thrust, -0.96 - 0.34 * thrust)
+	if progress >= 1.0:
+		_punch_active = false
+		if fp_left_arm:
+			fp_left_arm.position = Vector3(-0.24, -0.48, -0.66)
+			fp_left_arm.rotation = Vector3(deg_to_rad(-18.0), deg_to_rad(-8.0), deg_to_rad(-7.0))
+		if fp_right_arm:
+			fp_right_arm.position = Vector3(0.24, -0.48, -0.66)
+			fp_right_arm.rotation = Vector3(deg_to_rad(-18.0), deg_to_rad(6.0), deg_to_rad(8.0))
+		if fp_left_hand:
+			fp_left_hand.position = Vector3(-0.24, -0.93, -0.94)
+		if fp_right_hand:
+			fp_right_hand.position = Vector3(0.24, -0.93, -0.96)
 
 func _update_player_visuals(delta: float, direction: Vector3) -> void:
 	var moving := direction.length_squared() > 0.001 and is_on_floor()
