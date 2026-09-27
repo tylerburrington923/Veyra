@@ -11,6 +11,7 @@ extends Node3D
 var definitions: Dictionary = {}
 var states: Dictionary = {}
 var visuals: Dictionary = {}
+var death_timers: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("animal_manager")
@@ -30,6 +31,9 @@ func _process(delta: float) -> void:
 		if state and definition and state.alive:
 			AnimalSimulation.process_tick(state, definition, delta)
 			_update_behavior(state, definition, delta)
+			if not state.alive:
+				_on_animal_death(state)
+	_update_dead_animals(delta)
 	_update_visuals(delta)
 
 func _register_definitions() -> void:
@@ -65,12 +69,55 @@ func spawn_animal(animal_id: String, definition_id: String, position: Vector3) -
 	var visual := _make_visual(definition_id)
 	visual.name = "Animal_" + animal_id
 	add_child(visual)
+	var collision := CollisionShape3D.new()
+	var capsule := CapsuleShape3D.new()
+	capsule.radius = 0.38
+	capsule.height = 1.25 if definition_id == "lumen_grazer" else 1.0
+	collision.shape = capsule
+	collision.position.y = 0.65 if definition_id == "lumen_grazer" else 0.45
+	visual.add_child(collision)
+	if visual is CollisionObject3D:
+		(visual as CollisionObject3D).collision_layer = 2
+		(visual as CollisionObject3D).collision_mask = 1
+		visual.add_to_group("interactable")
 	visual.global_position = position
 	visuals[animal_id] = visual
 	return visual
 
+func damage_animal(animal_id: String, amount: float, player: Node = null) -> String:
+	var state := states.get(animal_id) as AnimalState
+	if not state or not state.alive or amount <= 0.0:
+		return "It is already down."
+	state.health = maxf(0.0, state.health - amount)
+	if state.health <= 0.0:
+		state.alive = false
+		_on_animal_death(state, player)
+		return "%s died." % str(definitions[state.definition_id].display_name)
+	return "%s • %d HP" % [str(definitions[state.definition_id].display_name), int(ceil(state.health))]
+
+func _on_animal_death(state: AnimalState, player: Node = null) -> void:
+	if death_timers.has(state.animal_id):
+		return
+	death_timers[state.animal_id] = 6.0
+	var recipient := player
+	if not recipient:
+		recipient = get_tree().get_first_node_in_group("local_player")
+	if recipient and recipient.has_method("get_inventory"):
+		var inventory: VeyraInventory = recipient.get_inventory()
+		if inventory:
+			var definition: AnimalDefinition = definitions.get(state.definition_id)
+			var drop_type := "Wood" if definition and definition.id == "mireback" else "Stone"
+			inventory.add_resource(drop_type, 2)
+
+func _update_dead_animals(delta: float) -> void:
+	for animal_id in death_timers.keys().duplicate():
+		death_timers[animal_id] = float(death_timers[animal_id]) - delta
+		if float(death_timers[animal_id]) <= 0.0:
+			despawn_animal(str(animal_id))
+
 func despawn_animal(animal_id: String) -> void:
 	states.erase(animal_id)
+	death_timers.erase(animal_id)
 	var visual: Node3D = visuals.get(animal_id)
 	if visual:
 		visual.queue_free()
@@ -155,13 +202,15 @@ func _update_behavior(state: AnimalState, definition: AnimalDefinition, delta: f
 		state.position = _vector_dict(_get_grounded_position(current + offset.normalized() * step))
 		state.stamina = clampf(state.stamina - 0.08 * delta, 0.0, 100.0)
 
-func _make_visual(definition_id: String) -> Node3D:
+func _make_visual(definition_id: String) -> StaticBody3D:
 	if definition_id == "mireback":
 		return _make_mireback_visual()
 	return _make_lumen_grazer_visual()
 
-func _make_lumen_grazer_visual() -> Node3D:
-	var root := Node3D.new()
+func _make_lumen_grazer_visual() -> StaticBody3D:
+	var root := StaticBody3D.new()
+	root.add_to_group("animal")
+	root.set_meta("animal_manager", self)
 	var coat := _material(Color(0.24, 0.34, 0.29), 0.92)
 	var glow := _material(Color(0.12, 0.60, 0.58), 0.7, 0.0, true, 0.75)
 	var dark := _material(Color(0.08, 0.10, 0.09), 1.0)
@@ -179,8 +228,10 @@ func _make_lumen_grazer_visual() -> Node3D:
 	_add_cylinder(root, Vector3(0.42, 1.34, 0.12), 0.035, 0.28, glow, 5, Vector3(0.0, 0.0, deg_to_rad(18.0)))
 	return root
 
-func _make_mireback_visual() -> Node3D:
-	var root := Node3D.new()
+func _make_mireback_visual() -> StaticBody3D:
+	var root := StaticBody3D.new()
+	root.add_to_group("animal")
+	root.set_meta("animal_manager", self)
 	var hide := _material(Color(0.20, 0.17, 0.13), 0.96)
 	var ridge := _material(Color(0.22, 0.45, 0.40), 0.72, 0.0, true, 0.55)
 	var dark := _material(Color(0.07, 0.065, 0.055), 1.0)
@@ -193,6 +244,7 @@ func _make_mireback_visual() -> Node3D:
 		_add_sphere(root, Vector3(x, 1.00 - abs(x) * 0.18, 0), 0.12, ridge, 6, Vector3(0.8, 1.2, 0.8))
 	_add_sphere(root, Vector3(0.67, 0.76, -0.20), 0.055, ridge, 5)
 	_add_sphere(root, Vector3(0.67, 0.76, 0.20), 0.055, ridge, 5)
+	root.set_meta("animal_id", "")
 	return root
 
 func _material(color: Color, roughness: float = 0.9, metallic: float = 0.0, emission_enabled: bool = false, emission_energy: float = 0.0) -> StandardMaterial3D:
