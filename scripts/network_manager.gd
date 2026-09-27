@@ -227,6 +227,9 @@ func _broadcast_snapshot() -> void:
 	var npc_manager := get_tree().current_scene.get_node_or_null("NPCManager")
 	if npc_manager and npc_manager.has_method("get_network_snapshot"):
 		receive_npc_snapshot.rpc(npc_manager.get_network_snapshot())
+	var animal_manager := get_tree().current_scene.get_node_or_null("AnimalManager")
+	if animal_manager and animal_manager.has_method("get_network_snapshot"):
+		receive_animal_snapshot.rpc(animal_manager.get_network_snapshot())
 
 @rpc("authority", "unreliable")
 func receive_npc_snapshot(snapshot: Array) -> void:
@@ -235,6 +238,14 @@ func receive_npc_snapshot(snapshot: Array) -> void:
 	var npc_manager := get_tree().current_scene.get_node_or_null("NPCManager")
 	if npc_manager and npc_manager.has_method("apply_network_snapshot"):
 		npc_manager.apply_network_snapshot(snapshot)
+
+@rpc("authority", "unreliable")
+func receive_animal_snapshot(snapshot: Array) -> void:
+	if is_host:
+		return
+	var animal_manager := get_tree().current_scene.get_node_or_null("AnimalManager")
+	if animal_manager and animal_manager.has_method("apply_network_snapshot"):
+		animal_manager.apply_network_snapshot(snapshot)
 
 func _on_peer_connected(peer_id: int) -> void:
 	if not is_host:
