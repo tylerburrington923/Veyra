@@ -60,7 +60,7 @@ func get_interaction_text() -> String:
 
 func _action_text_for(player: Node) -> String:
 	if player and player.has_method("get_inventory"):
-		var inventory := player.get_inventory()
+		var inventory: VeyraInventory = player.get_inventory()
 		if inventory and inventory.has_method("has_resource") and inventory.has_resource("Vitreous Lux", 1):
 			return "ATTUNE ECHO-STONE"
 	return "MINE ECHO-STONE"
