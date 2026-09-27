@@ -2,7 +2,7 @@ extends Node
 
 const SAVE_PATH := "user://veyra_world.json"
 const BACKUP_PATH := "user://veyra_world.backup.json"
-const SAVE_VERSION := 5
+const SAVE_VERSION := 6
 
 func save_world(world: Node, inventory: Dictionary, settlement: Dictionary = {}, player_state: Dictionary = {}) -> bool:
     if not world or not world.has_method("get_world_state"):
@@ -106,9 +106,16 @@ func _sanitize_player_state(player_state: Dictionary) -> Dictionary:
     var tool_id := str(player_state.get("tool_id", "T00_HANDS"))
     if tool_id != "T00_HANDS" and tool_id not in VeyraItemCatalog.TOOL_IDS:
         tool_id = "T00_HANDS"
+    var position = player_state.get("position", [0.0, 1.5, 0.0])
+    var clean_position := [0.0, 1.5, 0.0]
+    if position is Array and position.size() >= 3:
+        clean_position = [float(position[0]), float(position[1]), float(position[2])]
     return {
         "tool_id": tool_id,
-        "tool_durability": clampf(float(player_state.get("tool_durability", 100.0)), 0.0, 100.0)
+        "tool_durability": clampf(float(player_state.get("tool_durability", 100.0)), 0.0, 100.0),
+        "position": clean_position,
+        "yaw": float(player_state.get("yaw", 0.0)),
+        "pitch": clampf(float(player_state.get("pitch", deg_to_rad(-8.0))), deg_to_rad(-70.0), deg_to_rad(55.0))
     }
 
 func _sanitize_settlement(settlement: Dictionary) -> Dictionary:
