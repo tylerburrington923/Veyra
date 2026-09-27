@@ -262,6 +262,12 @@ func _stabilize_spawn() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _is_modal_ui_open():
+		velocity.x = 0.0
+		velocity.z = 0.0
+		jump_requested = false
+		move_input = Vector2.ZERO
+		return
 	if _network_mode:
 		_network_physics(delta)
 		return
@@ -438,6 +444,15 @@ func _simulate_movement(delta: float, input_vector: Vector2, jump: bool) -> void
 		velocity.y = 0.0
 
 	move_and_slide()
+
+func _is_modal_ui_open() -> bool:
+	for ui in get_tree().get_nodes_in_group("building_ui"):
+		if ui is CanvasLayer and ui.visible:
+			return true
+	for ui in get_tree().get_nodes_in_group("modal_ui"):
+		if ui is CanvasLayer and ui.visible:
+			return true
+	return false
 
 func _get_local_move_input() -> Vector2:
 	var input_vector := move_input
