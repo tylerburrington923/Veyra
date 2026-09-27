@@ -24,6 +24,8 @@ func _run_tests() -> void:
 	_test_npc_simulation_definition_separation()
 	_test_npc_controller_presentation_contract()
 	_test_npc_manager_contract()
+	_test_npc_beta_wander_contract()
+	_test_wildlife_beta_contract()
 	_test_full_game_skeleton_contracts()
 	_test_tree_harvest_visual_contract()
 	_test_house_door_contract()
@@ -36,7 +38,7 @@ func _run_tests() -> void:
 	_test_building_interaction_contract()
 	_test_building_storage_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (28 suites)")
+		print("VEYRA CORE TESTS: PASS (30 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -727,3 +729,37 @@ func _test_water_system_contract() -> void:
 	_check(water.get_lake_level() > -100.0 and water.get_lake_level() < 100.0, "water level out of bounds")
 	water.queue_free()
 	generator.queue_free()
+
+
+func _test_npc_beta_wander_contract() -> void:
+	var manager_script := load("res://scripts/npc_manager.gd")
+	var manager: Node3D = manager_script.new()
+	root.add_child(manager)
+	var controller = manager.spawn_npc("npc_wander_01", "human_villager", Vector3.ZERO)
+	_check(controller != null, "NPC beta wander must spawn")
+	var state: NPCState = manager.get_npc_state("npc_wander_01")
+	state.current_job = "IDLE"
+	manager._update_villager_behavior(state, 20.0)
+	_check(state.current_task == "WANDER", "idle villager should transition to wander")
+	var start := Vector3(float(state.position.x), float(state.position.y), float(state.position.z))
+	manager._update_villager_behavior(state, 1.0)
+	var moved := Vector3(float(state.position.x), float(state.position.y), float(state.position.z))
+	_check(not moved.is_equal_approx(start), "wandering villager should move")
+	manager.queue_free()
+
+
+func _test_wildlife_beta_contract() -> void:
+	var manager_script := load("res://scripts/animal_manager.gd")
+	var manager: Node3D = manager_script.new()
+	root.add_child(manager)
+	var animal = manager.spawn_animal("deer_test_01", "deer", Vector3(3.0, 0.0, 3.0))
+	_check(animal != null, "wildlife beta must spawn a deer visual")
+	_check(manager.states.has("deer_test_01"), "wildlife manager must retain deer state")
+	var state: AnimalState = manager.states["deer_test_01"]
+	var hunger := state.hunger
+	manager._update_behavior(state, manager.definitions["deer"], 6.0)
+	_check(state.hunger < hunger, "wildlife simulation must update needs")
+	_check(state.behavior_state == "WANDER", "deer beta should enter wander behavior")
+	manager.despawn_animal("deer_test_01")
+	_check(not manager.states.has("deer_test_01"), "wildlife despawn must remove authoritative state")
+	manager.queue_free()
