@@ -156,5 +156,5 @@ func _refresh_visual() -> void:
 		var m := material as StandardMaterial3D
 		var glow := clampf(resonance_state * 1.35 + thermal_state * 0.35 + (0.42 if activated else 0.0), 0.0, 1.25)
 		m.emission_enabled = glow > 0.04
-		m.emission = Color(0.16, 0.06, 0.28, 1) * glow
+		m.emission = Color(0.04, 0.42, 0.48, 1) * glow
 		m.emission_energy_multiplier = 0.55 + glow * 1.55
