@@ -441,7 +441,7 @@ func _copy_host_address() -> void:
 	_set_status("IP COPIED • %s" % value)
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED and lobby_layer:
+	if what == NOTIFICATION_WM_SIZE_CHANGED and lobby_layer:
 		var lobby_panel := lobby_layer.get_node_or_null("MultiplayerPanel") as Control
 		if lobby_panel:
 			_center_lobby_panel(lobby_panel)
