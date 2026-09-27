@@ -72,11 +72,11 @@ func interact(player_override: Node = null) -> void:
 	if not can_interact(player):
 		return
 
-	var inventory: Node = player.get_inventory() if player.has_method("get_inventory") else null
+	var inventory: VeyraInventory = player.get_inventory() if player.has_method("get_inventory") else null
 	if not inventory:
 		return
 
-	var attuned := inventory.has_resource("Vitreous Lux", 1)
+	var attuned: bool = inventory.has_resource("Vitreous Lux", 1)
 	var yield_amount := attuned_yield if attuned else base_yield
 	var accepted := int(inventory.add_resource("Echo-Stone", yield_amount))
 	if accepted <= 0:
