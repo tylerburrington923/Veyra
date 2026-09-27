@@ -130,7 +130,7 @@ func _align_anomalies_to_terrain() -> void:
 		if not node.name.begins_with("EchoStone"):
 			continue
 		var p := node.position
-		p.y = float(generator.get_height_at_world(p.x, p.z))
+		p.y = float(generator.get_height_at_world(p.x, p.z)) + 0.9
 		node.position = p
 		var mesh := node.get_node_or_null("MeshInstance3D") as MeshInstance3D
 		if mesh:
