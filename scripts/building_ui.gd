@@ -112,10 +112,10 @@ func _refresh_townhall() -> void:
 	var state: Dictionary = settlement.get_settlement_state()
 	var stock: Dictionary = state.get("stock", {})
 	var population := int(state.get("population", 0))
-	var players := settlement.get_active_player_count() if settlement.has_method("get_active_player_count") else 0
-	var villagers := settlement.get_active_villager_count() if settlement.has_method("get_active_villager_count") else 0
-	var demand := settlement.get_water_demand() if settlement.has_method("get_water_demand") else 0
-	var days := settlement.get_water_days_remaining() if settlement.has_method("get_water_days_remaining") else 0.0
+	var players: int = settlement.get_active_player_count() if settlement.has_method("get_active_player_count") else 0
+	var villagers: int = settlement.get_active_villager_count() if settlement.has_method("get_active_villager_count") else 0
+	var demand: int = settlement.get_water_demand() if settlement.has_method("get_water_demand") else 0
+	var days: float = settlement.get_water_days_remaining() if settlement.has_method("get_water_days_remaining") else 0.0
 	body_label.text = "SETTLEMENT: %s\n\nPOPULATION: %d\nPlayers: %d   Villagers: %d\n\nWATER RESERVE: %d\nDaily demand: %d\nCoverage: %.1f days\n\nFOOD: %d\nWOOD: %d\nSTONE: %d\n\nThe Well adds Water to the town reserve.\nWater is consumed for each player and villager each lunar cycle." % [
 		str(state.get("name", "New Settlement")),
 		population, players, villagers,
