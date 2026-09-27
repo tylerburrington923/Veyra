@@ -1,0 +1,76 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/npc_visual.gd" id="1_visual"]
+
+[sub_resource type="CapsuleMesh" id="Torso"]
+radius = 0.29
+height = 0.78
+[sub_resource type="SphereMesh" id="Head"]
+radius = 0.28
+height = 0.56
+[sub_resource type="CapsuleMesh" id="Limb"]
+radius = 0.11
+height = 0.75
+[sub_resource type="SphereMesh" id="Foot"]
+radius = 0.14
+height = 0.28
+[sub_resource type="StandardMaterial3D" id="Shirt"]
+albedo_color = Color(0.12, 0.34, 0.44, 1)
+roughness = 0.82
+[sub_resource type="StandardMaterial3D" id="Pants"]
+albedo_color = Color(0.055, 0.065, 0.075, 1)
+roughness = 0.88
+[sub_resource type="StandardMaterial3D" id="Skin"]
+albedo_color = Color(0.72, 0.50, 0.36, 1)
+roughness = 0.86
+
+[node name="NPCVisual" type="Node3D"]
+script = ExtResource("1_visual")
+
+[node name="Torso" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.15, 0)
+scale = Vector3(1.06, 1.04, 0.88)
+mesh = SubResource("Torso")
+material_override = SubResource("Shirt")
+
+[node name="Head" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.78, 0)
+scale = Vector3(0.96, 1.02, 0.94)
+mesh = SubResource("Head")
+material_override = SubResource("Skin")
+
+[node name="LeftArm" type="MeshInstance3D" parent="."]
+position = Vector3(-0.40, 1.14, 0)
+rotation_degrees = Vector3(0, 0, -8)
+scale = Vector3(1.0, 1.05, 1.0)
+mesh = SubResource("Limb")
+material_override = SubResource("Skin")
+
+[node name="RightArm" type="MeshInstance3D" parent="."]
+position = Vector3(0.40, 1.14, 0)
+rotation_degrees = Vector3(0, 0, 8)
+scale = Vector3(1.0, 1.05, 1.0)
+mesh = SubResource("Limb")
+material_override = SubResource("Skin")
+
+[node name="LeftLeg" type="MeshInstance3D" parent="."]
+position = Vector3(-0.18, 0.48, 0)
+mesh = SubResource("Limb")
+material_override = SubResource("Pants")
+
+[node name="RightLeg" type="MeshInstance3D" parent="."]
+position = Vector3(0.18, 0.48, 0)
+mesh = SubResource("Limb")
+material_override = SubResource("Pants")
+
+[node name="LeftFoot" type="MeshInstance3D" parent="."]
+position = Vector3(-0.18, 0.08, -0.08)
+scale = Vector3(1.0, 0.55, 1.25)
+mesh = SubResource("Foot")
+material_override = SubResource("Pants")
+
+[node name="RightFoot" type="MeshInstance3D" parent="."]
+position = Vector3(0.18, 0.08, -0.08)
+scale = Vector3(1.0, 0.55, 1.25)
+mesh = SubResource("Foot")
+material_override = SubResource("Pants")
