@@ -806,6 +806,59 @@ func _test_water_system_contract() -> void:
 	generator.queue_free()
 
 
+func _test_inventory_capacity_contract() -> void:
+	var inventory := VeyraInventory.new()
+	inventory.max_slots = 2
+	inventory.max_weight = 1000.0
+	_check(inventory.add_resource("Stone", 5) == 5, "inventory should accept initial partial stack")
+	_check(inventory.add_resource("Stone", 200) == 193, "inventory should respect actual remaining stack/slot capacity")
+	_check(inventory.get_amount("Stone") == 198, "inventory amount should reflect stack capacity")
+	inventory.clear()
+	inventory.max_slots = 1
+	inventory.max_weight = 10.0
+	_check(inventory.add_resource("Meat", 20) == 10, "inventory should respect weight capacity for meat")
+	_check(is_equal_approx(inventory.get_total_weight(), 10.0), "inventory weight should match accepted meat")
+
+func _test_wildlife_meat_hide_contract() -> void:
+	var manager_script := load("res://scripts/animal_manager.gd")
+	var manager: AnimalManager = manager_script.new()
+	root.add_child(manager)
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var inventory: VeyraInventory = player.get_inventory()
+	inventory.clear()
+	var animal = manager.spawn_animal("meat_hide_test", "lumen_grazer", Vector3.ZERO)
+	_check(animal != null, "meat/hide test animal must spawn")
+	var result := manager.damage_animal("meat_hide_test", 999.0, player)
+	_check(result.contains("died"), "animal must die for meat/hide drop test")
+	_check(inventory.get_amount("Meat") == 3, "Lumen Grazer must drop meat")
+	_check(inventory.get_amount("Hide") == 1, "Lumen Grazer must drop hide")
+	manager.despawn_animal("meat_hide_test")
+	manager.queue_free()
+	player.queue_free()
+
+func _test_npc_work_contract() -> void:
+	var manager_script := load("res://scripts/npc_manager.gd")
+	var manager: NPCManager = manager_script.new()
+	root.add_child(manager)
+	var settlement: VeyraSettlementManager = root.get_node_or_null("/root/SettlementManager") as VeyraSettlementManager
+	_check(settlement != null, "settlement manager required for NPC work test")
+	if not settlement:
+		manager.queue_free()
+		return
+	var old_wood := settlement.wood_stock
+	manager.spawn_npc("npc_worker_contract", "human_worker", Vector3.ZERO)
+	var state: NPCState = manager.get_npc_state("npc_worker_contract")
+	state.current_job = "BUILDER"
+	state.current_task = "WORK"
+	state.behavior_timer = 3.0
+	manager._update_villager_behavior(state, 0.1)
+	_check(settlement.wood_stock == old_wood + 1, "working NPC should contribute wood to settlement stock")
+	_check(state.current_task == "IDLE", "working NPC should return to idle after completing work")
+	manager.despawn_npc("npc_worker_contract")
+	manager.queue_free()
+
 func _test_npc_beta_wander_contract() -> void:
 	var manager_script := load("res://scripts/npc_manager.gd")
 	var manager: Node3D = manager_script.new()
