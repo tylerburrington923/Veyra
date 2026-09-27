@@ -126,14 +126,6 @@ func _make_button(text_value: String, button_position: Vector2, button_size: Vec
 	button.add_to_group("camera_blocking_ui")
 	return button
 
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED:
-		var menu_button := get_node_or_null("MenuButton") as Control
-		if menu_button:
-			menu_button.position = Vector2(maxf(16.0, get_viewport().get_visible_rect().size.x - menu_button.size.x - 16.0), 16.0)
-		if panel:
-			_center_control(panel)
-
 func _center_control(control: Control) -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	control.position = (viewport_size - control.size) * 0.5
@@ -194,6 +186,12 @@ func _update_multiplayer_button() -> void:
 	multiplayer_button.text = "MULTIPLAYER" if not _network_session_active() else "MULTIPLAYER - ACTIVE"
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		var menu_button := get_node_or_null("MenuButton") as Control
+		if menu_button:
+			menu_button.position = Vector2(maxf(16.0, get_viewport().get_visible_rect().size.x - menu_button.size.x - 16.0), 16.0)
+		if panel:
+			_center_control(panel)
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and paused_by_menu:
 		get_tree().paused = false
 		paused_by_menu = false
