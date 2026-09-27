@@ -27,6 +27,7 @@ var join_button: Button
 var leave_button: Button
 var copy_ip_button: Button
 var close_lobby_button: Button
+var lobby_backdrop: ColorRect
 
 func _ready() -> void:
 	add_to_group("network_manager")
@@ -98,6 +99,8 @@ func leave_game() -> void:
 	_despawn_all_network_players()
 	if lobby_layer:
 		lobby_layer.visible = false
+	if lobby_backdrop:
+		lobby_backdrop.visible = false
 	_set_status("OFFLINE • single-player mode")
 
 func submit_local_input(input_vector: Vector2, yaw: float, pitch: float, jump: bool) -> void:
@@ -380,6 +383,13 @@ func _build_lobby_ui() -> void:
 	lobby_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(lobby_layer)
 	lobby_layer.visible = false
+
+	lobby_backdrop = ColorRect.new()
+	lobby_backdrop.name = "ModalBackdrop"
+	lobby_backdrop.color = Color(0.0, 0.0, 0.0, 0.48)
+	lobby_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+	lobby_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	lobby_layer.add_child(lobby_backdrop)
 
 	var panel := Panel.new()
 	panel.name = "MultiplayerPanel"
