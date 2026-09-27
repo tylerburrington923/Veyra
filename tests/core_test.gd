@@ -736,6 +736,7 @@ func _test_water_system_contract() -> void:
 	var water: Node3D = water_script.new()
 	generator.add_child(water)
 	water.configure(47291)
+	water.terrain_generator = generator
 	water.generate()
 	_check(water.is_generated(), "water must generate from terrain and seed")
 	_check(water.get_node_or_null("LakeSurface") != null, "lake surface missing")
