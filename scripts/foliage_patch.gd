@@ -10,7 +10,6 @@ extends Node3D
 @export var exclusion_radius: float = 12.0
 
 var terrain: Node
-var collision_body: StaticBody3D
 
 # Authoritative per-tree presentation state. This remains testable in headless CI;
 # the MultiMesh is only the rendering projection of this state.
@@ -81,7 +80,6 @@ func _generate() -> void:
 
     var trunk_instances := _create_multimesh("TreeTrunks", trunk_mesh, trunk_material, trunk_transforms)
     var leaf_instances := _create_multimesh("TreeCanopies", leaf_mesh, leaf_material, leaf_transforms)
-    var tree_collisions := _create_tree_collision(trunk_transforms)
     _tree_visual_active.resize(trunk_transforms.size())
     _tree_trunk_visual_transforms.resize(trunk_transforms.size())
     _tree_leaf_visual_transforms.resize(trunk_transforms.size())
@@ -89,14 +87,13 @@ func _generate() -> void:
         _tree_visual_active[i] = true
         _tree_trunk_visual_transforms[i] = trunk_transforms[i]
         _tree_leaf_visual_transforms[i] = leaf_transforms[i]
-    _create_tree_harvest_nodes(trunk_transforms, trunk_instances, leaf_instances, tree_collisions)
+    _create_tree_harvest_nodes(trunk_transforms, trunk_instances, leaf_instances)
 
 
 func _create_tree_harvest_nodes(
     transforms: Array[Transform3D],
     trunk_instances: MultiMeshInstance3D,
-    leaf_instances: MultiMeshInstance3D,
-    tree_collisions: StaticBody3D
+    leaf_instances: MultiMeshInstance3D
 ) -> void:
     if not terrain or transforms.is_empty():
         return
@@ -110,7 +107,8 @@ func _create_tree_harvest_nodes(
         node.tool_required = "I01_STONE_AXE"
         node.amount = 4
         node.durability_cost = 1.0
-        node.physical_collision = false
+        # One physics body serves both movement collision and harvesting.
+        node.physical_collision = true
         node.global_transform = transforms[i]
 
         var collision := CollisionShape3D.new()
@@ -129,16 +127,11 @@ func _create_tree_harvest_nodes(
         if leaf_instances and leaf_instances.multimesh:
             leaf_transform = leaf_instances.multimesh.get_instance_transform(i)
 
-        var tree_collision: CollisionShape3D = null
-        if tree_collisions and i < tree_collisions.get_child_count():
-            tree_collision = tree_collisions.get_child(i) as CollisionShape3D
-
-        if trunk_instances or leaf_instances or tree_collision:
+        if trunk_instances or leaf_instances:
             node.set_visual_controller(func(active: bool) -> void:
                 _set_tree_visual(
                     trunk_instances,
                     leaf_instances,
-                    tree_collision,
                     visual_index,
                     trunk_transform,
                     leaf_transform,
@@ -153,7 +146,6 @@ func _create_tree_harvest_nodes(
 func _set_tree_visual(
     trunk_instances: MultiMeshInstance3D,
     leaf_instances: MultiMeshInstance3D,
-    tree_collision: CollisionShape3D,
     index: int,
     trunk_transform: Transform3D,
     leaf_transform: Transform3D,
@@ -175,8 +167,6 @@ func _set_tree_visual(
     _set_multimesh_instance_transform(trunk_instances, index, trunk_target)
     _set_multimesh_instance_transform(leaf_instances, index, leaf_target)
 
-    if is_instance_valid(tree_collision):
-        tree_collision.disabled = not active
 
 
 func _set_multimesh_instance_transform(instance: MultiMeshInstance3D, index: int, transform: Transform3D) -> void:
@@ -261,22 +251,3 @@ func _leaf_material() -> StandardMaterial3D:
     material.albedo_color = Color(0.24, 0.39, 0.26, 1)
     material.roughness = 1.0
     return material
-
-
-func _create_tree_collision(transforms: Array[Transform3D]) -> StaticBody3D:
-    if transforms.is_empty():
-        return null
-    collision_body = StaticBody3D.new()
-    collision_body.name = "TreeCollision"
-    collision_body.collision_layer = 2
-    collision_body.collision_mask = 1
-    add_child(collision_body)
-    for tree_transform in transforms:
-        var collision := CollisionShape3D.new()
-        var shape := CylinderShape3D.new()
-        shape.radius = 0.16
-        shape.height = 1.5
-        collision.shape = shape
-        collision.transform = tree_transform
-        collision_body.add_child(collision)
-    return collision_body
