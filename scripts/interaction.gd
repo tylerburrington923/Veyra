@@ -16,7 +16,7 @@ const MAX_HANDLER_DEPTH := 8
 
 @export var interact_distance: float = MAX_TARGET_DISTANCE
 @export var resonance_strength: float = 1.8
-@export var target_update_interval: float = 0.08
+@export var target_update_interval: float = 0.12
 
 var target_label: Label
 var interact_button: Button
@@ -90,7 +90,7 @@ func _query_target() -> Dictionary:
 	if player is CollisionObject3D:
 		query.exclude = [player.get_rid()]
 
-	var hits := get_world_3d().direct_space_state.intersect_shape(query, 32)
+	var hits := get_world_3d().direct_space_state.intersect_shape(query, 16)
 	var viewport_size := get_viewport().get_visible_rect().size
 	var screen_center := viewport_size * 0.5
 	var best_eligible := {}
