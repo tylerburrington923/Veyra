@@ -28,6 +28,7 @@ func _ready() -> void:
 		lunar_cycle.configure(world_seed, world_time)
 
 	call_deferred("_restore_buildings")
+	call_deferred("_align_anomalies_to_terrain")
 	call_deferred("_ensure_wildlife_manager")
 	print("Veyra world initialized. Seed: ", world_seed, " | Lunar phase: ", lunar_cycle.get_phase_name() if lunar_cycle else "Unavailable")
 
@@ -118,6 +119,28 @@ func save_game() -> bool:
 		return false
 	return GameManager.save_current_game(self)
 
+
+func _align_anomalies_to_terrain() -> void:
+	# Echo-Stone instances are authored at y=0, while the procedural terrain is not flat.
+	# Ground them to the authoritative terrain height so anomalies never appear to float.
+	var generator := get_node_or_null("WorldGenerator")
+	if not generator or not generator.has_method("get_height_at_world"):
+		return
+	for node in get_children():
+		if not node.name.begins_with("EchoStone"):
+			continue
+		var p := node.position
+		p.y = float(generator.get_height_at_world(p.x, p.z))
+		node.position = p
+		var mesh := node.get_node_or_null("MeshInstance3D") as MeshInstance3D
+		if mesh:
+			var material := StandardMaterial3D.new()
+			material.albedo_color = Color(0.12, 0.28, 0.32, 1.0)
+			material.roughness = 0.78
+			material.emission_enabled = true
+			material.emission = Color(0.04, 0.42, 0.48, 1.0)
+			material.emission_energy_multiplier = 0.55
+			mesh.material_override = material
 
 func _restore_buildings() -> void:
 	if BuildingManager and BuildingManager.has_method("restore_from_settlement"):
