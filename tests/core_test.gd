@@ -22,6 +22,8 @@ func _run_tests() -> void:
 	_test_npc_state_validation_vs_sanitization()
 	_test_npc_simulation_layer()
 	_test_npc_simulation_definition_separation()
+	_test_npc_controller_presentation_contract()
+	_test_npc_manager_contract()
 	_test_full_game_skeleton_contracts()
 	_test_tree_harvest_visual_contract()
 	_test_house_door_contract()
