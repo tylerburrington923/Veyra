@@ -42,6 +42,7 @@ func _run_tests() -> void:
 	_test_campfire_and_townhall_contract()
 	_test_settlement_water_contract()
 	_test_multiplayer_contract()
+	_test_multiplayer_ui_contract()
 	_test_pause_menu_contract()
 	_test_active_npc_contract()
 	if failures.is_empty():
@@ -199,6 +200,22 @@ func _test_mobile_action_layout_contract() -> void:
 		_check(not craft_button.get_global_rect().intersects(jump_button.get_global_rect()), "crafting button must not overlap jump button")
 		_check(not craft_button.get_global_rect().intersects(use_button.get_global_rect()), "crafting button must not overlap use button")
 	player.queue_free()
+
+func _test_multiplayer_ui_contract() -> void:
+	var network_script := load("res://scripts/network_manager.gd")
+	var manager = network_script.new()
+	root.add_child(manager)
+	_check(manager.has_method("close_lobby_ui"), "multiplayer manager must expose a deterministic lobby close action")
+	manager.call_deferred("_build_lobby_ui")
+	await process_frame
+	var lobby = manager.get("lobby_layer")
+	_check(lobby != null, "multiplayer lobby layer must be created")
+	if lobby:
+		var panel := lobby.get_node_or_null("MultiplayerPanel") as Control
+		_check(panel != null, "multiplayer lobby panel must exist")
+		if panel:
+			_check(panel.get_node_or_null("CLOSE") != null, "multiplayer lobby must expose a close button")
+	manager.queue_free()
 
 func _test_pause_menu_contract() -> void:
 	var player_scene := load("res://scenes/player.tscn") as PackedScene
