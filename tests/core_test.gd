@@ -855,6 +855,11 @@ func _test_settlement_water_contract() -> void:
 	var player := player_scene.instantiate()
 	root.add_child(player)
 	player.add_to_group("player")
+	var other_players: Array[Node] = []
+	for existing in root.get_tree().get_nodes_in_group("player"):
+		if existing != player:
+			existing.remove_from_group("player")
+			other_players.append(existing)
 	settlement.water_stock = 0
 	settlement.villagers.clear()
 	settlement.add_villager("water_villager_01", "Water Test Villager")
@@ -867,6 +872,9 @@ func _test_settlement_water_contract() -> void:
 	settlement._last_world_time = 899.0
 	settlement.process_water_cycle(0.0, 900.0)
 	_check(settlement.water_stock == 10 - demand, "lunar cycle water mismatch: before=10 demand=%d after=%d cycle_index=%d" % [demand, settlement.water_stock, settlement.water_cycle_index])
+	for existing in other_players:
+		if is_instance_valid(existing):
+			existing.add_to_group("player")
 	player.queue_free()
 	settlement.villagers.clear()
 
