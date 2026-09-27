@@ -280,7 +280,6 @@ func request_interaction(resource_path: NodePath) -> void:
 		broadcast_interaction_feedback.rpc(peer_id, str(target.name))
 	_server_interaction_locks.erase(peer_id)
 
-@rpc("authority", "reliable")
 @rpc("any_peer", "reliable")
 func request_build(building_id: String, position: Vector3) -> void:
 	if not multiplayer.is_server():
@@ -306,6 +305,7 @@ func request_craft(recipe_id: String) -> void:
 	if manager and inventory:
 		manager.craft(recipe_id, inventory)
 
+@rpc("authority", "reliable")
 func broadcast_interaction_feedback(peer_id: int, target_name: String) -> void:
 	if status_label and peer_id == local_peer_id:
 		_set_status("USED %s" % target_name)
@@ -444,9 +444,9 @@ func _broadcast_game_state() -> void:
 			inventories[int(peer_id)] = player.get_inventory().get_snapshot()
 	var world := get_tree().current_scene
 	var generator := world.get_node_or_null("WorldGenerator") if world else null
-	var resources := generator.get_resource_state() if generator and generator.has_method("get_resource_state") else {}
+	var resources: Dictionary = generator.get_resource_state() if generator and generator.has_method("get_resource_state") else {}
 	var settlement := get_node_or_null("/root/SettlementManager")
-	var settlement_state := settlement.get_settlement_state() if settlement and settlement.has_method("get_settlement_state") else {}
+	var settlement_state: Dictionary = settlement.get_settlement_state() if settlement and settlement.has_method("get_settlement_state") else {}
 	receive_game_state.rpc(inventories, resources, settlement_state)
 
 @rpc("authority", "reliable")
