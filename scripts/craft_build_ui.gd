@@ -373,6 +373,8 @@ func _cancel_build() -> void:
 		placement_hud.visible = false
 	confirm_button.visible = false
 	cancel_button.visible = false
+	if crafting_button:
+		crafting_button.visible = true
 	status.text = "Choose Tools or Building."
 
 func _update_build_status() -> void:
