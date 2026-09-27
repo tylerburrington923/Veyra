@@ -26,10 +26,14 @@ func open_campfire(building: Node, player: Node) -> void:
 
 func open_townhall(building: Node, player: Node) -> void:
 	_open(building, player, "TOWN HALL")
-	_add_text("Settlement control. Build from here once the Town Hall exists.")
-	_add_text("Select a structure below. The world will close behind this menu and placement begins after selection.")
+	_add_text("SETTLEMENT COMMAND")
+	_add_or_update_status("Loading settlement status...")
+	_add_action("DEPOSIT 10 WOOD + 10 STONE", _deposit_civic_materials)
+	_add_text("Build new structures from the list below. Town Hall itself is excluded because each settlement has one civic anchor.")
 	_townhall_buttons.clear()
 	for building_id in VeyraBuildingCatalog.all_building_ids():
+		if building_id == "B05_TOWNHALL":
+			continue
 		var definition := VeyraBuildingCatalog.get_building(building_id)
 		_add_build_option(building_id, definition)
 	_refresh_townhall()
@@ -197,6 +201,11 @@ func _begin_build(building_id: String) -> void:
 		return
 	close_ui()
 
+func _deposit_civic_materials() -> void:
+	if _building and _building.has_method("deposit_civic_materials"):
+		_building.deposit_civic_materials(_player, 10)
+		_refresh_townhall()
+
 func _campfire_action() -> void:
 	if _building and _building.has_method("add_campfire_fuel"):
 		_building.add_campfire_fuel(_player, 1)
@@ -226,6 +235,19 @@ func _refresh_townhall() -> void:
 	if _mode != "townhall" or not _player:
 		return
 	var inventory: VeyraInventory = _player.get_inventory() if _player.has_method("get_inventory") else null
+	var settlement := get_node_or_null("/root/SettlementManager")
+	if settlement and settlement.has_method("get_settlement_state"):
+		var state: Dictionary = settlement.get_settlement_state()
+		var civic_stock: Dictionary = state.get("stock", {})
+		_add_or_update_status(
+			"Population %d  •  Food %d  •  Water %d  •  Wood %d  •  Stone %d" % [
+				int(state.get("population", 0)),
+				int(civic_stock.get("food", 0)),
+				int(civic_stock.get("water", 0)),
+				int(civic_stock.get("wood", 0)),
+				int(civic_stock.get("stone", 0))
+			]
+		)
 	if not inventory:
 		return
 	for building_id in _townhall_buttons.keys():
