@@ -16,6 +16,7 @@ func _ready() -> void:
 	_register_default_definitions()
 	if SettlementManager and SettlementManager.has_signal("settlement_changed"):
 		SettlementManager.settlement_changed.connect(_on_settlement_changed)
+	call_deferred("_ensure_beta_villager")
 	call_deferred("sync_settlement_villagers")
 
 func _process(delta: float) -> void:
@@ -36,6 +37,11 @@ func _process(delta: float) -> void:
 func _register_default_definitions() -> void:
 	definitions["human_worker"] = NPCDefinition.new("human_worker", "Worker", "human", 3.5, 1.0, 20, ["BUILD", "GATHER"], "worker_01")
 	definitions["human_villager"] = NPCDefinition.new("human_villager", "Villager", "human", 3.0, 1.0, 20, ["GATHER", "BUILD"], "villager_01")
+
+func _ensure_beta_villager() -> void:
+	if not SettlementManager or not SettlementManager.villagers.is_empty():
+		return
+	SettlementManager.add_villager("villager_beta_01", "Aren")
 
 func spawn_npc(npc_id: String, definition_id: String, position: Vector3) -> NPCController:
 	if npc_id.is_empty() or states.has(npc_id) or not definitions.has(definition_id):
@@ -111,3 +117,9 @@ func _get_settlement_center() -> Vector3:
 
 func _on_settlement_changed() -> void:
 	call_deferred("sync_settlement_villagers")
+
+func _ground_position(position: Vector3) -> Vector3:
+	var generator := get_tree().get_first_node_in_group("world_generator")
+	if generator and generator.has_method("get_height_at_world"):
+		position.y = float(generator.get_height_at_world(position.x, position.z)) + 0.05
+	return position
