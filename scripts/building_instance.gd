@@ -666,7 +666,9 @@ func _build_well() -> void:
 
 
 func _refine_metal(player: Node) -> bool:
-	var inventory: VeyraInventory = player.get_node_or_null("Inventory") as VeyraInventory if player else null
+	var inventory: VeyraInventory = null
+	if player:
+		inventory = player.get_node_or_null("Inventory") as VeyraInventory
 	if not inventory:
 		return false
 	if not inventory.has_resource("Metal", 2) or not inventory.has_resource("Wood", 1):
