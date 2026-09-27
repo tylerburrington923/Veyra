@@ -319,6 +319,29 @@ theme_override_colors/font_color = Color(0.84, 0.91, 0.92, 0.95)
 theme_override_font_sizes/font_size = 13
 text = "TARGET\\n--"
 
+[node name="InteractionHUD" type="PanelContainer" parent="MobileControls"]
+visible = false
+z_index = 20
+offset_left = -150.0
+offset_top = 54.0
+offset_right = 150.0
+offset_bottom = 106.0
+mouse_filter = 2
+
+[node name="Stack" type="VBoxContainer" parent="MobileControls/InteractionHUD"]
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="Action" type="Label" parent="MobileControls/InteractionHUD"]
+layout_mode = 2
+text = "USE"
+horizontal_alignment = 1
+
+[node name="Detail" type="Label" parent="MobileControls/InteractionHUD"]
+layout_mode = 2
+text = "INTERACTION"
+horizontal_alignment = 1
+
 [node name="DebugHUD" type="Label" parent="MobileControls"]
 offset_left = 24.0
 offset_top = 24.0
