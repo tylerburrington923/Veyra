@@ -27,6 +27,16 @@ var leave_button: Button
 
 func _ready() -> void:
 	add_to_group("network_manager")
+	if not multiplayer.peer_connected.is_connected(_on_peer_connected):
+		multiplayer.peer_connected.connect(_on_peer_connected)
+	if not multiplayer.peer_disconnected.is_connected(_on_peer_disconnected):
+		multiplayer.peer_disconnected.connect(_on_peer_disconnected)
+	if not multiplayer.connected_to_server.is_connected(_on_connected_to_server):
+		multiplayer.connected_to_server.connect(_on_connected_to_server)
+	if not multiplayer.connection_failed.is_connected(_on_connection_failed):
+		multiplayer.connection_failed.connect(_on_connection_failed)
+	if not multiplayer.server_disconnected.is_connected(_on_server_disconnected):
+		multiplayer.server_disconnected.connect(_on_server_disconnected)
 	call_deferred("_build_lobby_ui")
 
 func _process(delta: float) -> void:
@@ -50,8 +60,6 @@ func host_game() -> bool:
 	is_host = true
 	session_active = true
 	local_peer_id = 1
-	multiplayer.peer_connected.connect(_on_peer_connected)
-	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	_configure_existing_player(1, true)
 	_set_status("HOSTING • PORT %d\n%s" % [PORT, _get_lan_addresses()])
 	return true
@@ -70,9 +78,6 @@ func join_game(address: String) -> bool:
 	multiplayer.multiplayer_peer = peer
 	is_host = false
 	session_active = true
-	multiplayer.connected_to_server.connect(_on_connected_to_server)
-	multiplayer.connection_failed.connect(_on_connection_failed)
-	multiplayer.server_disconnected.connect(_on_server_disconnected)
 	local_peer_id = multiplayer.get_unique_id()
 	_set_status("CONNECTING TO %s:%d..." % [clean_address, PORT])
 	return true
@@ -80,6 +85,7 @@ func join_game(address: String) -> bool:
 func leave_game() -> void:
 	if multiplayer.has_multiplayer_peer():
 		multiplayer.multiplayer_peer.close()
+	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
 	session_active = false
 	is_host = false
 	peer_inputs.clear()
