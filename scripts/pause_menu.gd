@@ -175,7 +175,8 @@ func _show_multiplayer() -> void:
 			lobby.visible = true
 			var lobby_panel = lobby.get_node_or_null("MultiplayerPanel")
 			if lobby_panel:
-				lobby_panel.position = Vector2(445, 170)
+				var viewport_size := get_viewport().get_visible_rect().size
+				lobby_panel.position = (viewport_size - lobby_panel.size) * 0.5
 	status.text = "MULTIPLAYER PANEL OPEN"
 	_update_multiplayer_button()
 
