@@ -81,7 +81,7 @@ func _build_base() -> void:
 	_backdrop.name = "ModalBackdrop"
 	_backdrop.color = Color(0.0, 0.0, 0.0, 0.48)
 	_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
-	_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_backdrop.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	add_child(_backdrop)
 
 	panel = Panel.new()
