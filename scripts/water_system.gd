@@ -117,7 +117,8 @@ func _make_stream() -> void:
     rng.seed = seed_value + 1703
     for i in range(stream_points):
         var t := float(i) / float(stream_points - 1)
-        var p := start + dir * (3.0 + 2.0 * t) * i + side * (sin(t * 8.0 + seed_value % 13) * 1.7 + rng.randf_range(-0.3, 0.3))
+        var path_point := start + dir * (3.0 + 2.0 * t) * i + side * (sin(t * 8.0 + seed_value % 13) * 1.7 + rng.randf_range(-0.3, 0.3))
+        var p := path_point
         if i > 0 and p.distance_to(previous) > 5.0:
             p = previous + (p - previous).normalized() * 5.0
         previous = p
