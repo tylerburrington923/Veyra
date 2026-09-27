@@ -12,7 +12,6 @@ var _mode := ""
 var _backdrop: ColorRect
 
 func _ready() -> void:
-	layer = 100
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("building_ui")
 	layer = 200
@@ -132,6 +131,8 @@ func _layout_panel() -> void:
 	var height := minf(620.0, maxf(300.0, size.y - 24.0))
 	panel.size = Vector2(width, height)
 	panel.position = (size - panel.size) * 0.5
+	_backdrop.size = size
+	_backdrop.position = Vector2.ZERO
 	title_label.position = Vector2(16, 12)
 	title_label.size = Vector2(width - 112, 38)
 	body_scroll.position = Vector2(16, 58)
@@ -152,12 +153,14 @@ func _add_text(text: String) -> void:
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size", 15)
+	label.modulate = Color(0.72, 0.78, 0.80, 1.0)
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body_box.add_child(label)
 
 func _add_action(text: String, callback: Callable) -> void:
 	var button := Button.new()
 	button.text = text
+	button.tooltip_text = text
 	button.custom_minimum_size = Vector2(0, 48)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.pressed.connect(callback)
@@ -169,6 +172,7 @@ func _add_build_option(id: String, definition: Dictionary) -> void:
 	row.add_theme_constant_override("separation", 2)
 	var button := Button.new()
 	button.text = str(definition.get("name", id))
+	button.tooltip_text = "Select %s" % button.text
 	button.custom_minimum_size = Vector2(0, 48)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.pressed.connect(_begin_build.bind(id))
