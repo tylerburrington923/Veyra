@@ -7,6 +7,7 @@ var settings_button
 var multiplayer_button
 var main_menu_button
 var settings_panel
+var menu_button: Button
 var paused_by_menu := false
 
 func _ready() -> void:
@@ -19,7 +20,7 @@ func _ready() -> void:
 	panel.visible = false
 
 func _build() -> void:
-	var menu_button := Button.new()
+	menu_button = Button.new()
 	menu_button.name = "MenuButton"
 	menu_button.text = "PAUSE"
 	menu_button.position = Vector2(maxf(16.0, get_viewport().get_visible_rect().size.x - 116.0), 16.0)
@@ -143,6 +144,7 @@ func _toggle() -> void:
 func _open() -> void:
 	visible = true
 	panel.visible = true
+	menu_button.visible = false
 	settings_panel.visible = false
 	paused_by_menu = not _network_session_active()
 	if paused_by_menu:
@@ -155,6 +157,7 @@ func _resume() -> void:
 	settings_panel.visible = false
 	panel.visible = false
 	visible = true
+	menu_button.visible = true
 	if paused_by_menu:
 		get_tree().paused = false
 	paused_by_menu = false
@@ -176,6 +179,8 @@ func _hide_settings() -> void:
 	status.text = "GAME PAUSED" if paused_by_menu else "MULTIPLAYER MENU"
 
 func _show_multiplayer() -> void:
+	panel.visible = false
+	menu_button.visible = false
 	var network_manager = get_node_or_null("/root/NetworkManager")
 	if network_manager:
 		var lobby = network_manager.get("lobby_layer")
@@ -187,6 +192,18 @@ func _show_multiplayer() -> void:
 				lobby_panel.position = (viewport_size - lobby_panel.size) * 0.5
 	status.text = "MULTIPLAYER PANEL OPEN"
 	_update_multiplayer_button()
+
+func show_pause_panel() -> void:
+	_open()
+
+func close_all_overlays() -> void:
+	var network_manager = get_node_or_null("/root/NetworkManager")
+	if network_manager and network_manager.has_method("close_lobby_ui"):
+		network_manager.close_lobby_ui()
+	var building_ui := get_tree().get_first_node_in_group("building_ui")
+	if building_ui and building_ui.has_method("close_ui"):
+		building_ui.close_ui()
+	_resume()
 
 func _update_multiplayer_button() -> void:
 	multiplayer_button.text = "MULTIPLAYER" if not _network_session_active() else "MULTIPLAYER - ACTIVE"
@@ -207,6 +224,18 @@ func _network_session_active() -> bool:
 	if not network_manager:
 		return false
 	return bool(network_manager.get("session_active"))
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+		var network_manager = get_node_or_null("/root/NetworkManager")
+		if network_manager and bool(network_manager.get("lobby_layer")) and network_manager.get("lobby_layer").visible:
+			network_manager.close_lobby_ui()
+			show_pause_panel()
+			return
+		if panel.visible:
+			_resume()
+		elif get_tree().get_first_node_in_group("building_ui"):
+			close_all_overlays()
 
 func _return_to_main_menu() -> void:
 	if paused_by_menu:
