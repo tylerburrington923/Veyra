@@ -46,7 +46,7 @@ func _run_tests() -> void:
 	_test_pause_menu_contract()
 	_test_active_npc_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (38 suites)")
+		print("VEYRA CORE TESTS: PASS (39 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -206,8 +206,7 @@ func _test_multiplayer_ui_contract() -> void:
 	var manager = network_script.new()
 	root.add_child(manager)
 	_check(manager.has_method("close_lobby_ui"), "multiplayer manager must expose a deterministic lobby close action")
-	manager.call_deferred("_build_lobby_ui")
-	await process_frame
+	manager._build_lobby_ui()
 	var lobby = manager.get("lobby_layer")
 	_check(lobby != null, "multiplayer lobby layer must be created")
 	if lobby:
