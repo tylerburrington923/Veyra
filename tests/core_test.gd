@@ -7,6 +7,7 @@ func _initialize() -> void:
 
 func _run_tests() -> void:
 	_test_inventory_round_trip()
+	_test_inventory_capacity_contract()
 	_test_crafting_transaction()
 	_test_collision_contract()
 	_test_tool_state_contract()
@@ -28,6 +29,7 @@ func _run_tests() -> void:
 	_test_npc_trade_and_service_contract()
 	_test_wildlife_beta_contract()
 	_test_wildlife_combat_contract()
+	_test_wildlife_meat_hide_contract()
 	_test_full_game_skeleton_contracts()
 	_test_tree_harvest_visual_contract()
 	_test_house_door_contract()
@@ -45,8 +47,9 @@ func _run_tests() -> void:
 	_test_multiplayer_ui_contract()
 	_test_pause_menu_contract()
 	_test_active_npc_contract()
+	_test_npc_work_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (39 suites)")
+		print("VEYRA CORE TESTS: PASS (42 suites)")
 		quit(0)
 	else:
 		for failure in failures:
