@@ -62,6 +62,17 @@ func interact(player_override: Node = null) -> void:
                 _last_interaction_feedback = "Town Hall: population %d." % population
             else:
                 _last_interaction_feedback = "Town Hall: settlement system unavailable."
+        "B06_SHRINE":
+            _last_interaction_feedback = "The shrine hums softly. The Lux remembers you."
+        "B07_WATCHTOWER":
+            _last_interaction_feedback = "The high ground reveals the lunar horizon."
+        "B08_GARDEN":
+            var garden_settlement := get_node_or_null("/root/SettlementManager")
+            if garden_settlement and garden_settlement.has_method("add_stock"):
+                garden_settlement.add_stock("Food", 1)
+                _last_interaction_feedback = "Lunar Garden: +1 Food."
+            else:
+                _last_interaction_feedback = "Lunar Garden: settlement reserve unavailable."
         _:
             _last_interaction_feedback = "Nothing to use here."
 
@@ -72,7 +83,7 @@ func can_interact(player: Node) -> bool:
             return _door_root != null
         "B02_STORAGE":
             return player != null
-        "B01_CAMPFIRE", "B04_WELL", "B05_TOWNHALL":
+        "B01_CAMPFIRE", "B04_WELL", "B05_TOWNHALL", "B06_SHRINE", "B07_WATCHTOWER", "B08_GARDEN":
             return true
         _:
             return false
@@ -90,6 +101,12 @@ func get_interaction_point() -> Vector3:
             return global_position + Vector3(0.0, 0.65, -0.8)
         "B05_TOWNHALL":
             return global_position + Vector3(0.0, 1.0, -3.7)
+        "B06_SHRINE":
+            return global_position + Vector3(0.0, 1.0, -1.0)
+        "B07_WATCHTOWER":
+            return global_position + Vector3(0.0, 2.0, -1.0)
+        "B08_GARDEN":
+            return global_position + Vector3(0.4, 0.5, -1.0)
         _:
             return global_position + Vector3.UP * 0.7
 
@@ -106,6 +123,12 @@ func get_interaction_text() -> String:
             return "Use Well"
         "B05_TOWNHALL":
             return "Open Town Hall"
+        "B06_SHRINE":
+            return "Attune Resonance Shrine"
+        "B07_WATCHTOWER":
+            return "Survey from Watchtower"
+        "B08_GARDEN":
+            return "Tend Lunar Garden"
         _:
             return "Use"
 
@@ -303,6 +326,12 @@ func _build_visual() -> void:
             _build_well()
         "B05_TOWNHALL":
             _build_townhall()
+        "B06_SHRINE":
+            _build_shrine()
+        "B07_WATCHTOWER":
+            _build_watchtower()
+        "B08_GARDEN":
+            _build_garden()
         _:
             _build_generic()
 
