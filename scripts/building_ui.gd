@@ -225,7 +225,7 @@ func _refresh_campfire() -> void:
 func _refresh_townhall() -> void:
 	if _mode != "townhall" or not _player:
 		return
-	var inventory := _player.get_node_or_null("Inventory") as VeyraInventory
+	var inventory: VeyraInventory = _player.get_inventory() if _player.has_method("get_inventory") else null
 	if not inventory:
 		return
 	for building_id in _townhall_buttons.keys():
@@ -283,3 +283,7 @@ func _style_button(button: Button) -> void:
 	style.corner_radius_bottom_left = 10
 	style.corner_radius_bottom_right = 10
 	button.add_theme_stylebox_override("normal", style)
+	var disabled_style := style.duplicate() as StyleBoxFlat
+	disabled_style.bg_color = Color(0.045, 0.06, 0.065, 0.78)
+	disabled_style.border_color = Color(0.20, 0.24, 0.25, 0.45)
+	button.add_theme_stylebox_override("disabled", disabled_style)
