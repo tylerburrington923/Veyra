@@ -188,7 +188,7 @@ func _update_villager_behavior(state: NPCState, delta: float) -> void:
 			state.target_position = _vector_dict(work_target)
 		elif state.current_job == "TRADER" or state.current_job == "Trader":
 			state.current_task = "PATROL"
-			var phase := float((abs(state.npc_id.hash()) + int(Time.get_ticks_msec() / 1000.0)) % 360) * 0.0174533
+			var phase := float((abs(state.npc_id.hash()) + int(state.behavior_timer)) % 360) * 0.0174533
 			var patrol_target := _ground_position(_get_settlement_center() + Vector3(cos(phase), 0.0, sin(phase)) * 4.0)
 			state.target_position = _vector_dict(patrol_target)
 		else:
