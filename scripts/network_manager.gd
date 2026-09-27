@@ -215,8 +215,6 @@ func _on_peer_disconnected(peer_id: int) -> void:
 func _on_connected_to_server() -> void:
 	local_peer_id = multiplayer.get_unique_id()
 	_set_status("CONNECTED • waiting for host snapshot")
-	for peer_id in [local_peer_id]:
-		rpc_id(1, "network_spawn_player", int(peer_id))
 
 func _on_connection_failed() -> void:
 	leave_game()
