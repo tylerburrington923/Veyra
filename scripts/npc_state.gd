@@ -26,6 +26,8 @@ var schedule_state: String = "REST"
 var settlement_id: String = ""
 var home_building_id: String = ""
 var work_building_id: String = ""
+var behavior_timer: float = 0.0
+var home_position: Dictionary = {"x": 0.0, "y": 0.0, "z": 0.0}
 
 func _init(p_npc_id: String = "", p_definition_id: String = "") -> void:
 	npc_id = p_npc_id
@@ -87,7 +89,9 @@ func to_dict() -> Dictionary:
 		"schedule_state": schedule_state,
 		"settlement_id": settlement_id,
 		"home_building_id": home_building_id,
-		"work_building_id": work_building_id
+		"work_building_id": work_building_id,
+		"behavior_timer": behavior_timer,
+		"home_position": home_position.duplicate()
 	}
 
 static func from_dict(data: Dictionary) -> NPCState:
@@ -108,6 +112,8 @@ static func from_dict(data: Dictionary) -> NPCState:
 	state.settlement_id = str(data.get("settlement_id", ""))
 	state.home_building_id = str(data.get("home_building_id", ""))
 	state.work_building_id = str(data.get("work_building_id", ""))
+	state.behavior_timer = float(data.get("behavior_timer", 0.0))
+	state.home_position = _extract_vector_dict(data.get("home_position", {}))
 	return state
 
 static func _extract_vector_dict(data: Dictionary) -> Dictionary:
