@@ -29,8 +29,9 @@ func _run_tests() -> void:
 	_test_townhall_contract()
 	_test_starter_inventory_contract()
 	_test_mobile_action_layout_contract()
+	_test_water_system_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (22 suites)")
+		print("VEYRA CORE TESTS: PASS (23 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -637,3 +638,24 @@ func _test_npc_state_validation_vs_sanitization() -> void:
 	corrupted.sanitize()
 	_check(corrupted.health == 0.0, "sanitize must clamp negative health")
 	_check(not corrupted.alive, "sanitize must mark zero-health NPC dead")
+
+
+func _test_water_system_contract() -> void:
+	var generator_script := load("res://scripts/world_generator.gd")
+	var water_script := load("res://scripts/water_system.gd")
+	var generator: Node3D = generator_script.new()
+	generator.seed_value = 47291
+	root.add_child(generator)
+	generator.generate()
+	var water: Node3D = water_script.new()
+	root.add_child(water)
+	water.configure(47291)
+	water.generate()
+	_check(water.is_generated(), "water must generate from terrain and seed")
+	_check(water.get_node_or_null("LakeSurface") != null, "lake surface missing")
+	_check(water.get_node_or_null("LakeShore") != null, "lake shoreline missing")
+	_check(water.get_node_or_null("StreamSurface") != null, "stream surface missing")
+	_check(water.get_lake_center().distance_to(Vector3.ZERO) < 120.0, "water must remain inside terrain bounds")
+	_check(water.get_lake_level() > -100.0 and water.get_lake_level() < 100.0, "water level out of bounds")
+	water.queue_free()
+	generator.queue_free()
