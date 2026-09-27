@@ -177,6 +177,10 @@ func try_interact() -> void:
 		if player and player.has_method("play_tool_use"):
 			player.play_tool_use()
 		_set_target_state(_classify_target(handler), handler.name, "interact()", collision_point)
+		if target_label and handler.has_method("get_interaction_feedback"):
+			var feedback := str(handler.get_interaction_feedback())
+			if not feedback.is_empty():
+				target_label.text = feedback
 		return
 
 	if handler.has_method("resonate"):
