@@ -119,6 +119,10 @@ func _toggle_storage(player: Node) -> void:
     var storage: Dictionary = settlement.get_building_storage(building_id) if settlement.has_method("get_building_storage") else {}
     if storage.is_empty():
         storage = {"resources": {}, "items": {}}
+    if not (storage.get("resources", {}) is Dictionary):
+        storage["resources"] = {}
+    if not (storage.get("items", {}) is Dictionary):
+        storage["items"] = {}
 
     var carried_resources: Dictionary = inventory.get_snapshot().get("resources", {})
     var carried_items: Dictionary = inventory.get_snapshot().get("items", {})
