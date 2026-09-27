@@ -67,61 +67,61 @@ func _apply_loaded_state(save_data: Dictionary) -> void:
 
 
 func _apply_seed_to_generators() -> void:
-    var generator := get_node_or_null("WorldGenerator")
-    if generator:
-        generator.set("seed_value", world_seed)
+	var generator := get_node_or_null("WorldGenerator")
+	if generator:
+		generator.set("seed_value", world_seed)
 
-    var foliage := get_node_or_null("Foliage")
-    if foliage:
-        foliage.set("seed_value", world_seed)
+	var foliage := get_node_or_null("Foliage")
+	if foliage:
+		foliage.set("seed_value", world_seed)
 
-    var detail := get_node_or_null("WorldDetail")
-    if detail:
-        detail.set("seed_value", world_seed)
+	var detail := get_node_or_null("WorldDetail")
+	if detail:
+		detail.set("seed_value", world_seed)
 
-    var water := get_node_or_null("Water")
-    if water:
-        water.set("seed_value", world_seed)
+	var water := get_node_or_null("Water")
+	if water:
+		water.set("seed_value", world_seed)
 
 
 func get_world_time() -> float:
-    return world_time
+	return world_time
 
 
 func get_lunar_state() -> Dictionary:
-    if lunar_cycle:
-        return lunar_cycle.get_lunar_state()
-    return {}
+	if lunar_cycle:
+		return lunar_cycle.get_lunar_state()
+	return {}
 
 
 func get_world_state() -> Dictionary:
-    return {
-        "seed": world_seed,
-        "world_time": world_time,
-        "lunar": get_lunar_state(),
-        "resources": _get_resource_state(),
-        "version": 5
-    }
+	return {
+		"seed": world_seed,
+		"world_time": world_time,
+		"lunar": get_lunar_state(),
+		"resources": _get_resource_state(),
+		"version": 5
+	}
 
 func _get_resource_state() -> Dictionary:
-    var generator := get_node_or_null("WorldGenerator")
-    if generator and generator.has_method("get_resource_state"):
-        return generator.get_resource_state()
-    return {}
+	var generator := get_node_or_null("WorldGenerator")
+	if generator and generator.has_method("get_resource_state"):
+		return generator.get_resource_state()
+	return {}
 
 func save_game() -> bool:
-    if not GameManager:
-        return false
-    return GameManager.save_current_game(self)
+	if not GameManager:
+		return false
+	return GameManager.save_current_game(self)
 
 
 func _restore_buildings() -> void:
-    if BuildingManager and BuildingManager.has_method("restore_from_settlement"):
-        BuildingManager.restore_from_settlement()
+	if BuildingManager and BuildingManager.has_method("restore_from_settlement"):
+		BuildingManager.restore_from_settlement()
 
 func _ensure_wildlife_manager() -> void:
-    if get_node_or_null("AnimalManager"):
-        return
-    var manager := ANIMAL_MANAGER_SCRIPT.new()
-    manager.name = "AnimalManager"
-    add_child(manager)
+	if get_node_or_null("AnimalManager"):
+		return
+	var manager := ANIMAL_MANAGER_SCRIPT.new()
+	manager.name = "AnimalManager"
+	add_child(manager)
