@@ -884,6 +884,12 @@ func _test_multiplayer_contract() -> void:
 	_check(manager.has_method("receive_snapshot"), "multiplayer manager must expose authoritative snapshot handling")
 	_check(manager.has_method("submit_local_interaction"), "multiplayer manager must expose interaction requests")
 	_check(manager.has_method("request_interaction"), "multiplayer manager must validate interaction requests on host")
+	_check(manager._is_private_ipv4("192.168.43.1"), "192.168 hotspot address must be recognized")
+	_check(manager._is_private_ipv4("10.0.0.1"), "10.x LAN address must be recognized")
+	_check(manager._is_private_ipv4("172.20.10.1"), "172.16/12 hotspot address must be recognized")
+	_check(not manager._is_private_ipv4("172.32.0.1"), "172.32.x.x must not be treated as private LAN")
+	_check(not manager._is_private_ipv4("8.8.8.8"), "public IPv4 must not be treated as LAN")
+	_check(not manager._is_private_ipv4("192.168.43"), "malformed IPv4 must be rejected")
 	manager.queue_free()
 
 	var player_scene := load("res://scenes/player.tscn") as PackedScene
