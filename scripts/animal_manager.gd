@@ -170,7 +170,7 @@ func _make_lumen_grazer_visual() -> Node3D:
 	_add_sphere(root, Vector3(0.58, 1.05, 0), 0.22, coat, 7)
 	for side in [-1.0, 1.0]:
 		for x in [-0.28, 0.28]:
-			_add_capsule(root, Vector3(x, 0.40, side * 0.15), Vector3(0.06, 0.06, 0.27), dark, 5)
+			_add_capsule(root, Vector3(x, 0.44, side * 0.15), Vector3(0.06, 0.08, 0.36), dark, 5)
 	_add_sphere(root, Vector3(-0.54, 1.02, 0), 0.10, dark, 5)
 	_add_sphere(root, Vector3(0.58, 1.13, -0.19), 0.055, glow, 5)
 	_add_sphere(root, Vector3(0.58, 1.13, 0.19), 0.055, glow, 5)
@@ -188,7 +188,7 @@ func _make_mireback_visual() -> Node3D:
 	_add_sphere(root, Vector3(0.62, 0.70, 0), 0.25, hide, 7)
 	for x in [-0.28, 0.28]:
 		for side in [-1.0, 1.0]:
-			_add_capsule(root, Vector3(x, 0.25, side * 0.20), Vector3(0.075, 0.07, 0.20), dark, 5)
+			_add_capsule(root, Vector3(x, 0.29, side * 0.20), Vector3(0.075, 0.08, 0.30), dark, 5)
 	for x in [-0.38, -0.12, 0.14, 0.40]:
 		_add_sphere(root, Vector3(x, 1.00 - abs(x) * 0.18, 0), 0.12, ridge, 6, Vector3(0.8, 1.2, 0.8))
 	_add_sphere(root, Vector3(0.67, 0.76, -0.20), 0.055, ridge, 5)
