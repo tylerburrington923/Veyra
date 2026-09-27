@@ -25,7 +25,9 @@ func _run_tests() -> void:
 	_test_npc_controller_presentation_contract()
 	_test_npc_manager_contract()
 	_test_npc_beta_wander_contract()
+	_test_npc_trade_and_service_contract()
 	_test_wildlife_beta_contract()
+	_test_wildlife_combat_contract()
 	_test_full_game_skeleton_contracts()
 	_test_tree_harvest_visual_contract()
 	_test_house_door_contract()
@@ -43,7 +45,7 @@ func _run_tests() -> void:
 	_test_pause_menu_contract()
 	_test_active_npc_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (35 suites)")
+		print("VEYRA CORE TESTS: PASS (37 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -799,6 +801,36 @@ func _test_npc_beta_wander_contract() -> void:
 	manager.queue_free()
 
 
+func _test_npc_trade_and_service_contract() -> void:
+	var manager_script := load("res://scripts/npc_manager.gd")
+	var manager: NPCManager = manager_script.new()
+	root.add_child(manager)
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var inventory: VeyraInventory = player.get_inventory()
+	inventory.resources.clear()
+	inventory.items.clear()
+	inventory.total_weight = 0.0
+	var trader := manager.spawn_npc("npc_trader_test", "human_villager", Vector3.ZERO)
+	var trader_state: NPCState = manager.get_npc_state("npc_trader_test")
+	trader_state.current_job = "TRADER"
+	inventory.add_resource("Stone", 5)
+	var trade_result := manager.interact_with_npc("npc_trader_test", player)
+	_check(inventory.get_amount("Stone") == 0 and inventory.get_amount("Metal") == 1, "NPC trader must perform a real inventory trade")
+	_check(trade_result.contains("traded"), "NPC trader must report completed trade")
+	var builder := manager.spawn_npc("npc_builder_test", "human_worker", Vector3.ZERO)
+	var builder_state: NPCState = manager.get_npc_state("npc_builder_test")
+	builder_state.current_job = "BUILDER"
+	inventory.add_resource("Wood", 2)
+	inventory.add_resource("Stone", 2)
+	var service_result := manager.interact_with_npc("npc_builder_test", player)
+	_check(inventory.has_item("I01_STONE_AXE"), "NPC builder service must craft a Stone Axe")
+	_check(service_result.contains("crafted"), "NPC builder must report completed service")
+	manager.queue_free()
+	player.queue_free()
+
+
 func _test_wildlife_beta_contract() -> void:
 	var manager_script := load("res://scripts/animal_manager.gd")
 	var manager: Node3D = manager_script.new()
@@ -816,6 +848,30 @@ func _test_wildlife_beta_contract() -> void:
 	_check(not manager.states.has("grazer_test_01"), "wildlife despawn must remove authoritative state")
 	manager.queue_free()
 
+
+
+func _test_wildlife_combat_contract() -> void:
+	var manager_script := load("res://scripts/animal_manager.gd")
+	var manager: AnimalManager = manager_script.new()
+	root.add_child(manager)
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var inventory: VeyraInventory = player.get_inventory()
+	inventory.resources.clear()
+	inventory.items.clear()
+	inventory.total_weight = 0.0
+	var animal := manager.spawn_animal("combat_test_01", "lumen_grazer", Vector3.ZERO)
+	_check(animal != null and animal.has_method("interact"), "wildlife must expose an interaction actor")
+	var state: AnimalState = manager.states["combat_test_01"]
+	var result := manager.damage_animal("combat_test_01", 999.0, player)
+	_check(not state.alive and state.health == 0.0, "wildlife must die at zero health")
+	_check(result.contains("died"), "wildlife death must report a death event")
+	_check(inventory.get_amount("Stone") == 2, "wildlife death must produce a resource drop")
+	_check((animal as Node3D).visible == false, "dead wildlife must become non-visible")
+	manager.despawn_animal("combat_test_01")
+	manager.queue_free()
+	player.queue_free()
 
 
 func _test_campfire_and_townhall_contract() -> void:
