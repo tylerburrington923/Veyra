@@ -695,7 +695,12 @@ func _test_building_storage_contract() -> void:
 	_check(int(stored.get("resources", {}).get("Wood", 0)) == 7, "storage must persist deposited wood")
 	building.interact()
 	_check(inventory.get_amount("Wood") == 7, "storage withdrawal must restore deposited wood")
-	_check(settlement.get_building_storage(building_id).is_empty(), "storage must be empty after full withdrawal")
+	var emptied_storage := settlement.get_building_storage(building_id)
+	_check(
+		int(emptied_storage.get("resources", {}).get("Wood", 0)) == 0
+		and emptied_storage.get("items", {}).is_empty(),
+		"storage must be empty after full withdrawal"
+	)
 	settlement.buildings.erase(building_id)
 	building.queue_free()
 	player.queue_free()
