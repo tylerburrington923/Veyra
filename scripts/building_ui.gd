@@ -3,193 +3,231 @@ class_name VeyraBuildingUI
 
 var panel: Panel
 var title_label: Label
-var body_label: Label
-var action_button: Button
+var body_scroll: ScrollContainer
+var body_box: VBoxContainer
 var close_button: Button
 var _building: Node
 var _player: Node
+var _mode := ""
 
 func _ready() -> void:
-	layer = 80
+	layer = 100
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("building_ui")
 	_build_base()
 	visible = false
 
 func open_campfire(building: Node, player: Node) -> void:
-	_building = building
-	_player = player
-	title_label.text = "CAMPFIRE"
-	action_button.text = "ADD WOOD"
-	_refresh_campfire()
-	visible = true
+	_open(building, player, "CAMPFIRE")
+	_add_text("Add wood to keep the fire burning.")
+	_add_action("ADD WOOD", _campfire_action)
 
 func open_townhall(building: Node, player: Node) -> void:
-	_building = building
-	_player = player
-	title_label.text = "TOWN HALL"
-	action_button.text = "DEPOSIT 10"
-	_refresh_townhall()
-	visible = true
+	_open(building, player, "TOWN HALL")
+	_add_text("Settlement control. Build from here once the Town Hall exists.")
+	_add_text("Select a structure below. The world will close behind this menu and placement begins after selection.")
+	for building_id in VeyraBuildingCatalog.all_building_ids():
+		var definition := VeyraBuildingCatalog.get_building(building_id)
+		_add_build_option(building_id, definition)
+
+func open_blacksmith(building: Node, player: Node) -> void:
+	_open(building, player, "BLACKSMITH")
+	_add_text("Refine raw Metal into Refined Metal, then forge durable tools.")
+	_add_action("REFINE 2 METAL → 1 REFINED", _refine_action)
+	_add_action("FORGE STONE AXE", _forge_axe)
+	_add_action("FORGE STONE PICK", _forge_pick)
 
 func close_ui() -> void:
 	visible = false
 	_building = null
 	_player = null
+	_mode = ""
 
 func _process(_delta: float) -> void:
-	if not visible or not _building:
+	if not visible:
 		return
-	if title_label.text == "CAMPFIRE":
+	if _mode == "campfire":
 		_refresh_campfire()
-	else:
+	elif _mode == "townhall":
 		_refresh_townhall()
+	elif _mode == "blacksmith":
+		_refresh_blacksmith()
 
-func _on_action_pressed() -> void:
-	if not _building:
+func _input(event: InputEvent) -> void:
+	if not visible:
 		return
-	if title_label.text == "CAMPFIRE":
-		if _building.has_method("add_campfire_fuel"):
-			_building.add_campfire_fuel(_player, 1)
-			_refresh_campfire()
-	else:
-		if _building.has_method("deposit_civic_materials"):
-			_building.deposit_civic_materials(_player, 10)
-			_refresh_townhall()
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+		close_ui()
+		get_viewport().set_input_as_handled()
+
+func _open(building: Node, player: Node, title_text: String) -> void:
+	_building = building
+	_player = player
+	title_label.text = title_text
+	_mode = title_text.to_lower().replace(" ", "_")
+	_clear_body()
+	visible = true
+	get_viewport().set_input_as_handled()
 
 func _build_base() -> void:
 	panel = Panel.new()
 	panel.name = "BuildingPanel"
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(panel)
-
-	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.025, 0.045, 0.06, 0.98)
-	panel_style.border_width_left = 1
-	panel_style.border_width_top = 1
-	panel_style.border_width_right = 1
-	panel_style.border_width_bottom = 1
-	panel_style.border_color = Color(0.24, 0.62, 0.66, 0.72)
-	panel_style.corner_radius_top_left = 16
-	panel_style.corner_radius_top_right = 16
-	panel_style.corner_radius_bottom_left = 16
-	panel_style.corner_radius_bottom_right = 16
-	panel.add_theme_stylebox_override("panel", panel_style)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.025, 0.04, 0.055, 0.985)
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.25, 0.62, 0.66, 0.75)
+	style.corner_radius_top_left = 16
+	style.corner_radius_top_right = 16
+	style.corner_radius_bottom_left = 16
+	style.corner_radius_bottom_right = 16
+	panel.add_theme_stylebox_override("panel", style)
 
 	title_label = Label.new()
-	title_label.add_theme_font_size_override("font_size", 24)
-	title_label.add_theme_color_override("font_color", Color(0.42, 0.82, 0.84, 1))
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_font_size_override("font_size", 23)
 	panel.add_child(title_label)
 
-	var scroll := ScrollContainer.new()
-	scroll.name = "BodyScroll"
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	panel.add_child(scroll)
-
-	body_label = Label.new()
-	body_label.add_theme_font_size_override("font_size", 16)
-	body_label.add_theme_color_override("font_color", Color(0.78, 0.84, 0.85, 1))
-	body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body_label.custom_minimum_size = Vector2(0, 260)
-	scroll.add_child(body_label)
-
-	action_button = Button.new()
-	action_button.add_theme_font_size_override("font_size", 16)
-	action_button.pressed.connect(_on_action_pressed)
-	_style_button(action_button)
-	panel.add_child(action_button)
+	body_scroll = ScrollContainer.new()
+	body_scroll.name = "BodyScroll"
+	body_scroll.mouse_filter = Control.MOUSE_FILTER_STOP
+	body_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	body_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	panel.add_child(body_scroll)
+	body_box = VBoxContainer.new()
+	body_box.add_theme_constant_override("separation", 8)
+	body_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body_scroll.add_child(body_box)
 
 	close_button = Button.new()
 	close_button.text = "CLOSE"
-	close_button.add_theme_font_size_override("font_size", 16)
+	close_button.custom_minimum_size = Vector2(0, 48)
 	close_button.pressed.connect(close_ui)
 	_style_button(close_button)
 	panel.add_child(close_button)
-
 	_layout_panel()
 
 func _layout_panel() -> void:
-	if not panel:
-		return
-	var viewport_size := get_viewport().get_visible_rect().size
-	var width := minf(440.0, maxf(280.0, viewport_size.x - 24.0))
-	var height := minf(400.0, maxf(260.0, viewport_size.y - 24.0))
+	var size := get_viewport().get_visible_rect().size
+	var width := minf(520.0, maxf(300.0, size.x - 24.0))
+	var height := minf(620.0, maxf(300.0, size.y - 24.0))
 	panel.size = Vector2(width, height)
-	panel.position = (viewport_size - panel.size) * 0.5
+	panel.position = (size - panel.size) * 0.5
 	title_label.position = Vector2(16, 12)
-	title_label.size = Vector2(width - 32.0, 38.0)
-	var button_y := height - 62.0
-	var gap := 12.0
-	var button_width := (width - 56.0) * 0.5
-	action_button.position = Vector2(20, button_y)
-	action_button.size = Vector2(button_width, 44)
-	close_button.position = Vector2(36.0 + button_width, button_y)
-	close_button.size = Vector2(button_width, 44)
-	var scroll := panel.get_node_or_null("BodyScroll") as ScrollContainer
-	if scroll:
-		scroll.position = Vector2(20, 58)
-		scroll.size = Vector2(width - 40.0, maxf(120.0, button_y - 70.0))
-		body_label.custom_minimum_size = Vector2(scroll.size.x - 8.0, 260.0)
+	title_label.size = Vector2(width - 32, 38)
+	body_scroll.position = Vector2(16, 58)
+	body_scroll.size = Vector2(width - 32, height - 122)
+	close_button.position = Vector2(16, height - 56)
+	close_button.size = Vector2(width - 32, 44)
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_SIZE_CHANGED:
 		_layout_panel()
-func _style_button(button: Button) -> void:
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(0.07, 0.16, 0.18, 0.98)
-	normal.border_width_left = 1
-	normal.border_width_top = 1
-	normal.border_width_right = 1
-	normal.border_width_bottom = 1
-	normal.border_color = Color(0.30, 0.65, 0.68, 0.62)
-	normal.corner_radius_top_left = 10
-	normal.corner_radius_top_right = 10
-	normal.corner_radius_bottom_left = 10
-	normal.corner_radius_bottom_right = 10
-	var hover := normal.duplicate()
-	hover.bg_color = Color(0.11, 0.24, 0.26, 1.0)
-	var pressed := normal.duplicate()
-	pressed.bg_color = Color(0.16, 0.34, 0.36, 1.0)
-	var disabled := normal.duplicate()
-	disabled.bg_color = Color(0.05, 0.08, 0.09, 0.65)
-	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("hover", hover)
-	button.add_theme_stylebox_override("pressed", pressed)
-	button.add_theme_stylebox_override("disabled", disabled)
+
+func _clear_body() -> void:
+	for child in body_box.get_children():
+		child.queue_free()
+
+func _add_text(text: String) -> void:
+	var label := Label.new()
+	label.text = text
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_font_size_override("font_size", 15)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body_box.add_child(label)
+
+func _add_action(text: String, callback: Callable) -> void:
+	var button := Button.new()
+	button.text = text
+	button.custom_minimum_size = Vector2(0, 48)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.pressed.connect(callback)
+	_style_button(button)
+	body_box.add_child(button)
+
+func _add_build_option(id: String, definition: Dictionary) -> void:
+	var row := VBoxContainer.new()
+	row.add_theme_constant_override("separation", 2)
+	var button := Button.new()
+	button.text = str(definition.get("name", id))
+	button.custom_minimum_size = Vector2(0, 48)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.pressed.connect(_begin_build.bind(id))
+	_style_button(button)
+	row.add_child(button)
+	var cost := Label.new()
+	cost.text = _format_cost(definition.get("cost", {}))
+	cost.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	cost.add_theme_font_size_override("font_size", 13)
+	row.add_child(cost)
+	body_box.add_child(row)
+
+func _begin_build(building_id: String) -> void:
+	var manager := get_node_or_null("/root/BuildingManager") as VeyraBuildingManager
+	if not manager or not manager.select_building(building_id):
+		return
+	close_ui()
+
+func _campfire_action() -> void:
+	if _building and _building.has_method("add_campfire_fuel"):
+		_building.add_campfire_fuel(_player, 1)
+
+func _refine_action() -> void:
+	if _building and _building.has_method("blacksmith_refine"):
+		_building.blacksmith_refine(_player)
+		_refresh_blacksmith()
+
+func _forge_axe() -> void:
+	if _building and _building.has_method("blacksmith_forge"):
+		_building.blacksmith_forge(_player, "I01_STONE_AXE")
+		_refresh_blacksmith()
+
+func _forge_pick() -> void:
+	if _building and _building.has_method("blacksmith_forge"):
+		_building.blacksmith_forge(_player, "I02_STONE_PICK")
+		_refresh_blacksmith()
 
 func _refresh_campfire() -> void:
 	if not _building:
 		return
 	var heat := float(_building.get_campfire_heat()) if _building.has_method("get_campfire_heat") else 0.0
-	var wood := 0
-	if _player and _player.has_method("get_inventory"):
-		var inventory: Node = _player.get_inventory()
-		if inventory:
-			wood = inventory.get_amount("Wood")
-	body_label.text = "INPUT\n[  —  ]\n\nFUEL\n[  WOOD  ]   Backpack: %d\n\nOUTPUT\n[  HEAT  ]\n\nHeat remaining: %.0f sec\n\nEach Wood adds 30 seconds of campfire heat." % [wood, heat]
-	action_button.disabled = wood <= 0
+	_add_or_update_status("Heat remaining: %.0f sec" % heat)
 
 func _refresh_townhall() -> void:
-	var settlement := get_node_or_null("/root/SettlementManager")
-	if not settlement:
-		body_label.text = "Settlement system unavailable."
-		return
-	var state: Dictionary = settlement.get_settlement_state()
-	var stock: Dictionary = state.get("stock", {})
-	var population := int(state.get("population", 0))
-	var players: int = settlement.get_active_player_count() if settlement.has_method("get_active_player_count") else 0
-	var villagers: int = settlement.get_active_villager_count() if settlement.has_method("get_active_villager_count") else 0
-	var demand: int = settlement.get_water_demand() if settlement.has_method("get_water_demand") else 0
-	var days: float = settlement.get_water_days_remaining() if settlement.has_method("get_water_days_remaining") else 0.0
-	body_label.text = "%s\n\nPOPULATION   %d   •   PLAYERS %d   •   VILLAGERS %d\n\nWATER RESERVE   %d\nDAILY DEMAND   %d   •   COVERAGE %.1f DAYS\n\nFOOD   %d\nWOOD   %d\nSTONE   %d\n\nThe Well feeds the settlement reserve. Each player and villager consumes one Water per lunar cycle." % [
-		str(state.get("name", "New Settlement")),
-		population, players, villagers,
-		int(stock.get("water", 0)), demand, float(days),
-		int(stock.get("food", 0)), int(stock.get("wood", 0)), int(stock.get("stone", 0))
-	]
-	var can_deposit := false
-	if _player and _player.has_method("get_inventory"):
-		var inventory: Node = _player.get_inventory()
-		can_deposit = inventory != null and (inventory.get_amount("Wood") > 0 or inventory.get_amount("Stone") > 0)
-	action_button.disabled = not can_deposit
+	pass
+
+func _refresh_blacksmith() -> void:
+	pass
+
+func _add_or_update_status(text: String) -> void:
+	var status := body_box.get_node_or_null("Status") as Label
+	if not status:
+		status = Label.new()
+		status.name = "Status"
+		status.add_theme_font_size_override("font_size", 14)
+		body_box.add_child(status)
+	status.text = text
+
+func _format_cost(cost: Dictionary) -> String:
+	var parts: Array[String] = []
+	for key in cost.keys():
+		parts.append("%s x%d" % [key, int(cost[key])])
+	return "Cost: " + " • ".join(parts)
+
+func _style_button(button: Button) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.07, 0.16, 0.18, 0.98)
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.30, 0.65, 0.68, 0.62)
+	style.corner_radius_top_left = 10
+	style.corner_radius_top_right = 10
+	style.corner_radius_bottom_left = 10
+	style.corner_radius_bottom_right = 10
+	button.add_theme_stylebox_override("normal", style)
