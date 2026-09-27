@@ -15,6 +15,7 @@ const ANIMAL_MANAGER_SCRIPT = preload("res://scripts/animal_manager.gd")
 
 func _ready() -> void:
 	world_seed = default_world_seed
+	_apply_graphics_profile()
 
 	if GameManager:
 		world_seed = GameManager.world_seed
@@ -128,3 +129,25 @@ func _ensure_wildlife_manager() -> void:
 	var manager := ANIMAL_MANAGER_SCRIPT.new()
 	manager.name = "AnimalManager"
 	add_child(manager)
+
+func apply_graphics_profile(profile_name: String) -> void:
+	if not GraphicsSettings:
+		return
+	GraphicsSettings.profile = profile_name
+	_apply_graphics_profile()
+
+func _apply_graphics_profile() -> void:
+	if not GraphicsSettings:
+		return
+	var camera := get_tree().get_first_node_in_group("local_player")
+	if camera and camera.has_node("Camera3D"):
+		camera.get_node("Camera3D").far = GraphicsSettings.get_camera_far()
+	var foliage := get_node_or_null("Foliage")
+	if foliage and foliage.has_method("set_visibility_distance"):
+		foliage.set_visibility_distance(GraphicsSettings.get_foliage_distance())
+	var detail := get_node_or_null("WorldDetail")
+	if detail and detail.has_method("set_visibility_distance"):
+		detail.set_visibility_distance(GraphicsSettings.get_detail_distance())
+	var environment := get_node_or_null("Environment")
+	if environment and environment.environment:
+		environment.environment.fog_density = GraphicsSettings.get_fog_density()
