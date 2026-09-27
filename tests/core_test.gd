@@ -40,6 +40,8 @@ func _run_tests() -> void:
 	_test_campfire_and_townhall_contract()
 	_test_settlement_water_contract()
 	_test_multiplayer_contract()
+	_test_pause_menu_contract()
+	_test_active_npc_contract()
 	if failures.is_empty():
 		print("VEYRA CORE TESTS: PASS (33 suites)")
 		quit(0)
@@ -199,6 +201,31 @@ func _test_mobile_action_layout_contract() -> void:
 		_check(not craft_button.get_global_rect().intersects(jump_button.get_global_rect()), "crafting button must not overlap jump button")
 		_check(not craft_button.get_global_rect().intersects(use_button.get_global_rect()), "crafting button must not overlap use button")
 	player.queue_free()
+
+func _test_pause_menu_contract() -> void:
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var menu := player.get_node_or_null("PauseMenu") as CanvasLayer
+	_check(menu != null, "local player must create pause menu")
+	var menu_button := menu.get_node_or_null("MenuButton") as Button if menu else null
+	_check(menu_button != null, "pause menu must expose top-corner menu button")
+	_check(menu_button != null and menu_button.is_in_group("camera_blocking_ui"), "menu button must block camera touch")
+	player.queue_free()
+
+
+func _test_active_npc_contract() -> void:
+	var manager_script := load("res://scripts/npc_manager.gd")
+	var manager := manager_script.new()
+	root.add_child(manager)
+	var npc := manager.spawn_npc("test_active_npc", "human_villager", Vector3.ZERO)
+	_check(npc != null, "NPC manager must spawn an active villager controller")
+	_check(manager.get_npc_state("test_active_npc") != null, "active NPC state must exist")
+	if npc:
+		_check(npc.get_node_or_null("Visual") != null, "active NPC must have a visual")
+	manager.despawn_npc("test_active_npc")
+	manager.queue_free()
+
 
 func _check(condition: bool, message: String) -> void:
 	if not condition:
