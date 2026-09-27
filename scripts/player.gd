@@ -525,22 +525,6 @@ func _update_player_visuals(delta: float, direction: Vector3) -> void:
 		var target_y := 1.15 + (absf(stride) * 0.025 if moving else 0.0)
 		torso.position.y = move_toward(torso.position.y, target_y, delta * 2.5)
 
-func _update_debug_hud(input_vector: Vector2) -> void:
-	if not debug_hud:
-		return
-	var world := get_parent()
-	var lunar_text := "MOON: --"
-	var seed_text := "SEED: --"
-	if world and world.has_method("get_lunar_state"):
-		var lunar: Dictionary = world.get_lunar_state()
-		lunar_text = "MOON: %s" % str(lunar.get("phase_name", "--"))
-		seed_text = "SEED: VE-%05d" % int(lunar.get("world_seed", 0))
-	var tool_text := "HANDS"
-	match selected_tool_id:
-		"I01_STONE_AXE": tool_text = "AXE"
-		"I02_STONE_PICK": tool_text = "PICK"
-	debug_hud.text = "%s  •  %s  •  %s" % [seed_text, lunar_text, tool_text]
-
 
 func _recover_from_fall() -> void:
 	var world_generator := get_parent().get_node_or_null("WorldGenerator")
