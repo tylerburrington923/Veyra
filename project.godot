@@ -1,8 +1,8 @@
 [application]
 config/name="Veyra"
-run/main_scene="res://scenes/world.tscn"
+run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
-config/version="0.2.0-beta"
+config/version="0.3.0-beta"
 
 [autoload]
 SettlementManager="*res://scripts/settlement_manager.gd"
