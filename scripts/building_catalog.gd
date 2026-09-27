@@ -44,6 +44,12 @@ const BUILDINGS := {
 		"size": Vector2(3.0, 3.0),
 		"cost": {"Wood": 28, "Stone": 12}
 	},
+	"B09_BLACKSMITH": {
+		"id": "B09_BLACKSMITH",
+		"name": "Blacksmith",
+		"size": Vector2(4.5, 4.0),
+		"cost": {"Wood": 30, "Stone": 30, "Metal": 10}
+	},
 	"B08_GARDEN": {
 		"id": "B08_GARDEN",
 		"name": "Lunar Garden",
