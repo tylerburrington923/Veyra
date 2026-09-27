@@ -25,6 +25,7 @@ var ip_field: LineEdit
 var host_button: Button
 var join_button: Button
 var leave_button: Button
+var copy_ip_button: Button
 
 func _ready() -> void:
 	add_to_group("network_manager")
@@ -94,6 +95,8 @@ func leave_game() -> void:
 	is_host = false
 	peer_inputs.clear()
 	_despawn_all_network_players()
+	if lobby_layer:
+		lobby_layer.visible = false
 	_set_status("OFFLINE • single-player mode")
 
 func submit_local_input(input_vector: Vector2, yaw: float, pitch: float, jump: bool) -> void:
@@ -365,7 +368,8 @@ func _build_lobby_ui() -> void:
 
 	var panel := Panel.new()
 	panel.name = "MultiplayerPanel"
-	panel.position = Vector2(24, 24)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	panel.position = Vector2(-180, -95)
 	panel.size = Vector2(360, 190)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	lobby_layer.add_child(panel)
@@ -414,6 +418,24 @@ func _build_lobby_ui() -> void:
 	leave_button.add_to_group("camera_blocking_ui")
 	leave_button.pressed.connect(leave_game)
 	panel.add_child(leave_button)
+
+	copy_ip_button = Button.new()
+	copy_ip_button.text = "COPY IP"
+	copy_ip_button.position = Vector2(246, 44)
+	copy_ip_button.size = Vector2(90, 34)
+	copy_ip_button.add_to_group("camera_blocking_ui")
+	copy_ip_button.pressed.connect(_copy_host_address)
+	panel.add_child(copy_ip_button)
+
+func _copy_host_address() -> void:
+	var addresses := _get_lan_addresses()
+	var prefix := "HOTSPOT/LAN IP: "
+	var value := addresses.trim_prefix(prefix).split(":")[0]
+	if value.is_empty() or value == "unavailable":
+		_set_status("NO LAN IP FOUND")
+		return
+	DisplayServer.clipboard_set(value)
+	_set_status("IP COPIED • %s" % value)
 
 func _set_status(message: String) -> void:
 	if status_label:
