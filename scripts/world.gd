@@ -14,26 +14,28 @@ var world_seed: int = 47291
 const ANIMAL_MANAGER_SCRIPT = preload("res://scripts/animal_manager.gd")
 
 func _ready() -> void:
-    world_seed = default_world_seed
+	world_seed = default_world_seed
 
-    if GameManager:
-        world_seed = GameManager.world_seed
-        _apply_loaded_state(GameManager.get_loaded_save())
+	if GameManager:
+		world_seed = GameManager.world_seed
+		_apply_loaded_state(GameManager.get_loaded_save())
 
-    _apply_seed_to_generators()
+	_apply_seed_to_generators()
 
-    if lunar_cycle:
-        lunar_cycle.cycle_length_seconds = lunar_cycle_seconds
-        lunar_cycle.configure(world_seed, world_time)
+	if lunar_cycle:
+		lunar_cycle.cycle_length_seconds = lunar_cycle_seconds
+		lunar_cycle.configure(world_seed, world_time)
 
-    call_deferred("_restore_buildings")\n    # NPC simulation is intentionally dormant until the settlement population system is ready.\n    var npc_manager := get_node_or_null("NPCManager")\n    if npc_manager:\n        npc_manager.queue_free()
-    print("Veyra world initialized. Seed: ", world_seed, " | Lunar phase: ", lunar_cycle.get_phase_name() if lunar_cycle else "Unavailable")
+	call_deferred("_restore_buildings")
+	print("Veyra world initialized. Seed: ", world_seed, " | Lunar phase: ", lunar_cycle.get_phase_name() if lunar_cycle else "Unavailable")
 
 
 func _process(delta: float) -> void:
-    if lunar_cycle:
-        lunar_cycle.advance(delta)
-        world_time = lunar_cycle.world_time
+	if lunar_cycle:
+		lunar_cycle.advance(delta)
+		world_time = lunar_cycle.world_time
+	if SettlementManager and SettlementManager.has_method("process_water_cycle"):
+		SettlementManager.process_water_cycle(world_time, lunar_cycle_seconds)
 
 
 func _apply_loaded_state(save_data: Dictionary) -> void:
