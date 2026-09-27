@@ -149,6 +149,35 @@ func add_stock(resource_type: String, amount: int) -> void:
             stone_stock += amount
     settlement_changed.emit()
 
+func consume_stock(resource_type: String, amount: int) -> bool:
+    if amount <= 0:
+        return false
+    var available := 0
+    match resource_type:
+        "Food":
+            available = food_stock
+        "Water":
+            available = water_stock
+        "Wood":
+            available = wood_stock
+        "Stone":
+            available = stone_stock
+        _:
+            return false
+    if available < amount:
+        return false
+    match resource_type:
+        "Food":
+            food_stock -= amount
+        "Water":
+            water_stock -= amount
+        "Wood":
+            wood_stock -= amount
+        "Stone":
+            stone_stock -= amount
+    settlement_changed.emit()
+    return true
+
 func get_settlement_state() -> Dictionary:
     return {
         "version": SETTLEMENT_VERSION,
