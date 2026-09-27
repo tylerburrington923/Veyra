@@ -16,10 +16,13 @@ func add_resource(resource_type: String, amount: int) -> int:
 
     var current := get_amount(resource_type)
     var stack_limit := VeyraResourceCatalog.max_stack(resource_type)
+    var free_stack_space := 0
+    if current > 0:
+        free_stack_space = stack_limit - (current % stack_limit)
+        if free_stack_space == stack_limit:
+            free_stack_space = 0
     var free_slots := maxi(0, max_slots - _used_slots())
-    var capacity_by_slots := free_slots * stack_limit
-    if current > 0 and current % stack_limit != 0:
-        capacity_by_slots += stack_limit - (current % stack_limit)
+    var capacity_by_slots := free_stack_space + free_slots * stack_limit
     var accepted := mini(amount, capacity_by_slots)
 
     var per_item_weight := VeyraResourceCatalog.weight(resource_type)
@@ -114,9 +117,12 @@ func _load_amount(resource_type: String, amount: int) -> int:
     var current := get_amount(resource_type)
     var stack_limit := VeyraResourceCatalog.max_stack(resource_type)
     var free_slots := maxi(0, max_slots - _used_slots())
-    var capacity_by_slots := free_slots * stack_limit
+    var free_stack_space := 0
     if current > 0:
-        capacity_by_slots += stack_limit - (current % stack_limit)
+        free_stack_space = stack_limit - (current % stack_limit)
+        if free_stack_space == stack_limit:
+            free_stack_space = 0
+    var capacity_by_slots := free_stack_space + free_slots * stack_limit
     var accepted := mini(amount, capacity_by_slots)
     var weight := VeyraResourceCatalog.weight(resource_type)
     if weight > 0.0:
@@ -133,9 +139,12 @@ func add_item(item_id: String, amount: int) -> int:
     var current := get_item_amount(item_id)
     var stack_limit := VeyraItemCatalog.max_stack(item_id)
     var free_slots := maxi(0, max_slots - _used_slots())
-    var capacity := free_slots * stack_limit
-    if current > 0 and current % stack_limit != 0:
-        capacity += stack_limit - (current % stack_limit)
+    var free_stack_space := 0
+    if current > 0:
+        free_stack_space = stack_limit - (current % stack_limit)
+        if free_stack_space == stack_limit:
+            free_stack_space = 0
+    var capacity := free_stack_space + free_slots * stack_limit
     var accepted := mini(amount, capacity)
     var item_weight := VeyraItemCatalog.weight(item_id)
     if item_weight > 0.0:
@@ -184,3 +193,26 @@ func _used_slots() -> int:
         if amount > 0:
             slots += int(ceili(float(amount) / float(VeyraItemCatalog.max_stack(str(key)))))
     return slots
+
+
+func clear() -> void:
+    resources.clear()
+    items.clear()
+    total_weight = 0.0
+    inventory_changed.emit(get_snapshot(), "", 0)
+
+func get_resource_types() -> Array[String]:
+    var result: Array[String] = []
+    for resource_type in resources.keys():
+        if int(resources[resource_type]) > 0:
+            result.append(str(resource_type))
+    result.sort()
+    return result
+
+func get_item_types() -> Array[String]:
+    var result: Array[String] = []
+    for item_id in items.keys():
+        if int(items[item_id]) > 0:
+            result.append(str(item_id))
+    result.sort()
+    return result
