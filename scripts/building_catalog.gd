@@ -31,6 +31,24 @@ const BUILDINGS := {
 		"name": "Town Hall",
 		"size": Vector2(8.0, 7.0),
 		"cost": {"Wood": 60, "Stone": 40}
+	},
+	"B06_SHRINE": {
+		"id": "B06_SHRINE",
+		"name": "Resonance Shrine",
+		"size": Vector2(3.0, 3.0),
+		"cost": {"Stone": 18, "Vitreous Lux": 4}
+	},
+	"B07_WATCHTOWER": {
+		"id": "B07_WATCHTOWER",
+		"name": "Watchtower",
+		"size": Vector2(3.0, 3.0),
+		"cost": {"Wood": 28, "Stone": 12}
+	},
+	"B08_GARDEN": {
+		"id": "B08_GARDEN",
+		"name": "Lunar Garden",
+		"size": Vector2(4.0, 4.0),
+		"cost": {"Wood": 10, "Stone": 6, "Vitreous Lux": 2}
 	}
 }
 
