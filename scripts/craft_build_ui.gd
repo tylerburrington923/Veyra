@@ -168,6 +168,7 @@ func _build_placement_hud() -> void:
 	placement_hud.name = "PlacementHUD"
 	placement_hud.visible = false
 	placement_hud.mouse_filter = Control.MOUSE_FILTER_STOP
+	placement_hud.add_to_group("camera_blocking_ui")
 	add_child(placement_hud)
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.025, 0.04, 0.06, 0.96)
@@ -190,11 +191,13 @@ func _build_placement_hud() -> void:
 
 	placement_place = Button.new()
 	placement_place.text = "PLACE"
+	placement_place.add_to_group("camera_blocking_ui")
 	placement_place.pressed.connect(_confirm_build)
 	placement_hud.add_child(placement_place)
 
 	placement_cancel = Button.new()
 	placement_cancel.text = "CANCEL"
+	placement_cancel.add_to_group("camera_blocking_ui")
 	placement_cancel.pressed.connect(_cancel_build)
 	placement_hud.add_child(placement_cancel)
 	_layout_placement_hud()
