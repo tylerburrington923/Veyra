@@ -87,6 +87,8 @@ var _network_target_position: Vector3 = Vector3.ZERO
 var _network_target_yaw: float = 0.0
 var _network_input_accumulator: float = 0.0
 var _network_input_interval: float = 0.05
+var _pause_menu: CanvasLayer
+const PAUSE_MENU_SCRIPT = preload("res://scripts/pause_menu.gd")
 
 
 func get_tool_id() -> String:
@@ -188,6 +190,7 @@ func add_resource(resource_type: String, amount: int) -> void:
 
 
 func _ready() -> void:
+	add_to_group("player")
 	_network_mode = bool(get_meta("network_mode", false))
 	_network_local = bool(get_meta("network_local", true))
 	_network_peer_id = int(get_meta("network_peer_id", 1))
@@ -217,6 +220,7 @@ func _ready() -> void:
 		_configure_camera()
 		_configure_first_person_view()
 		_hide_joystick()
+		_ensure_pause_menu()
 	else:
 		_disable_local_presentation()
 	_update_equipped_tool_visual()
@@ -326,6 +330,14 @@ func configure_network_role(peer_id: int, local_control: bool) -> void:
 	else:
 		remove_from_group("local_player")
 		_disable_local_presentation()
+
+func _ensure_pause_menu() -> void:
+	if _pause_menu and is_instance_valid(_pause_menu):
+		return
+	_pause_menu = PAUSE_MENU_SCRIPT.new()
+	_pause_menu.name = "PauseMenu"
+	add_child(_pause_menu)
+
 
 func configure_offline_role() -> void:
 	_network_mode = false
