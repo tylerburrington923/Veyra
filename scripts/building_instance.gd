@@ -8,6 +8,7 @@ var building_type: String = ""
 var door_open := false
 var _door_root: Node3D
 var _door_collision: CollisionShape3D
+var _last_interaction_feedback := ""
 
 const HOUSE_WIDTH := 5.8
 const HOUSE_DEPTH := 4.8
@@ -23,29 +24,158 @@ func setup(id: String, type_id: String, position_value: Vector3, door_open_value
     global_position = position_value
     collision_layer = 2
     collision_mask = 1
+    add_to_group("interactable")
     _build_visual()
+    _last_interaction_feedback = ""
 
 
 func interact() -> void:
-    if building_type != "B03_SHELTER" or not _door_root:
-        return
-    set_door_open(not door_open)
+    _last_interaction_feedback = ""
+    var player := get_tree().get_first_node_in_group("local_player")
+    match building_type:
+        "B01_CAMPFIRE":
+            _last_interaction_feedback = "Campfire: warmth is ready."
+        "B02_STORAGE":
+            _toggle_storage(player)
+        "B03_SHELTER":
+            if _door_root:
+                set_door_open(not door_open)
+                _last_interaction_feedback = "House door opened." if door_open else "House door closed."
+        "B04_WELL":
+            var settlement := get_node_or_null("/root/SettlementManager")
+            if settlement and settlement.has_method("add_stock"):
+                settlement.add_stock("Water", 5)
+                _last_interaction_feedback = "Well: +5 Water to settlement reserve."
+            else:
+                _last_interaction_feedback = "Well: settlement reserve unavailable."
+        "B05_TOWNHALL":
+            var town_settlement := get_node_or_null("/root/SettlementManager")
+            if town_settlement:
+                var population := int(town_settlement.get("population"))
+                _last_interaction_feedback = "Town Hall: population %d." % population
+            else:
+                _last_interaction_feedback = "Town Hall: settlement system unavailable."
+        _:
+            _last_interaction_feedback = "Nothing to use here."
 
 
-func can_interact(_player: Node) -> bool:
-    return building_type == "B03_SHELTER" and _door_root != null
+func can_interact(player: Node) -> bool:
+    match building_type:
+        "B03_SHELTER":
+            return _door_root != null
+        "B02_STORAGE":
+            return player != null
+        "B01_CAMPFIRE", "B04_WELL", "B05_TOWNHALL":
+            return true
+        _:
+            return false
 
 
 func get_interaction_point() -> Vector3:
-    if building_type == "B03_SHELTER":
-        return global_position + Vector3(0.0, 1.0, -HOUSE_DEPTH * 0.5 - 0.35)
-    return global_position + Vector3.UP * 0.7
+    match building_type:
+        "B03_SHELTER":
+            return global_position + Vector3(0.0, 1.0, -HOUSE_DEPTH * 0.5 - 0.35)
+        "B01_CAMPFIRE":
+            return global_position + Vector3(0.0, 0.55, -0.85)
+        "B02_STORAGE":
+            return global_position + Vector3(0.0, 0.85, -0.85)
+        "B04_WELL":
+            return global_position + Vector3(0.0, 0.65, -0.8)
+        "B05_TOWNHALL":
+            return global_position + Vector3(0.0, 1.0, -3.7)
+        _:
+            return global_position + Vector3.UP * 0.7
 
 
 func get_interaction_text() -> String:
-    if building_type == "B03_SHELTER":
-        return "Close House Door" if door_open else "Open House Door"
-    return ""
+    match building_type:
+        "B01_CAMPFIRE":
+            return "Use Campfire"
+        "B02_STORAGE":
+            return "Open Storage"
+        "B03_SHELTER":
+            return "Close House Door" if door_open else "Open House Door"
+        "B04_WELL":
+            return "Use Well"
+        "B05_TOWNHALL":
+            return "Enter Town Hall"
+        _:
+            return "Use"
+
+
+func get_interaction_feedback() -> String:
+    return _last_interaction_feedback
+
+
+func _toggle_storage(player: Node) -> void:
+    if not player:
+        _last_interaction_feedback = "Storage: player unavailable."
+        return
+    var inventory: VeyraInventory = player.get_node_or_null("Inventory") as VeyraInventory
+    var settlement := get_node_or_null("/root/SettlementManager")
+    if not inventory or not settlement:
+        _last_interaction_feedback = "Storage: inventory unavailable."
+        return
+    var storage: Dictionary = settlement.get_building_storage(building_id) if settlement.has_method("get_building_storage") else {}
+    if storage.is_empty():
+        storage = {"resources": {}, "items": {}}
+
+    var carried_resources: Dictionary = inventory.get_snapshot().get("resources", {})
+    var carried_items: Dictionary = inventory.get_snapshot().get("items", {})
+    var stored_any := false
+
+    for resource_type in carried_resources.keys():
+        var amount := int(carried_resources[resource_type])
+        if amount <= 0:
+            continue
+        var removed := inventory.remove_resource(str(resource_type), amount)
+        if removed > 0:
+            storage["resources"][str(resource_type)] = int(storage["resources"].get(str(resource_type), 0)) + removed
+            stored_any = true
+
+    for item_id in carried_items.keys():
+        var amount := int(carried_items[item_id])
+        if amount <= 0:
+            continue
+        var removed := inventory.remove_item(str(item_id), amount)
+        if removed > 0:
+            storage["items"][str(item_id)] = int(storage["items"].get(str(item_id), 0)) + removed
+            stored_any = true
+
+    if stored_any:
+        settlement.set_building_storage(building_id, storage)
+        _last_interaction_feedback = "Storage: all carried goods deposited."
+        return
+
+    var withdrawn := 0
+    var stored_resources: Dictionary = storage.get("resources", {})
+    for resource_type in stored_resources.keys():
+        var amount := int(stored_resources[resource_type])
+        if amount <= 0:
+            continue
+        var accepted := inventory.add_resource(str(resource_type), amount)
+        if accepted > 0:
+            stored_resources[resource_type] = amount - accepted
+            withdrawn += accepted
+            if stored_resources[resource_type] <= 0:
+                stored_resources.erase(resource_type)
+
+    var stored_items: Dictionary = storage.get("items", {})
+    for item_id in stored_items.keys():
+        var amount := int(stored_items[item_id])
+        if amount <= 0:
+            continue
+        var accepted := inventory.add_item(str(item_id), amount)
+        if accepted > 0:
+            stored_items[item_id] = amount - accepted
+            withdrawn += accepted
+            if stored_items[item_id] <= 0:
+                stored_items.erase(item_id)
+
+    storage["resources"] = stored_resources
+    storage["items"] = stored_items
+    settlement.set_building_storage(building_id, storage)
+    _last_interaction_feedback = "Storage: withdrew %d items." % withdrawn if withdrawn > 0 else "Storage is empty."
 
 
 func set_door_open(open: bool) -> void:
