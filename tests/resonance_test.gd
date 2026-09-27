@@ -42,6 +42,21 @@ func _run() -> void:
 	if VeyraResourceCatalog.weight("Vitreous Lux") != 0.75:
 		failures.append("Vitreous Lux weight contract changed")
 
+	var progression_player = load("res://scripts/player.gd").new()
+	root.add_child(progression_player)
+	progression_player.add_resonance(10.0)
+	if progression_player.get_resonance_tier_name() != "SENSITIZED":
+		failures.append("10 resonance should reach SENSITIZED tier")
+	progression_player.add_resonance(15.0)
+	if progression_player.get_resonance_tier_name() != "AWAKENED":
+		failures.append("25 resonance should reach AWAKENED tier")
+	progression_player.add_resonance(25.0)
+	if progression_player.get_resonance_tier_name() != "ATTUNED":
+		failures.append("50 resonance should reach ATTUNED tier")
+	progression_player.add_resonance(50.0)
+	if progression_player.get_resonance_tier_name() != "CONVERGENCE":
+		failures.append("100 resonance should reach CONVERGENCE tier")
+
 	var player := DummyPlayer.new()
 	root.add_child(player)
 	player.inventory.add_resource("Vitreous Lux", 1)
