@@ -21,6 +21,8 @@ jobs:
         run: godot --headless --path . --editor --quit
       - name: Headless runtime smoke test
         run: timeout 12s godot --headless --path . --quit-after 4
+      - name: Core test suite
+        run: godot --headless --path . --script res://tests/core_test.gd
 
       - name: Package source for testing
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
