@@ -28,6 +28,7 @@ func _ready() -> void:
 	if terrain and terrain.has_method("get_height_at_world"):
 		global_position.y = terrain.get_height_at_world(global_position.x, global_position.z) + 0.9
 	_refresh_visual()
+	set_process(false)
 
 func _process(delta: float) -> void:
 	interaction_cooldown = maxf(0.0, interaction_cooldown - delta)
@@ -42,6 +43,8 @@ func _process(delta: float) -> void:
 	elif _visual_accumulator >= 0.12:
 		_visual_accumulator = 0.0
 		_refresh_visual()
+	if stored_energy <= 0.0 and thermal_state <= 0.0 and resonance_state <= 0.0 and interaction_cooldown <= 0.0 and not activated:
+		set_process(false)
 
 func can_interact(player: Node) -> bool:
 	if interaction_cooldown > 0.0 or not player or not player.has_method("get_tool_id"):
