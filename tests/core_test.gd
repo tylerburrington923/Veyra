@@ -838,7 +838,7 @@ func _test_wildlife_beta_contract() -> void:
 	var state: AnimalState = manager.states["grazer_test_01"]
 	var hunger := state.hunger
 	_check(AnimalSimulation.process_tick(state, manager.definitions["lumen_grazer"], 6.0), "wildlife simulation tick should succeed")
-	manager._update_behavior(state, manager.definitions["lumen_grazer"], 6.0)
+	manager._update_behavior(state, manager.definitions["lumen_grazer"], 8.0)
 	_check(state.hunger < hunger, "wildlife simulation must update needs")
 	_check(state.behavior_state == "WANDER", "Lumen Grazer beta should enter wander behavior")
 	manager.despawn_animal("grazer_test_01")
