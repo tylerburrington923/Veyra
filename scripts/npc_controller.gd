@@ -60,7 +60,9 @@ func _process(delta: float) -> void:
 	var rotation_weight := 1.0 - exp(-maxf(0.0, rotation_smoothing) * delta)
 
 	global_position = global_position.lerp(target_position, position_weight)
-	rotation = rotation.slerp(target_rotation, rotation_weight)
+	rotation.y = lerp_angle(rotation.y, target_rotation.y, rotation_weight)
+	rotation.x = lerpf(rotation.x, target_rotation.x, rotation_weight)
+	rotation.z = lerpf(rotation.z, target_rotation.z, rotation_weight)
 
 func _state_position(data: Dictionary) -> Vector3:
 	return Vector3(
