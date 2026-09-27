@@ -22,6 +22,7 @@ func _build() -> void:
 	menu_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	menu_button.position = Vector2(-140, 24)
 	menu_button.size = Vector2(120, 48)
+	menu_button.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	menu_button.add_to_group("camera_blocking_ui")
 	menu_button.pressed.connect(_toggle)
 	add_child(menu_button)
@@ -30,6 +31,7 @@ func _build() -> void:
 	panel.name = "PausePanel"
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	panel.size = Vector2(390, 360)
+	panel.custom_minimum_size = Vector2(320, 300)
 	panel.position = -panel.size * 0.5
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(panel)
