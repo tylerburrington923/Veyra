@@ -86,7 +86,6 @@ func _test_tree_harvest_visual_contract() -> void:
 	foliage._set_tree_visual(
 		trunk,
 		canopy,
-		collision,
 		0,
 		Transform3D(Basis.IDENTITY, Vector3(0, 1, 0)),
 		Transform3D(Basis.IDENTITY, Vector3(0, 2, 0)),
@@ -101,7 +100,6 @@ func _test_tree_harvest_visual_contract() -> void:
 	foliage._set_tree_visual(
 		trunk,
 		canopy,
-		collision,
 		0,
 		Transform3D(Basis.IDENTITY, Vector3(0, 1, 0)),
 		Transform3D(Basis.IDENTITY, Vector3(0, 2, 0)),
