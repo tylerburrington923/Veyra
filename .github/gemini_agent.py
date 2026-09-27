@@ -5,6 +5,7 @@ import pathlib
 import re
 import urllib.request
 import urllib.error
+import time
 
 ROOT = pathlib.Path(".").resolve()
 API_KEY = os.environ["GEMINI_API_KEY"]
@@ -193,6 +194,40 @@ JSON shape:
 }}
 """
 
+
+RETRYABLE_HTTP_CODES = {429, 500, 502, 503, 504}
+
+def post_gemini(url, payload, label, attempts=5):
+    """Call Gemini with bounded retry/backoff for transient service/rate-limit failures."""
+    body = json.dumps(payload).encode("utf-8")
+    last_error = None
+    for attempt in range(1, attempts + 1):
+        req = urllib.request.Request(
+            url,
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=300) as resp:
+                return json.load(resp)
+        except urllib.error.HTTPError as e:
+            details = e.read().decode("utf-8", "replace")
+            last_error = f"Gemini {label} API HTTP {e.code}: {details}"
+            if e.code not in RETRYABLE_HTTP_CODES or attempt >= attempts:
+                raise SystemExit(last_error)
+            delay = min(30, 2 ** (attempt - 1))
+            print(f"Gemini {label} transient HTTP {e.code}; retry {attempt + 1}/{attempts} in {delay}s", flush=True)
+            time.sleep(delay)
+        except (urllib.error.URLError, TimeoutError) as e:
+            last_error = f"Gemini {label} request failed: {e}"
+            if attempt >= attempts:
+                raise SystemExit(last_error)
+            delay = min(30, 2 ** (attempt - 1))
+            print(f"Gemini {label} transient request error; retry {attempt + 1}/{attempts} in {delay}s", flush=True)
+            time.sleep(delay)
+    raise SystemExit(last_error or f"Gemini {label} request failed")
+
 url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={API_KEY}"
 payload = {
     "system_instruction": {"parts": [{"text": system}]},
@@ -203,17 +238,7 @@ payload = {
         "maxOutputTokens": 50000
     }
 }
-req = urllib.request.Request(
-    url,
-    data=json.dumps(payload).encode("utf-8"),
-    headers={"Content-Type": "application/json"},
-    method="POST",
-)
-try:
-    with urllib.request.urlopen(req, timeout=300) as resp:
-        raw = json.load(resp)
-except urllib.error.HTTPError as e:
-    raise SystemExit(f"Gemini API HTTP {e.code}: {e.read().decode('utf-8', 'replace')}")
+raw = post_gemini(url, payload, "implementation")
 
 try:
     text = raw["candidates"][0]["content"]["parts"][0]["text"]
@@ -327,13 +352,7 @@ Set approved=false for any error/critical finding or required architectural corr
         "contents": [{"role": "user", "parts": [{"text": review_prompt}]}],
         "generationConfig": {"temperature": 0.0, "responseMimeType": "application/json", "maxOutputTokens": 16000},
     }
-    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"),
-                                 headers={"Content-Type": "application/json"}, method="POST")
-    try:
-        with urllib.request.urlopen(req, timeout=300) as resp:
-            raw = json.load(resp)
-    except urllib.error.HTTPError as e:
-        raise SystemExit(f"Gemini review API HTTP {e.code}: {e.read().decode('utf-8', 'replace')}")
+    raw = post_gemini(url, payload, "review")
     try:
         text = raw["candidates"][0]["content"]["parts"][0]["text"]
         review = json.loads(text)
