@@ -47,7 +47,6 @@ var touch_start: Dictionary = {}
 @onready var interact_button: Button = get_node_or_null("MobileControls/InteractButton") as Button
 @onready var jump_button: Button = get_node_or_null("MobileControls/JumpButton") as Button
 @onready var camera: Camera3D = get_node_or_null("Camera3D") as Camera3D
-@onready var debug_hud: Label = get_node_or_null("MobileControls/DebugHUD") as Label
 @onready var left_leg: MeshInstance3D = get_node_or_null("LeftLeg") as MeshInstance3D
 @onready var right_leg: MeshInstance3D = get_node_or_null("RightLeg") as MeshInstance3D
 @onready var left_arm: MeshInstance3D = get_node_or_null("LeftArm") as MeshInstance3D
@@ -62,7 +61,6 @@ var touch_start: Dictionary = {}
 @onready var tool_holder: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder") as Node3D
 @onready var equipped_tool_visual: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool") as Node3D
 var walk_time: float = 0.0
-var _debug_hud_accumulator: float = 0.0
 var _tool_swing_time: float = 0.0
 var _tool_swing_duration: float = 0.22
 var _tool_swing_active: bool = false
@@ -310,11 +308,6 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_update_player_visuals(delta, direction)
 	_update_tool_animation(delta)
-	_debug_hud_accumulator += delta
-	if _debug_hud_accumulator >= 0.25:
-		_debug_hud_accumulator = 0.0
-		_update_debug_hud(input_vector)
-
 
 func configure_network_role(peer_id: int, local_control: bool) -> void:
 	_network_mode = true
