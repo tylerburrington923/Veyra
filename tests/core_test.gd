@@ -217,7 +217,7 @@ func _test_pause_menu_contract() -> void:
 		_check(menu_button.position.y >= 0.0 and menu_button.position.y + menu_button.size.y <= viewport_size.y, "pause button must remain inside viewport vertically")
 		menu_button.emit_signal("pressed")
 		_check(menu.visible and menu.get_node_or_null("PausePanel").visible, "pause button must open the in-game menu panel")
-		var multiplayer_button := menu.get_node_or_null("PausePanel/Multiplayer") as Button
+		var multiplayer_button := menu.get_node_or_null("PausePanel/MULTIPLAYER") as Button
 		_check(multiplayer_button != null, "pause menu must expose multiplayer button")
 		var panel := menu.get_node_or_null("PausePanel") as Control
 		_check(panel != null and panel.position.x >= 0.0 and panel.position.y >= 0.0, "pause panel must be positioned inside viewport")
