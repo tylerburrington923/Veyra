@@ -49,11 +49,11 @@ func get_interaction_requirement(player: Node) -> String:
 		return "Hands"
 	return ""
 
-func interact() -> void:
+func interact(player_override: Node = null) -> void:
 	if depleted or remaining <= 0 or interaction_cooldown > 0.0:
 		return
 
-	var player: Node = get_tree().get_first_node_in_group("local_player")
+	var player: Node = player_override if player_override else get_tree().get_first_node_in_group("local_player")
 	if not player:
 		return
 
