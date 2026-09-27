@@ -43,7 +43,7 @@ func _run_tests() -> void:
 	_test_pause_menu_contract()
 	_test_active_npc_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (33 suites)")
+		print("VEYRA CORE TESTS: PASS (35 suites)")
 		quit(0)
 	else:
 		for failure in failures:
