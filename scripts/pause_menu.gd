@@ -27,6 +27,7 @@ func _build() -> void:
 	menu_button.text = "PAUSE"
 	menu_button.position = Vector2(maxf(16.0, get_viewport().get_visible_rect().size.x - 116.0), 16.0)
 	menu_button.size = Vector2(100, 42)
+	menu_button.text = "MENU"
 	menu_button.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_style_button(menu_button)
 	menu_button.add_to_group("camera_blocking_ui")
