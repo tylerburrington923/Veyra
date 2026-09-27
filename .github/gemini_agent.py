@@ -216,14 +216,14 @@ def post_gemini(url, payload, label, attempts=5):
             details = e.read().decode("utf-8", "replace")
             last_error = f"Gemini {label} API HTTP {e.code}: {details}"
             if e.code not in RETRYABLE_HTTP_CODES or attempt >= attempts:
-                raise SystemExit(last_error)
+                raise RuntimeError(last_error)
             delay = min(30, 2 ** (attempt - 1))
             print(f"Gemini {label} transient HTTP {e.code}; retry {attempt + 1}/{attempts} in {delay}s", flush=True)
             time.sleep(delay)
         except (urllib.error.URLError, TimeoutError) as e:
             last_error = f"Gemini {label} request failed: {e}"
             if attempt >= attempts:
-                raise SystemExit(last_error)
+                raise RuntimeError(last_error)
             delay = min(30, 2 ** (attempt - 1))
             print(f"Gemini {label} transient request error; retry {attempt + 1}/{attempts} in {delay}s", flush=True)
             time.sleep(delay)
