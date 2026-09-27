@@ -47,7 +47,7 @@ offset_top = 72.0
 offset_right = 1200.0
 offset_bottom = 155.0
 theme_override_colors/font_color = Color(0.35, 0.82, 0.84, 1)
-theme_override_font_sizes/font_size = 58
+theme_override_font_sizes/font_size = 52
 text = "VEYRA"
 horizontal_alignment = 1
 
@@ -71,7 +71,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="Panel" parent="Center"]
-custom_minimum_size = Vector2(390, 350)
+custom_minimum_size = Vector2(370, 350)
 layout_mode = 2
 theme_override_styles/panel = SubResource("PanelStyle")
 
@@ -79,7 +79,7 @@ theme_override_styles/panel = SubResource("PanelStyle")
 layout_mode = 0
 offset_left = 25.0
 offset_top = 22.0
-offset_right = 365.0
+offset_right = 345.0
 offset_bottom = 55.0
 theme_override_colors/font_color = Color(0.65, 0.72, 0.75, 1)
 theme_override_font_sizes/font_size = 15
@@ -88,57 +88,57 @@ horizontal_alignment = 1
 
 [node name="EnterButton" type="Button" parent="Center/Panel"]
 layout_mode = 0
-offset_left = 35.0
+offset_left = 28.0
 offset_top = 75.0
-offset_right = 355.0
-offset_bottom = 135.0
+offset_right = 342.0
+offset_bottom = 133.0
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("ButtonStyle")
 text = "ENTER VEYRA"
 
 [node name="SettingsButton" type="Button" parent="Center/Panel"]
 layout_mode = 0
-offset_left = 35.0
-offset_top = 150.0
-offset_right = 355.0
-offset_bottom = 202.0
+offset_left = 28.0
+offset_top = 147.0
+offset_right = 342.0
+offset_bottom = 199.0
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("ButtonStyle")
 text = "SETTINGS"
 
 [node name="ExitButton" type="Button" parent="Center/Panel"]
 layout_mode = 0
-offset_left = 35.0
-offset_top = 217.0
-offset_right = 355.0
-offset_bottom = 269.0
+offset_left = 28.0
+offset_top = 213.0
+offset_right = 342.0
+offset_bottom = 265.0
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("ButtonStyle")
 text = "EXIT"
 
 [node name="SettingsPanel" type="Panel" parent="Center/Panel"]
 layout_mode = 0
-offset_left = 20.0
-offset_top = 65.0
-offset_right = 370.0
-offset_bottom = 325.0
+offset_left = 10.0
+offset_top = 60.0
+offset_right = 360.0
+offset_bottom = 330.0
 theme_override_styles/panel = SubResource("PanelStyle")
 
 [node name="Text" type="Label" parent="Center/Panel/SettingsPanel"]
 layout_mode = 0
 offset_left = 20.0
-offset_top = 20.0
+offset_top = 18.0
 offset_right = 330.0
-offset_bottom = 145.0
+offset_bottom = 95.0
 theme_override_font_sizes/font_size = 17
 text = "GRAPHICS\nCompatibility renderer\n\nWORLD\nDeterministic simulation\nSeed 47291"
 
 [node name="BackButton" type="Button" parent="Center/Panel/SettingsPanel"]
 layout_mode = 0
 offset_left = 95.0
-offset_top = 175.0
+offset_top = 215.0
 offset_right = 255.0
-offset_bottom = 225.0
+offset_bottom = 260.0
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("ButtonStyle")
 text = "BACK"
