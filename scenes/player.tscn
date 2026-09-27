@@ -465,6 +465,21 @@ theme_override_font_sizes/font_size = 22
 text = "Picked up"
 visible = false
 
+[node name="BackpackButton" type="Button" parent="HUDInventory" groups=["camera_blocking_ui"]]
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -190.0
+offset_top = 24.0
+offset_right = -28.0
+offset_bottom = 76.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "BACKPACK"
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("InteractStyle")
+
 [node name="InventoryPanel" type="Panel" parent="HUDInventory"]
 offset_left = 28.0
 offset_top = 205.0
