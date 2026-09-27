@@ -35,6 +35,8 @@ func _run_tests() -> void:
 	_test_house_door_contract()
 	_test_house_geometry_contract()
 	_test_townhall_contract()
+	_test_townhall_civic_contract()
+	_test_building_placement_contract()
 	_test_starter_inventory_contract()
 	_test_mobile_action_layout_contract()
 	_test_water_system_contract()
@@ -179,6 +181,41 @@ func _test_townhall_contract() -> void:
 	_check(hall.get_child_count() >= 10, "town hall must have a substantial civic visual assembly")
 	hall.queue_free()
 
+
+func _test_townhall_civic_contract() -> void:
+	var settlement := root.get_node_or_null("SettlementManager")
+	if not settlement:
+		return
+	var hall := VeyraBuildingInstance.new()
+	root.add_child(hall)
+	hall.setup("TEST-CIVIC-HALL", "B05_TOWNHALL", Vector3.ZERO)
+	settlement.add_building("TEST-CIVIC-HALL", "B05_TOWNHALL", Vector3.ZERO)
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var inventory: VeyraInventory = player.get_inventory()
+	inventory.add_resource("Wood", 10)
+	inventory.add_resource("Stone", 10)
+	_check(hall.deposit_civic_materials(player, 10), "town hall must accept civic material deposits")
+	var state: Dictionary = settlement.get_settlement_state()
+	var stock: Dictionary = state.get("stock", {})
+	_check(int(stock.get("wood", 0)) >= 10, "town hall must add deposited wood to settlement stock")
+	_check(int(stock.get("stone", 0)) >= 10, "town hall must add deposited stone to settlement stock")
+	_check(inventory.get_amount("Wood") == 0 and inventory.get_amount("Stone") == 0, "town hall deposit must remove material from player inventory")
+	var manager := root.get_node_or_null("BuildingManager")
+	if manager:
+		_check(manager.has_method("_has_townhall"), "building manager must expose a Town Hall uniqueness guard")
+		_check(bool(manager.call("_has_townhall")), "building manager must detect an existing Town Hall")
+	player.queue_free()
+	hall.queue_free()
+
+func _test_building_placement_contract() -> void:
+	var manager := VeyraBuildingManager.new()
+	root.add_child(manager)
+	_check(manager.MAX_BUILD_DISTANCE > manager.MIN_BUILD_DISTANCE, "building placement range must be coherent")
+	_check(manager.GRID_SIZE > 0.0, "building placement grid must be positive")
+	_check(manager.snap_position(Vector3(1.49, 3.2, -2.51)) == Vector3(1.0, 3.2, -3.0), "building placement must snap only X/Z while preserving terrain Y")
+	manager.queue_free()
 
 func _test_starter_inventory_contract() -> void:
 	var game_manager: Node = root.get_node_or_null("GameManager")
