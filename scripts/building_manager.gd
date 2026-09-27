@@ -48,15 +48,17 @@ func update_from_camera(player: Node3D, camera: Camera3D, inventory: VeyraInvent
         return
     var ray_origin := camera.global_position
     var ray_end := ray_origin + -camera.global_transform.basis.z * MAX_BUILD_DISTANCE
-    var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end, 1)
+    # Placement is driven by terrain, never by the roof/walls of an existing
+    # building. Existing structures are still checked separately by
+    # _is_space_clear(), so aiming at a building cannot place a new one on top
+    # of it or make the player appear to "jump" onto it.
+    var terrain_query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end, 1)
+    terrain_query.collide_with_bodies = true
+    terrain_query.collide_with_areas = false
     if player is CollisionObject3D:
-        query.exclude = [player.get_rid()]
-    var hit := get_viewport().get_world_3d().direct_space_state.intersect_ray(query)
-    var point: Vector3
-    if hit.is_empty():
-        point = ray_end
-    else:
-        point = hit.get("position", ray_end)
+        terrain_query.exclude = [player.get_rid()]
+    var hit := get_viewport().get_world_3d().direct_space_state.intersect_ray(terrain_query)
+    var point: Vector3 = hit.get("position", ray_end) if not hit.is_empty() else ray_end
     point.y = _ground_height(point, player)
     evaluate_placement(player, point, inventory)
 
@@ -102,6 +104,10 @@ func confirm_build(player: Node3D, inventory: VeyraInventory) -> bool:
         return false
 
     var definition := get_selected_building()
+    # There is one civic anchor per settlement. A Town Hall can be built only
+    # when the settlement does not already contain one.
+    if selected_building_id == "B05_TOWNHALL" and _has_townhall():
+        return false
     var cost: Dictionary = definition.get("cost", {})
     for resource_type in cost.keys():
         if inventory.remove_resource(str(resource_type), int(cost[resource_type])) < int(cost[resource_type]):
@@ -245,6 +251,16 @@ func _on_door_state_changed(building_id: String, open: bool) -> void:
     var settlement := _get_settlement_manager()
     if settlement:
         settlement.call("set_building_door_state", building_id, open)
+
+func _has_townhall() -> bool:
+    var settlement := _get_settlement_manager()
+    if not settlement:
+        return false
+    var buildings: Dictionary = settlement.get("buildings")
+    for record in buildings.values():
+        if record is Dictionary and str(record.get("type", "")) == "B05_TOWNHALL":
+            return true
+    return false
 
 func _get_settlement_manager() -> Node:
     return get_node_or_null("/root/SettlementManager")
