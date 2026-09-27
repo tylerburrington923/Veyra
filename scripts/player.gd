@@ -84,8 +84,6 @@ func add_resonance(amount: float) -> void:
 	if not resonance_discovered:
 		resonance_discovered = true
 	resonance_changed.emit(resonance_charge, resonance_discovered)
-	else:
-		resonance_changed.emit(resonance_charge, resonance_discovered)
 
 func set_resonance_state(charge: float, discovered: bool) -> void:
 	resonance_charge = clampf(charge, 0.0, 100.0)
