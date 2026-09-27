@@ -24,7 +24,7 @@ extends CharacterBody3D
 
 @export_category("Camera")
 @export var camera_distance: float = 0.0
-@export var camera_height: float = 1.68
+@export var camera_height: float = 1.64
 @export var camera_fov: float = 70.0
 @export var camera_far: float = 140.0
 
@@ -208,17 +208,21 @@ func _configure_camera() -> void:
 	camera.current = true
 	camera.fov = camera_fov
 	camera.far = camera_far
-	camera.position = Vector3(0.0, camera_height, camera_distance)
+	camera.position = Vector3(0.09, camera_height, 0.035 + camera_distance)
 	camera.rotation = Vector3(look_pitch, 0.0, 0.0)
 	look_pitch = camera.rotation.x
 	target_yaw = rotation.y
 
 
 func _configure_first_person_view() -> void:
-	# Keep the camera inside the player capsule but hide body geometry so it cannot occlude the world.
-	for mesh in [head, hair, left_eye, right_eye, left_arm, right_arm, left_hand, right_hand, torso, left_leg, right_leg, get_node_or_null("LeftFoot"), get_node_or_null("RightFoot")]:
+	# Preserve the real body for shadows, third-person presentation, and the future multiplayer/NPC
+	# character pipeline. Only the head/face is hidden from the near-camera view; the lower body
+	# remains coherent beneath the camera instead of being replaced by a disconnected FPS body.
+	for mesh in [head, hair, left_eye, right_eye]:
 		if mesh:
 			mesh.visible = false
+	# The camera-attached hands remain a presentation layer for readable tool use. The authoritative
+	# body arms/hands stay present in the world model for later third-person/NPC reuse.
 	for mesh in [viewmodel_left_arm, viewmodel_right_arm, viewmodel_left_hand, viewmodel_right_hand]:
 		if mesh:
 			mesh.visible = true
