@@ -31,6 +31,9 @@ func _ready() -> void:
 	_build_ui()
 	set_process(false)
 
+func is_modal_open() -> bool:
+	return panel != null and panel.visible
+
 func _process(_delta: float) -> void:
 	if mode == "build" and building:
 		var camera := get_viewport().get_camera_3d()
@@ -46,6 +49,7 @@ func _build_ui() -> void:
 	panel.offset_top = -270
 	panel.offset_bottom = 220
 	panel.visible = false
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(panel)
 
 	var panel_style := StyleBoxFlat.new()
