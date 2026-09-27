@@ -378,6 +378,31 @@ Set approved=false for any error/critical finding or required architectural corr
     return review_model_used, review
 
 diff_text = git_diff()
+
+# Validation is deliberately deferred when requested. This lets the workflow run
+# Godot 4.7.2 import/tests before spending another model call on self-review.
+if os.environ.get("GEMINI_DEFER_REVIEW", "").lower() in {"1", "true", "yes"}:
+    report["review"] = {
+        "status": "deferred",
+        "reason": "Godot validation must pass before independent Gemini review.",
+    }
+    pathlib.Path("gemini_agent_output.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+    print(json.dumps(report, indent=2))
+    raise SystemExit(0)
+
+if os.environ.get("GEMINI_REVIEW_ONLY", "").lower() in {"1", "true", "yes"}:
+    report_path = pathlib.Path("gemini_agent_output.json")
+    if not report_path.exists():
+        raise SystemExit("Gemini review-only phase requires gemini_agent_output.json.")
+    try:
+        existing = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise SystemExit(f"Existing Gemini report is invalid JSON: {e}")
+    if not isinstance(existing.get("files"), list):
+        raise SystemExit("Existing Gemini report has no files array.")
+    report = existing
+    diff_text = git_diff()
+
 review_model, review = review_generated_changes(diff_text)
 report["review"] = {
     "model": review_model,
