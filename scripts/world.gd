@@ -34,7 +34,9 @@ func _process(delta: float) -> void:
 	if lunar_cycle:
 		lunar_cycle.advance(delta)
 		world_time = lunar_cycle.world_time
-	if SettlementManager and SettlementManager.has_method("process_water_cycle"):
+	var network_manager = get_node_or_null("/root/NetworkManager")
+	var simulate_settlement := network_manager == null or not bool(network_manager.get("session_active")) or bool(network_manager.get("is_host"))
+	if simulate_settlement and SettlementManager and SettlementManager.has_method("process_water_cycle"):
 		SettlementManager.process_water_cycle(world_time, lunar_cycle_seconds)
 
 
