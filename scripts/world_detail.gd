@@ -168,6 +168,8 @@ func _create_multimesh(
 
 	instance.multimesh = multimesh
 	instance.material_override = material
+	instance.visibility_range_end = _visibility_distance
+	instance.visibility_range_end_margin = 8.0
 	add_child(instance)
 	return instance
 
