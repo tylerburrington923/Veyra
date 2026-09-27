@@ -9,6 +9,8 @@ var right_arm: MeshInstance3D
 var left_leg: MeshInstance3D
 var right_leg: MeshInstance3D
 var gait_phase := 0.0
+var torso: MeshInstance3D
+var head: MeshInstance3D
 
 func configure(definition: NPCDefinition) -> void:
 	_clear_visual()
@@ -19,19 +21,19 @@ func configure(definition: NPCDefinition) -> void:
 	var pants := _make_material(Color(0.055, 0.065, 0.075, 1), 0.88)
 	var skin := _make_material(Color(0.72, 0.50, 0.36, 1), 0.86)
 
-	var body := MeshInstance3D.new()
-	body.name = "Body"
+	torso = MeshInstance3D.new()
+	torso.name = "Body"
 	var body_mesh := CapsuleMesh.new()
 	body_mesh.radius = 0.29
 	body_mesh.height = 0.78
 	body_mesh.radial_segments = 8
-	body.mesh = body_mesh
-	body.material_override = shirt
-	body.position = Vector3(0.0, 1.15, 0.0)
-	body.scale = Vector3(1.06, 1.04, 0.88)
-	add_child(body)
+	torso.mesh = body_mesh
+	torso.material_override = shirt
+	torso.position = Vector3(0.0, 1.15, 0.0)
+	torso.scale = Vector3(1.06, 1.04, 0.88)
+	add_child(torso)
 
-	var head := MeshInstance3D.new()
+	head = MeshInstance3D.new()
 	head.name = "Head"
 	var head_mesh := SphereMesh.new()
 	head_mesh.radius = 0.28
@@ -43,6 +45,34 @@ func configure(definition: NPCDefinition) -> void:
 	head.position = Vector3(0.0, 1.78, 0.0)
 	head.scale = Vector3(0.96, 1.02, 0.94)
 	add_child(head)
+
+	var hair := MeshInstance3D.new()
+	hair.name = "Hair"
+	var hair_mesh := SphereMesh.new()
+	hair_mesh.radius = 0.29
+	hair_mesh.height = 0.58
+	hair_mesh.radial_segments = 8
+	hair_mesh.rings = 4
+	hair.mesh = hair_mesh
+	hair.material_override = _make_material(Color(0.035, 0.045, 0.055, 1), 0.95)
+	hair.position = Vector3(0.0, 1.98, 0.015)
+	hair.scale = Vector3(1.03, 0.48, 1.03)
+	add_child(hair)
+
+	var eye_material := _make_material(Color(0.86, 0.94, 0.92, 1), 0.30)
+	var eye_left := _add_eye("LeftEye", Vector3(-0.095, 1.80, -0.255), eye_material)
+	var eye_right := _add_eye("RightEye", Vector3(0.095, 1.80, -0.255), eye_material)
+	add_child(eye_left)
+	add_child(eye_right)
+
+	var belt := MeshInstance3D.new()
+	belt.name = "Belt"
+	var belt_mesh := BoxMesh.new()
+	belt_mesh.size = Vector3(0.58, 0.12, 0.46)
+	belt.mesh = belt_mesh
+	belt.material_override = _make_material(Color(0.08, 0.07, 0.06, 1), 0.92)
+	belt.position = Vector3(0.0, 0.87, 0.0)
+	add_child(belt)
 
 	left_arm = _add_limb("LeftArm", Vector3(-0.40, 1.14, 0.0), Vector3(0.0, 0.0, -8.0), skin)
 	right_arm = _add_limb("RightArm", Vector3(0.40, 1.14, 0.0), Vector3(0.0, 0.0, 8.0), skin)
@@ -77,6 +107,20 @@ func _add_limb(node_name: String, node_position: Vector3, degrees: Vector3, mate
 	limb.rotation_degrees = degrees
 	add_child(limb)
 	return limb
+
+func _add_eye(node_name: String, node_position: Vector3, material: StandardMaterial3D) -> MeshInstance3D:
+	var eye := MeshInstance3D.new()
+	eye.name = node_name
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.045
+	mesh.height = 0.09
+	mesh.radial_segments = 6
+	mesh.rings = 3
+	eye.mesh = mesh
+	eye.material_override = material
+	eye.position = node_position
+	eye.scale = Vector3(1.0, 1.15, 0.55)
+	return eye
 
 func _add_foot(node_name: String, node_position: Vector3, material: StandardMaterial3D) -> void:
 	var foot := MeshInstance3D.new()
