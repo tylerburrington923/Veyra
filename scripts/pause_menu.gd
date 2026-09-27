@@ -184,6 +184,7 @@ func _hide_settings() -> void:
 
 func _show_multiplayer() -> void:
 	panel.visible = false
+	backdrop.visible = false
 	menu_button.visible = false
 	var network_manager = get_node_or_null("/root/NetworkManager")
 	if network_manager:
