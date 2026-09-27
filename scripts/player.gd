@@ -76,6 +76,18 @@ signal tool_changed(tool_id: String, durability: float)
 var selected_tool_id: String = "T00_HANDS"
 var tool_durability: float = 100.0
 
+# Multiplayer alpha: the server owns movement state; clients send input and
+# receive authoritative transforms. Offline play remains unchanged.
+var _network_mode: bool = false
+var _network_local: bool = true
+var _network_peer_id: int = 1
+var _network_input: Vector2 = Vector2.ZERO
+var _network_jump: bool = false
+var _network_target_position: Vector3 = Vector3.ZERO
+var _network_target_yaw: float = 0.0
+var _network_input_accumulator: float = 0.0
+var _network_input_interval: float = 0.05
+
 
 func get_tool_id() -> String:
 	return selected_tool_id
@@ -176,7 +188,14 @@ func add_resource(resource_type: String, amount: int) -> void:
 
 
 func _ready() -> void:
-	add_to_group("local_player")
+	_network_mode = bool(get_meta("network_mode", false))
+	_network_local = bool(get_meta("network_local", true))
+	_network_peer_id = int(get_meta("network_peer_id", 1))
+	if _network_local:
+		add_to_group("local_player")
+	if _network_mode and not _network_local:
+		_disable_local_presentation()
+
 	# Give a brand-new save a generous starter cache so the beta loop is testable
 	# immediately. Loaded saves are left untouched.
 	if GameManager and GameManager.get_loaded_save().is_empty():
@@ -194,9 +213,12 @@ func _ready() -> void:
 	if jump_button and not jump_button.pressed.is_connected(_on_jump_pressed):
 		jump_button.pressed.connect(_on_jump_pressed)
 
-	_configure_camera()
-	_configure_first_person_view()
-	_hide_joystick()
+	if _network_local:
+		_configure_camera()
+		_configure_first_person_view()
+		_hide_joystick()
+	else:
+		_disable_local_presentation()
 	_update_equipped_tool_visual()
 	_tool_base_rotation = tool_holder.rotation_degrees if tool_holder else Vector3.ZERO
 
@@ -236,15 +258,13 @@ func _stabilize_spawn() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _network_mode:
+		_network_physics(delta)
+		return
+
 	_recover_from_fall()
 	rotation.y = lerp_angle(rotation.y, target_yaw, 1.0 - exp(-camera_yaw_smoothing * delta))
-	var input_vector: Vector2 = move_input
-
-	if input_vector.length_squared() < 0.0001:
-		input_vector = Vector2(
-			Input.get_axis("move_left", "move_right"),
-			Input.get_axis("move_back", "move_forward")
-		)
+	var input_vector: Vector2 = _get_local_move_input()
 
 	if input_vector.length() > 1.0:
 		input_vector = input_vector.normalized()
@@ -289,6 +309,136 @@ func _physics_process(delta: float) -> void:
 		_debug_hud_accumulator = 0.0
 		_update_debug_hud(input_vector)
 
+
+func configure_network_role(peer_id: int, local_control: bool) -> void:
+	_network_mode = true
+	_network_peer_id = peer_id
+	_network_local = local_control
+	set_meta("network_mode", true)
+	set_meta("network_local", local_control)
+	set_meta("network_peer_id", peer_id)
+	set_multiplayer_authority(peer_id, true)
+	if local_control:
+		add_to_group("local_player")
+		_configure_camera()
+		_configure_first_person_view()
+		_hide_joystick()
+	else:
+		remove_from_group("local_player")
+		_disable_local_presentation()
+
+func set_network_input(input_vector: Vector2, jump: bool, yaw: float) -> void:
+	_network_input = input_vector.limit_length(1.0)
+	_network_jump = jump
+	_network_target_yaw = yaw
+
+func apply_network_state(position_value: Vector3, yaw: float) -> void:
+	_network_target_position = position_value
+	_network_target_yaw = yaw
+	if not _network_mode:
+		return
+	if _network_local:
+		if global_position.distance_to(position_value) > 4.0:
+			global_position = position_value
+	else:
+		if global_position == Vector3.ZERO:
+			global_position = position_value
+
+func get_network_state() -> Dictionary:
+	return {
+		"peer_id": _network_peer_id,
+		"position": global_position,
+		"yaw": rotation.y
+	}
+
+func _network_physics(delta: float) -> void:
+	if not multiplayer.has_multiplayer_peer():
+		return
+
+	if multiplayer.is_server():
+		var input_vector := _network_input
+		var jump := _network_jump
+		if _network_local:
+			input_vector = _get_local_move_input()
+			jump = jump_requested
+			rotation.y = target_yaw
+		else:
+			rotation.y = _network_target_yaw
+
+		_simulate_movement(delta, input_vector, jump)
+		_network_jump = false
+		jump_requested = false
+		_update_player_visuals(delta, _camera_relative_direction(input_vector))
+		return
+
+	if _network_local:
+		_network_input_accumulator += delta
+		if _network_input_accumulator >= _network_input_interval:
+			_network_input_accumulator = 0.0
+			var jump_to_send := jump_requested
+			jump_requested = false
+			NetworkManager.submit_local_input(
+				_get_local_move_input(),
+				target_yaw,
+				look_pitch,
+				jump_to_send
+			)
+		rotation.y = lerp_angle(rotation.y, _network_target_yaw, 1.0 - exp(-12.0 * delta))
+		global_position = global_position.lerp(_network_target_position, 1.0 - exp(-9.0 * delta))
+	else:
+		global_position = global_position.lerp(_network_target_position, 1.0 - exp(-12.0 * delta))
+		rotation.y = lerp_angle(rotation.y, _network_target_yaw, 1.0 - exp(-12.0 * delta))
+
+func _simulate_movement(delta: float, input_vector: Vector2, jump: bool) -> void:
+	if input_vector.length() > 1.0:
+		input_vector = input_vector.normalized()
+	var direction := _camera_relative_direction(input_vector)
+	if direction.length_squared() > 0.001:
+		direction = direction.normalized()
+		velocity.x = move_toward(velocity.x, direction.x * speed, acceleration * delta)
+		velocity.z = move_toward(velocity.z, direction.z * speed, acceleration * delta)
+	else:
+		velocity.x = move_toward(velocity.x, 0.0, braking * delta)
+		velocity.z = move_toward(velocity.z, 0.0, braking * delta)
+
+	if not is_on_floor():
+		velocity.y -= gravity * delta
+	elif jump:
+		velocity.y = jump_velocity
+		var jump_direction := direction.normalized() if direction.length_squared() > 0.001 else Vector3.ZERO
+		if jump_direction != Vector3.ZERO:
+			velocity.x += jump_direction.x * jump_forward_boost
+			velocity.z += jump_direction.z * jump_forward_boost
+	else:
+		velocity.y = 0.0
+
+	move_and_slide()
+
+func _get_local_move_input() -> Vector2:
+	var input_vector := move_input
+	if input_vector.length_squared() < 0.0001:
+		input_vector = Vector2(
+			Input.get_axis("move_left", "move_right"),
+			Input.get_axis("move_back", "move_forward")
+		)
+	return input_vector.limit_length(1.0)
+
+func _disable_local_presentation() -> void:
+	var camera_node := get_node_or_null("Camera3D") as Camera3D
+	if camera_node:
+		camera_node.current = false
+	var controls := get_node_or_null("MobileControls") as CanvasLayer
+	if controls:
+		controls.visible = false
+	var craft_ui := get_node_or_null("CraftBuildUI") as CanvasLayer
+	if craft_ui:
+		craft_ui.visible = false
+	var inventory_ui := get_node_or_null("HUDInventory") as CanvasLayer
+	if inventory_ui:
+		inventory_ui.visible = false
+	var viewmodel := get_node_or_null("Camera3D/ViewModel") as Node3D
+	if viewmodel:
+		viewmodel.visible = false
 
 func play_tool_use() -> void:
 	if selected_tool_id == VeyraItemCatalog.HANDS_ID or not equipped_tool_visual or not equipped_tool_visual.visible:
