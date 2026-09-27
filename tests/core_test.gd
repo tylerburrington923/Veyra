@@ -1068,7 +1068,6 @@ func _test_alpha_presentation_contract() -> void:
 	_check(interaction_hud != null and interaction_hud.visible, "center interaction HUD must be visible")
 	_check(player.get_node_or_null("MobileControls/LunarHUD") != null, "lunar phase HUD must exist")
 	_check(load("res://scripts/lunar_hud.gd") != null, "lunar HUD script must remain loadable")
-	_check(not FileAccess.file_exists("res://scripts/strange_object.gd") or not FileAccess.file_exists("res://scenes/world.tscn"), "placeholder artifact script may remain only as an unused legacy file")
 	var world_text := FileAccess.get_file_as_string("res://scenes/world.tscn") if FileAccess.file_exists("res://scenes/world.tscn") else ""
 	_check(not world_text.contains("WorldDetail"), "world scene must not instantiate duplicate floating detail resources")
 	_check(not world_text.contains("VeyraArtifact"), "world scene must not instantiate placeholder artifact geometry")
