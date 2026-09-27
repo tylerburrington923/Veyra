@@ -9,11 +9,13 @@ var close_button: Button
 var _building: Node
 var _player: Node
 var _mode := ""
+var _backdrop: ColorRect
 
 func _ready() -> void:
 	layer = 100
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("building_ui")
+	layer = 200
 	_build_base()
 	visible = false
 
@@ -39,9 +41,14 @@ func open_blacksmith(building: Node, player: Node) -> void:
 
 func close_ui() -> void:
 	visible = false
+	if _backdrop:
+		_backdrop.visible = false
 	_building = null
 	_player = null
 	_mode = ""
+
+func is_modal_open() -> bool:
+	return visible
 
 func _process(_delta: float) -> void:
 	if not visible:
@@ -64,12 +71,20 @@ func _open(building: Node, player: Node, title_text: String) -> void:
 	_building = building
 	_player = player
 	title_label.text = title_text
-	_mode = title_text.to_lower().replace(" ", "_")
+	_mode = "campfire" if title_text == "CAMPFIRE" else ("townhall" if title_text == "TOWN HALL" else "blacksmith")
 	_clear_body()
 	visible = true
+	_backdrop.visible = true
 	get_viewport().set_input_as_handled()
 
 func _build_base() -> void:
+	_backdrop = ColorRect.new()
+	_backdrop.name = "ModalBackdrop"
+	_backdrop.color = Color(0.0, 0.0, 0.0, 0.48)
+	_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+	_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_backdrop)
+
 	panel = Panel.new()
 	panel.name = "BuildingPanel"
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -118,11 +133,11 @@ func _layout_panel() -> void:
 	panel.size = Vector2(width, height)
 	panel.position = (size - panel.size) * 0.5
 	title_label.position = Vector2(16, 12)
-	title_label.size = Vector2(width - 32, 38)
+	title_label.size = Vector2(width - 112, 38)
 	body_scroll.position = Vector2(16, 58)
 	body_scroll.size = Vector2(width - 32, height - 122)
-	close_button.position = Vector2(16, height - 56)
-	close_button.size = Vector2(width - 32, 44)
+	close_button.position = Vector2(width - 96, 10)
+	close_button.size = Vector2(80, 40)
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_SIZE_CHANGED:
