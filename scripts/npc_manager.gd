@@ -13,6 +13,8 @@ func _settlement_manager() -> VeyraSettlementManager:
 var definitions: Dictionary = {}
 var states: Dictionary = {}
 var controllers: Dictionary = {}
+var _simulation_accumulator := 0.0
+const SIMULATION_INTERVAL := 0.10
 
 func _ready() -> void:
 	add_to_group("npc_manager")
@@ -26,16 +28,20 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if delta <= 0.0:
 		return
-	var network_manager = get_node_or_null("/root/NetworkManager")
-	var network_client := network_manager != null and bool(network_manager.get("session_active")) and not bool(network_manager.get("is_host"))
-	var typed_states: Array[NPCState] = []
-	for state in states.values():
-		if state is NPCState:
-			typed_states.append(state)
-	if not typed_states.is_empty() and not network_client:
-		NPCSimulation.process_batch(typed_states, definitions, delta)
-		for state in typed_states:
-			_update_villager_behavior(state, delta)
+	_simulation_accumulator += minf(delta, 0.25)
+	if _simulation_accumulator >= SIMULATION_INTERVAL:
+		var sim_delta := _simulation_accumulator
+		_simulation_accumulator = 0.0
+		var network_manager = get_node_or_null("/root/NetworkManager")
+		var network_client := network_manager != null and bool(network_manager.get("session_active")) and not bool(network_manager.get("is_host"))
+		var typed_states: Array[NPCState] = []
+		for state in states.values():
+			if state is NPCState:
+				typed_states.append(state)
+		if not typed_states.is_empty() and not network_client:
+			NPCSimulation.process_batch(typed_states, definitions, sim_delta)
+			for state in typed_states:
+				_update_villager_behavior(state, sim_delta)
 	for npc_id in controllers:
 		var controller: NPCController = controllers[npc_id]
 		var state: NPCState = states.get(npc_id)
