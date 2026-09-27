@@ -10,6 +10,7 @@ extends Node3D
 
 var terrain: Node
 var collision_body: StaticBody3D
+var _visibility_distance: float = 72.0
 
 
 func _ready() -> void:
@@ -93,6 +94,13 @@ func _generate() -> void:
 	_create_harvest_nodes("PURPLE_LUX", crystal_transforms, "Vitreous Lux", "I02_STONE_PICK", 1, 1.0, crystal_instances)
 
 
+
+func set_visibility_distance(distance: float) -> void:
+	_visibility_distance = maxf(20.0, distance)
+	for child in get_children():
+		if child is MultiMeshInstance3D:
+			child.visibility_range_end = _visibility_distance
+			child.visibility_range_end_margin = 8.0
 
 func _create_harvest_nodes(prefix: String, transforms: Array[Transform3D], resource_type: String, required_tool: String, amount: int, durability_cost: float, visual_instance: MultiMeshInstance3D) -> void:
 	if not terrain or transforms.is_empty():
