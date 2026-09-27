@@ -43,21 +43,21 @@ roughness = 1.0
 albedo_color = Color(0.02, 0.02, 0.02, 1)
 roughness = 0.5
 [sub_resource type="BoxMesh" id="ToolHandleMesh"]
-size = Vector3(0.055, 0.58, 0.055)
+size = Vector3(0.07, 0.62, 0.07)
 
 [sub_resource type="BoxMesh" id="AxeHeadMesh"]
-size = Vector3(0.13, 0.18, 0.10)
+size = Vector3(0.16, 0.20, 0.12)
 
 [sub_resource type="BoxMesh" id="AxeBladeMesh"]
-size = Vector3(0.22, 0.25, 0.11)
+size = Vector3(0.30, 0.28, 0.12)
 
 [sub_resource type="BoxMesh" id="PickHeadMesh"]
-size = Vector3(0.26, 0.085, 0.10)
+size = Vector3(0.34, 0.10, 0.12)
 
 [sub_resource type="CylinderMesh" id="PickSpikeMesh"]
 top_radius = 0.025
 bottom_radius = 0.10
-height = 0.22
+height = 0.24
 radial_segments = 6
 
 [sub_resource type="BoxMesh" id="FPBeltMesh"]
@@ -202,7 +202,7 @@ scale = Vector3(1.0, 0.55, 1.25)
 mesh = SubResource("FootMesh")
 material_override = SubResource("Pants")
 [node name="Camera3D" type="Camera3D" parent="."]
-position = Vector3(0.09, 1.64, 0.035)
+position = Vector3(0.0, 1.64, 0.035)
 rotation_degrees = Vector3(-8, 0, 0)
 current = true
 cull_mask = 3
@@ -252,8 +252,8 @@ mesh = SubResource("FootMesh")
 material_override = SubResource("Pants")
 
 [node name="ToolHolder" type="Node3D" parent="Camera3D/ViewModel"]
-position = Vector3(0.25, -0.73, -1.02)
-rotation_degrees = Vector3(4, -6, -8)
+position = Vector3(0.23, -0.70, -1.00)
+rotation_degrees = Vector3(2, -4, -6)
 scale = Vector3(1.0, 1.0, 1.0)
 
 [node name="EquippedTool" type="Node3D" parent="Camera3D/ViewModel/ToolHolder"]
@@ -274,8 +274,8 @@ visible = false
 
 [node name="AxeBlade" type="MeshInstance3D" parent="Camera3D/ViewModel/ToolHolder/EquippedTool"]
 layers = 2
-position = Vector3(0.17, 0.55, 0.0)
-rotation_degrees = Vector3(0, 0, -4)
+position = Vector3(0.20, 0.55, 0.0)
+rotation_degrees = Vector3(0, 0, -8)
 mesh = SubResource("AxeBladeMesh")
 material_override = SubResource("FPToolStoneMaterial")
 visible = false
