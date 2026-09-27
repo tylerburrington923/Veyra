@@ -97,8 +97,8 @@ func _refresh_resonance() -> void:
 	var discovered := bool(player.get("resonance_discovered")) if player else false
 	if discovered:
 		resonance_seen = true
-	var lux := inventory.get_amount("Vitreous Lux")
-	var echo := inventory.get_amount("Echo-Stone")
+	var lux: int = inventory.get_amount("Vitreous Lux")
+	var echo: int = inventory.get_amount("Echo-Stone")
 	if discovered or charge > 0.0:
 		resonance_label.text = "RESONANCE  %02d%%   •   LUX %d   •   ECHO %d" % [int(round(charge)), lux, echo]
 	else:
