@@ -387,25 +387,25 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -150.0
-offset_top = -104.0
+offset_top = -94.0
 offset_right = 150.0
-offset_bottom = -42.0
+offset_bottom = -30.0
 theme_override_constants/separation = 6
 
 [node name="HandsSlot" type="Button" parent="HUDInventory/ToolHotbar" groups=["camera_blocking_ui"]]
-custom_minimum_size = Vector2(96, 58)
+custom_minimum_size = Vector2(94, 64)
 text = "1\nHANDS"
 theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("InteractStyle")
 
 [node name="AxeSlot" type="Button" parent="HUDInventory/ToolHotbar" groups=["camera_blocking_ui"]]
-custom_minimum_size = Vector2(112, 78)
+custom_minimum_size = Vector2(94, 64)
 text = "2\nAXE"
 theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("InteractStyle")
 
 [node name="PickSlot" type="Button" parent="HUDInventory/ToolHotbar" groups=["camera_blocking_ui"]]
-custom_minimum_size = Vector2(112, 78)
+custom_minimum_size = Vector2(94, 64)
 text = "3\nPICK"
 theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("InteractStyle")
@@ -441,13 +441,13 @@ anchor_left = 1.0
 anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 0.0
-offset_left = -190.0
-offset_top = 24.0
-offset_right = -28.0
-offset_bottom = 76.0
+offset_left = -220.0
+offset_top = 16.0
+offset_right = -124.0
+offset_bottom = 58.0
 grow_horizontal = 0
 grow_vertical = 0
-text = "BACKPACK"
+text = "PACK"
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("InteractStyle")
 
