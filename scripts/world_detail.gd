@@ -60,10 +60,10 @@ func _generate() -> void:
 	crystal_mesh.size = Vector3(0.65, 1.6, 0.65)
 
 	var crystal_material := StandardMaterial3D.new()
-	crystal_material.albedo_color = Color(0.30, 0.18, 0.42, 1)
+	crystal_material.albedo_color = Color(0.10, 0.38, 0.42, 1)
 	crystal_material.emission_enabled = true
-	crystal_material.emission = Color(0.08, 0.03, 0.14, 1)
-	crystal_material.emission_energy_multiplier = 0.45
+	crystal_material.emission = Color(0.02, 0.28, 0.32, 1)
+	crystal_material.emission_energy_multiplier = 0.38
 
 	var crystal_transforms: Array[Transform3D] = []
 
