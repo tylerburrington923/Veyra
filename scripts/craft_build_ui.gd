@@ -52,6 +52,7 @@ func _build_ui() -> void:
 	backdrop.name = "ModalBackdrop"
 	backdrop.color = Color(0.0, 0.0, 0.0, 0.48)
 	backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+	backdrop.add_to_group("camera_blocking_ui")
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	backdrop.visible = false
 	add_child(backdrop)
@@ -60,6 +61,7 @@ func _build_ui() -> void:
 	panel.name = "CraftingPanel"
 	panel.visible = false
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	panel.add_to_group("camera_blocking_ui")
 	add_child(panel)
 
 	var panel_style := StyleBoxFlat.new()
@@ -117,11 +119,15 @@ func _build_ui() -> void:
 	option_scroll.name = "RecipeScroll"
 	option_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	option_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	option_scroll.follow_focus = true
+	option_scroll.scroll_deadzone = 18
+	option_scroll.mouse_filter = Control.MOUSE_FILTER_STOP
 	option_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(option_scroll)
 
 	option_list = VBoxContainer.new()
-	option_list.add_theme_constant_override("separation", 8)
+	option_list.add_theme_constant_override("separation", 10)
+	option_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	option_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	option_scroll.add_child(option_list)
 
@@ -332,7 +338,7 @@ func _add_recipe_option(item_name: String, cost_text: String, affordable: bool, 
 
 	var button := Button.new()
 	button.text = item_name
-	button.custom_minimum_size = Vector2(0, 48)
+	button.custom_minimum_size = Vector2(0, 56)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.tooltip_text = "Select %s" % item_name if affordable else "Missing materials"
 	button.disabled = not affordable
