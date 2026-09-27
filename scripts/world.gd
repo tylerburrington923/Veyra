@@ -26,7 +26,7 @@ func _ready() -> void:
         lunar_cycle.cycle_length_seconds = lunar_cycle_seconds
         lunar_cycle.configure(world_seed, world_time)
 
-    call_deferred("_restore_buildings")
+    call_deferred("_restore_buildings")\n    # NPC simulation is intentionally dormant until the settlement population system is ready.\n    var npc_manager := get_node_or_null("NPCManager")\n    if npc_manager:\n        npc_manager.queue_free()
     print("Veyra world initialized. Seed: ", world_seed, " | Lunar phase: ", lunar_cycle.get_phase_name() if lunar_cycle else "Unavailable")
 
 
