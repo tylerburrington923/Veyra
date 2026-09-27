@@ -1,10 +1,11 @@
 class_name AnimalManager
 extends Node3D
 
-## Lightweight wildlife presentation bridge. AnimalState remains authoritative;
-## this manager owns runtime states and disposable presentation nodes.
+## Lightweight Veyra wildlife runtime.
+## Host owns simulation in multiplayer; clients only present authoritative snapshots.
+## Creatures use primitive meshes/materials so the build stays small and mobile-friendly.
 
-@export var beta_animal_count: int = 3
+@export var beta_animal_count: int = 5
 @export var spawn_radius: float = 18.0
 
 var definitions: Dictionary = {}
@@ -19,33 +20,38 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if delta <= 0.0:
 		return
+	var network := get_node_or_null("/root/NetworkManager")
+	if network and bool(network.get("session_active")) and not bool(network.get("is_host")):
+		_update_visuals(delta)
+		return
 	for animal_id in states:
 		var state: AnimalState = states[animal_id]
 		var definition: AnimalDefinition = definitions.get(state.definition_id)
-		if state and definition:
+		if state and definition and state.alive:
 			AnimalSimulation.process_tick(state, definition, delta)
 			_update_behavior(state, definition, delta)
-	for animal_id in visuals:
-		var visual: Node3D = visuals[animal_id]
-		var state: AnimalState = states.get(animal_id)
-		if visual and state:
-			var target := _state_position(state.position)
-			visual.global_position = visual.global_position.lerp(target, 1.0 - exp(-8.0 * delta))
-			if state.behavior_state == "WANDER":
-				var direction := target - visual.global_position
-				direction.y = 0.0
-				if direction.length_squared() > 0.01:
-					visual.look_at(visual.global_position + direction.normalized(), Vector3.UP)
+	_update_visuals(delta)
 
 func _register_definitions() -> void:
-	definitions["deer"] = AnimalDefinition.new("deer", "Forest Deer", "cervid", 1.8, 50.0, 0.025, 0.035, "HERBIVORE")
+	# Veyra species deliberately echo Earth silhouettes without copying them.
+	definitions["lumen_grazer"] = AnimalDefinition.new(
+		"lumen_grazer", "Lumen Grazer", "resonant_cervid",
+		1.9, 55.0, 0.020, 0.030, "HERBIVORE"
+	)
+	definitions["mireback"] = AnimalDefinition.new(
+		"mireback", "Mireback", "burrowing_herbivore",
+		1.45, 70.0, 0.018, 0.025, "HERBIVORE"
+	)
 
 func _spawn_beta_wildlife() -> void:
-	var definition: AnimalDefinition = definitions["deer"]
-	for index in range(beta_animal_count):
+	var ids: Array[String] = ["lumen_grazer", "mireback", "lumen_grazer", "mireback", "lumen_grazer"]
+	var count := mini(beta_animal_count, ids.size())
+	for index in range(count):
+		var definition_id := ids[index]
 		var angle := float(index) * 2.39996323
-		var position := _get_grounded_position(Vector3(cos(angle), 0.0, sin(angle)) * (spawn_radius + index * 3.0))
-		spawn_animal("deer_%02d" % (index + 1), definition.id, position)
+		var distance := spawn_radius + index * 3.0
+		var position := _get_grounded_position(Vector3(cos(angle), 0.0, sin(angle)) * distance)
+		spawn_animal("wild_%02d" % (index + 1), definition_id, position)
 
 func spawn_animal(animal_id: String, definition_id: String, position: Vector3) -> Node3D:
 	if animal_id.is_empty() or states.has(animal_id) or not definitions.has(definition_id):
@@ -56,8 +62,7 @@ func spawn_animal(animal_id: String, definition_id: String, position: Vector3) -
 	state.position = _vector_dict(position)
 	state.target_position = _vector_dict(position)
 	states[animal_id] = state
-
-	var visual := _make_deer_visual(definition)
+	var visual := _make_visual(definition_id)
 	visual.name = "Animal_" + animal_id
 	add_child(visual)
 	visual.global_position = position
@@ -71,6 +76,59 @@ func despawn_animal(animal_id: String) -> void:
 		visual.queue_free()
 	visuals.erase(animal_id)
 
+func get_network_snapshot() -> Array:
+	var snapshot: Array = []
+	for animal_id in states:
+		var state: AnimalState = states[animal_id]
+		if state:
+			snapshot.append(state.to_dict())
+	return snapshot
+
+func apply_network_snapshot(snapshot: Array) -> void:
+	var incoming: Dictionary = {}
+	for value in snapshot:
+		if not value is Dictionary:
+			continue
+		var animal_id := str(value.get("animal_id", ""))
+		var definition_id := str(value.get("definition_id", ""))
+		if animal_id.is_empty() or not definitions.has(definition_id):
+			continue
+		incoming[animal_id] = value
+		var state: AnimalState = states.get(animal_id)
+		if not state:
+			spawn_animal(animal_id, definition_id, _state_position(value.get("position", {})))
+			state = states.get(animal_id)
+		if state:
+			var restored := AnimalState.from_dict(value)
+			restored.sanitize()
+			states[animal_id] = restored
+			if not visuals.has(animal_id):
+				var visual := _make_visual(definition_id)
+				visual.name = "Animal_" + animal_id
+				add_child(visual)
+				visuals[animal_id] = visual
+	for animal_id in states.keys():
+		if not incoming.has(animal_id):
+			despawn_animal(str(animal_id))
+
+func _update_visuals(delta: float) -> void:
+	for animal_id in visuals.keys():
+		var visual: Node3D = visuals[animal_id]
+		var state: AnimalState = states.get(animal_id)
+		if not visual or not state:
+			continue
+		if not state.alive:
+			visual.visible = false
+			continue
+		visual.visible = true
+		var target := _state_position(state.position)
+		visual.global_position = visual.global_position.lerp(target, 1.0 - exp(-8.0 * delta))
+		if state.behavior_state == "WANDER":
+			var direction := target - visual.global_position
+			direction.y = 0.0
+			if direction.length_squared() > 0.01:
+				visual.look_at(visual.global_position + direction.normalized(), Vector3.UP)
+
 func _update_behavior(state: AnimalState, definition: AnimalDefinition, delta: float) -> void:
 	state.behavior_timer += delta
 	if state.behavior_state == "IDLE":
@@ -78,7 +136,7 @@ func _update_behavior(state: AnimalState, definition: AnimalDefinition, delta: f
 			state.behavior_timer = 0.0
 			var origin := _state_position(state.position)
 			var phase := float(abs(state.animal_id.hash()) % 360) * 0.0174533
-			var target := origin + Vector3(cos(phase), 0.0, sin(phase)) * 5.0
+			var target := origin + Vector3(cos(phase), 0.0, sin(phase)) * (4.0 if definition.id == "lumen_grazer" else 3.2)
 			state.target_position = _vector_dict(_get_grounded_position(target))
 			state.behavior_state = "WANDER"
 		return
@@ -94,65 +152,97 @@ func _update_behavior(state: AnimalState, definition: AnimalDefinition, delta: f
 			state.behavior_timer = 0.0
 			return
 		var step := minf(definition.movement_speed * delta, distance)
-		var next := _get_grounded_position(current + offset.normalized() * step)
-		state.position = _vector_dict(next)
+		state.position = _vector_dict(_get_grounded_position(current + offset.normalized() * step))
 		state.stamina = clampf(state.stamina - 0.08 * delta, 0.0, 100.0)
 
-func _make_deer_visual(definition: AnimalDefinition) -> Node3D:
+func _make_visual(definition_id: String) -> Node3D:
+	if definition_id == "mireback":
+		return _make_mireback_visual()
+	return _make_lumen_grazer_visual()
+
+func _make_lumen_grazer_visual() -> Node3D:
 	var root := Node3D.new()
-	var coat := StandardMaterial3D.new()
-	coat.albedo_color = Color(0.38, 0.25, 0.14, 1)
-	coat.roughness = 0.95
-	var dark := StandardMaterial3D.new()
-	dark.albedo_color = Color(0.09, 0.065, 0.045, 1)
-	dark.roughness = 1.0
+	var coat := _material(Color(0.24, 0.34, 0.29), 0.92)
+	var glow := _material(Color(0.12, 0.60, 0.58), 0.7, 0.0, true, 0.75)
+	var dark := _material(Color(0.08, 0.10, 0.09), 1.0)
 
-	var body := MeshInstance3D.new()
-	var body_mesh := CapsuleMesh.new()
-	body_mesh.radius = 0.22
-	body_mesh.height = 0.95
-	body_mesh.radial_segments = 7
-	body.mesh = body_mesh
-	body.material_override = coat
-	body.rotation_degrees.z = 90.0
-	body.position.y = 0.85
-	root.add_child(body)
-
-	var head := MeshInstance3D.new()
-	var head_mesh := SphereMesh.new()
-	head_mesh.radius = 0.20
-	head_mesh.height = 0.40
-	head_mesh.radial_segments = 7
-	head_mesh.rings = 4
-	head.mesh = head_mesh
-	head.material_override = coat
-	head.position = Vector3(0.52, 1.0, 0.0)
-	root.add_child(head)
-
+	_add_capsule(root, Vector3(0, 0.88, 0), Vector3(0.25, 0.24, 0.52), coat, 7, 0, 90)
+	_add_sphere(root, Vector3(0.58, 1.05, 0), 0.22, coat, 7)
 	for side in [-1.0, 1.0]:
-		for leg_index in range(2):
-			var leg := MeshInstance3D.new()
-			var leg_mesh := CapsuleMesh.new()
-			leg_mesh.radius = 0.055
-			leg_mesh.height = 0.48
-			leg_mesh.radial_segments = 5
-			leg.mesh = leg_mesh
-			leg.material_override = dark
-			leg.position = Vector3(-0.25 + leg_index * 0.5, 0.38, side * 0.13)
-			root.add_child(leg)
-
-	var tail := MeshInstance3D.new()
-	var tail_mesh := SphereMesh.new()
-	tail_mesh.radius = 0.09
-	tail_mesh.height = 0.18
-	tail_mesh.radial_segments = 5
-	tail_mesh.rings = 3
-	tail.mesh = tail_mesh
-	tail.material_override = dark
-	tail.position = Vector3(-0.53, 1.0, 0.0)
-	root.add_child(tail)
-
+		for x in [-0.28, 0.28]:
+			_add_capsule(root, Vector3(x, 0.40, side * 0.15), Vector3(0.06, 0.06, 0.27), dark, 5)
+	_add_sphere(root, Vector3(-0.54, 1.02, 0), 0.10, dark, 5)
+	_add_sphere(root, Vector3(0.58, 1.13, -0.19), 0.055, glow, 5)
+	_add_sphere(root, Vector3(0.58, 1.13, 0.19), 0.055, glow, 5)
+	# Short resonance antlers are intentionally asymmetrical.
+	_add_cylinder(root, Vector3(0.42, 1.32, -0.12), 0.035, 0.34, glow, 5, Vector3(0.0, 0.0, deg_to_rad(-25.0)))
+	_add_cylinder(root, Vector3(0.42, 1.34, 0.12), 0.035, 0.28, glow, 5, Vector3(0.0, 0.0, deg_to_rad(18.0)))
 	return root
+
+func _make_mireback_visual() -> Node3D:
+	var root := Node3D.new()
+	var hide := _material(Color(0.20, 0.17, 0.13), 0.96)
+	var ridge := _material(Color(0.22, 0.45, 0.40), 0.72, 0.0, true, 0.55)
+	var dark := _material(Color(0.07, 0.065, 0.055), 1.0)
+	_add_capsule(root, Vector3(0, 0.66, 0), Vector3(0.34, 0.30, 0.60), hide, 7, 0, 90)
+	_add_sphere(root, Vector3(0.62, 0.70, 0), 0.25, hide, 7)
+	for x in [-0.28, 0.28]:
+		for side in [-1.0, 1.0]:
+			_add_capsule(root, Vector3(x, 0.25, side * 0.20), Vector3(0.075, 0.07, 0.20), dark, 5)
+	for x in [-0.38, -0.12, 0.14, 0.40]:
+		_add_sphere(root, Vector3(x, 1.00 - abs(x) * 0.18, 0), 0.12, ridge, 6, Vector3(0.8, 1.2, 0.8))
+	_add_sphere(root, Vector3(0.67, 0.76, -0.20), 0.055, ridge, 5)
+	_add_sphere(root, Vector3(0.67, 0.76, 0.20), 0.055, ridge, 5)
+	return root
+
+func _material(color: Color, roughness: float = 0.9, metallic: float = 0.0, emission_enabled: bool = false, emission_energy: float = 0.0) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.roughness = roughness
+	material.metallic = metallic
+	if emission_enabled:
+		material.emission_enabled = true
+		material.emission = color
+		material.emission_energy_multiplier = emission_energy
+	return material
+
+func _add_capsule(root: Node3D, position_value: Vector3, dimensions: Vector3, material: Material, segments: int, _unused: int = 0, rotation_z: float = 0.0) -> void:
+	var mesh := CapsuleMesh.new()
+	mesh.radius = dimensions.x
+	mesh.height = dimensions.y + dimensions.z
+	mesh.radial_segments = segments
+	var instance := MeshInstance3D.new()
+	instance.mesh = mesh
+	instance.material_override = material
+	instance.position = position_value
+	instance.rotation_degrees.z = rotation_z
+	root.add_child(instance)
+
+func _add_sphere(root: Node3D, position_value: Vector3, radius: float, material: Material, segments: int = 7, scale_value := Vector3.ONE) -> void:
+	var mesh := SphereMesh.new()
+	mesh.radius = radius
+	mesh.height = radius * 2.0
+	mesh.radial_segments = segments
+	mesh.rings = 4
+	var instance := MeshInstance3D.new()
+	instance.mesh = mesh
+	instance.material_override = material
+	instance.position = position_value
+	instance.scale = scale_value
+	root.add_child(instance)
+
+func _add_cylinder(root: Node3D, position_value: Vector3, radius: float, height: float, material: Material, segments: int, rotation_value: Vector3) -> void:
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius
+	mesh.bottom_radius = radius
+	mesh.height = height
+	mesh.radial_segments = segments
+	var instance := MeshInstance3D.new()
+	instance.mesh = mesh
+	instance.material_override = material
+	instance.position = position_value
+	instance.rotation = rotation_value
+	root.add_child(instance)
 
 func _get_grounded_position(position: Vector3) -> Vector3:
 	var generator := get_tree().get_first_node_in_group("world_generator")
@@ -160,8 +250,9 @@ func _get_grounded_position(position: Vector3) -> Vector3:
 		position.y = float(generator.get_height_at_world(position.x, position.z))
 	return position + Vector3(0.0, 0.05, 0.0)
 
-func _state_position(data: Dictionary) -> Vector3:
-	return Vector3(float(data.get("x", 0.0)), float(data.get("y", 0.0)), float(data.get("z", 0.0)))
+func _state_position(data: Variant) -> Vector3:
+	var value: Dictionary = data if data is Dictionary else {}
+	return Vector3(float(value.get("x", 0.0)), float(value.get("y", 0.0)), float(value.get("z", 0.0)))
 
 func _vector_dict(position: Vector3) -> Dictionary:
 	return {"x": position.x, "y": position.y, "z": position.z}
