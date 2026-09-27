@@ -46,6 +46,7 @@ jobs:
           cp -R /tmp/godot-templates/templates/. "$HOME/.local/share/godot/export_templates/4.7.2.stable/"
           godot --headless --path . --editor --quit
           godot --headless --path . --script res://tests/core_test.gd
+          godot --headless --path . --script res://tests/resonance_test.gd
           godot --headless --path . --export-debug "Veyra Android" build/Veyra-debug.apk
           test -s build/Veyra-debug.apk
       - name: Upload APK
