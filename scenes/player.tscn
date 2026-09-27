@@ -367,7 +367,7 @@ script = ExtResource("6_lunar_hud")
 mode = "reticle"
 
 [node name="InteractionHUD" type="PanelContainer" parent="MobileControls"]
-visible = false
+visible = true
 z_index = 20
 anchors_preset = 8
 anchor_left = 0.5
@@ -375,9 +375,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -150.0
-offset_top = 54.0
+offset_top = 46.0
 offset_right = 150.0
-offset_bottom = 106.0
+offset_bottom = 98.0
 mouse_filter = 2
 
 [node name="Stack" type="VBoxContainer" parent="MobileControls/InteractionHUD"]
