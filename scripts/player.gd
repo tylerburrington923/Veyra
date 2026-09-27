@@ -121,12 +121,24 @@ func use_tool(durability_cost: float = 1.0) -> bool:
 func get_save_state() -> Dictionary:
 	return {
 		"tool_id": selected_tool_id,
-		"tool_durability": clampf(tool_durability, 0.0, 100.0)
+		"tool_durability": clampf(tool_durability, 0.0, 100.0),
+		"position": [global_position.x, global_position.y, global_position.z],
+		"yaw": rotation.y,
+		"pitch": look_pitch
 	}
 
 func load_save_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return
+	var saved_position = state.get("position", [])
+	if saved_position is Array and saved_position.size() >= 3:
+		global_position = Vector3(float(saved_position[0]), float(saved_position[1]), float(saved_position[2]))
+		velocity = Vector3.ZERO
+	rotation.y = float(state.get("yaw", rotation.y))
+	target_yaw = rotation.y
+	look_pitch = clampf(float(state.get("pitch", look_pitch)), deg_to_rad(min_pitch_degrees), deg_to_rad(max_pitch_degrees))
+	if camera:
+		camera.rotation.x = look_pitch
 	var tool_id := str(state.get("tool_id", "T00_HANDS"))
 	var inventory := get_inventory()
 	if tool_id != "T00_HANDS" and (not inventory or not inventory.has_item(tool_id)):
