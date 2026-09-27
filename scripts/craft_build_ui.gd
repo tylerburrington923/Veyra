@@ -24,6 +24,8 @@ var placement_hud: Panel
 var placement_status: Label
 var placement_place: Button
 var placement_cancel: Button
+var _option_buttons: Array[Button] = []
+var _option_costs: Array[Dictionary] = []
 
 func _ready() -> void:
 	add_to_group("modal_ui")
@@ -279,7 +281,8 @@ func _show_crafting() -> void:
 			str(recipe.get("name", recipe_id)),
 			_format_cost(recipe.get("cost", {})),
 			_has_cost(recipe.get("cost", {})),
-			_craft.bind(recipe_id)
+			_craft.bind(recipe_id),
+			recipe.get("cost", {})
 		)
 
 func _show_building() -> void:
@@ -295,27 +298,33 @@ func _show_building() -> void:
 			str(definition.get("name", building_id)),
 			_format_cost(definition.get("cost", {})),
 			_has_cost(definition.get("cost", {})),
-			_select_building.bind(building_id)
+			_select_building.bind(building_id),
+			definition.get("cost", {})
 		)
 
-func _add_recipe_option(item_name: String, cost_text: String, affordable: bool, action: Callable) -> void:
+func _add_recipe_option(item_name: String, cost_text: String, affordable: bool, action: Callable, cost_data: Dictionary) -> void:
 	var row := VBoxContainer.new()
 	row.add_theme_constant_override("separation", 2)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var button := Button.new()
 	button.text = item_name
-	button.custom_minimum_size = Vector2(0, 46)
+	button.custom_minimum_size = Vector2(0, 48)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.tooltip_text = "Select %s" % item_name if affordable else "Missing materials"
+	button.disabled = not affordable
+	_style_option_button(button)
 	button.pressed.connect(action)
 	row.add_child(button)
+	_option_buttons.append(button)
+	_option_costs.append(cost_data)
 
 	var cost := Label.new()
-	cost.text = cost_text + ("  •  READY" if affordable else "")
+	cost.text = cost_text + ("  •  READY" if affordable else "  •  NEED MATERIALS")
 	cost.add_theme_font_size_override("font_size", 13)
 	cost.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	cost.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cost.modulate = Color(0.70, 0.76, 0.78, 1.0) if not affordable else Color(0.52, 0.78, 0.58, 1.0)
+	cost.modulate = Color(0.52, 0.78, 0.58, 1.0) if affordable else Color(0.60, 0.64, 0.66, 1.0)
 	row.add_child(cost)
 
 	option_list.add_child(row)
@@ -414,9 +423,44 @@ func _has_cost(cost: Dictionary) -> bool:
 func _clear_options() -> void:
 	for child in option_list.get_children():
 		child.queue_free()
+	_option_buttons.clear()
+	_option_costs.clear()
+
+func _on_inventory_changed(_snapshot: Dictionary, _changed_type: String, _changed_amount: int) -> void:
+	_refresh_option_affordability()
+
+func _refresh_option_affordability() -> void:
+	for index in range(_option_buttons.size()):
+		var button := _option_buttons[index]
+		if not button or not is_instance_valid(button):
+			continue
+		var affordable := _has_cost(_option_costs[index])
+		button.disabled = not affordable
+		button.tooltip_text = "Select %s" % button.text if affordable else "Missing materials"
 
 func _format_cost(cost: Dictionary) -> String:
 	var parts: Array[String] = []
 	for key in cost.keys():
 		parts.append("%s x%d" % [key, int(cost[key])])
 	return " • ".join(parts)
+
+func _style_option_button(button: Button) -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.07, 0.16, 0.18, 0.98)
+	normal.border_width_left = 1
+	normal.border_width_top = 1
+	normal.border_width_right = 1
+	normal.border_width_bottom = 1
+	normal.border_color = Color(0.30, 0.65, 0.68, 0.62)
+	normal.corner_radius_top_left = 10
+	normal.corner_radius_top_right = 10
+	normal.corner_radius_bottom_left = 10
+	normal.corner_radius_bottom_right = 10
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = Color(0.11, 0.22, 0.25, 0.98)
+	var disabled := normal.duplicate() as StyleBoxFlat
+	disabled.bg_color = Color(0.045, 0.06, 0.065, 0.78)
+	disabled.border_color = Color(0.20, 0.24, 0.25, 0.45)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("disabled", disabled)
