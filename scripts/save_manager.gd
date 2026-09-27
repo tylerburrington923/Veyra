@@ -117,6 +117,8 @@ func _sanitize_settlement(settlement: Dictionary) -> Dictionary:
 
     var clean := {
         "version": maxi(1, int(settlement.get("version", 1))),
+        "water_cycle_index": maxi(0, int(settlement.get("water_cycle_index", 0))),
+        "water_shortage": maxi(0, int(settlement.get("water_shortage", 0))),
         "name": str(settlement.get("name", "New Settlement")),
         "population": maxi(0, int(settlement.get("population", 0))),
         "stock": {},
