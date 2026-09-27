@@ -11,6 +11,8 @@ const ANIMAL_ACTOR_SCRIPT = preload("res://scripts/animal_actor.gd")
 
 var definitions: Dictionary = {}
 var states: Dictionary = {}
+var _simulation_accumulator := 0.0
+const SIMULATION_INTERVAL := 0.10
 var visuals: Dictionary = {}
 var death_timers: Dictionary = {}
 
@@ -21,6 +23,13 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	if delta <= 0.0:
+		return
+	_simulation_accumulator += minf(delta, 0.25)
+	if _simulation_accumulator < SIMULATION_INTERVAL:
+		return
+	var sim_delta := _simulation_accumulator
+	_simulation_accumulator = 0.0
+		if delta <= 0.0:
 		return
 	var network := get_node_or_null("/root/NetworkManager")
 	if network and bool(network.get("session_active")) and not bool(network.get("is_host")):
