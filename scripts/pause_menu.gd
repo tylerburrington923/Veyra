@@ -23,6 +23,7 @@ func _build() -> void:
 	menu_button.position = Vector2(-122, 18)
 	menu_button.size = Vector2(104, 44)
 	menu_button.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_style_button(menu_button)
 	menu_button.add_to_group("camera_blocking_ui")
 	menu_button.pressed.connect(_toggle)
 	add_child(menu_button)
@@ -93,12 +94,36 @@ func _set_graphics_profile(profile: String) -> void:
 	GraphicsSettings.set_profile(profile)
 	status.text = "GRAPHICS: %s" % GraphicsSettings.get_display_name()
 
+func _style_button(button: Button) -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.07, 0.13, 0.16, 0.94)
+	normal.border_width_left = 1
+	normal.border_width_top = 1
+	normal.border_width_right = 1
+	normal.border_width_bottom = 1
+	normal.border_color = Color(0.30, 0.58, 0.62, 0.55)
+	normal.corner_radius_top_left = 10
+	normal.corner_radius_top_right = 10
+	normal.corner_radius_bottom_left = 10
+	normal.corner_radius_bottom_right = 10
+	var hover := normal.duplicate()
+	hover.bg_color = Color(0.11, 0.22, 0.25, 0.98)
+	var pressed := normal.duplicate()
+	pressed.bg_color = Color(0.15, 0.31, 0.34, 1.0)
+	var disabled := normal.duplicate()
+	disabled.bg_color = Color(0.05, 0.08, 0.09, 0.65)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("disabled", disabled)
+
 func _make_button(text_value: String, button_position: Vector2, button_size: Vector2) -> Button:
 	var button := Button.new()
 	button.text = text_value
 	button.position = button_position
 	button.size = button_size
-	button.add_theme_font_size_override("font_size", 18)
+	button.add_theme_font_size_override("font_size", 16)
+	_style_button(button)
 	button.add_to_group("camera_blocking_ui")
 	return button
 
