@@ -459,19 +459,19 @@ func _test_npc_controller_presentation_contract() -> void:
 
 
 func _test_npc_manager_contract() -> void:
-    var manager_script := load("res://scripts/npc_manager.gd")
-    var manager: Node3D = manager_script.new()
-    root.add_child(manager)
-    var controller = manager.spawn_npc("npc_manager_01", "human_worker", Vector3(2.0, 0.0, -2.0))
-    _check(controller != null, "NPC manager must spawn a controller for a valid definition")
-    _check(manager.states.has("npc_manager_01"), "NPC manager must retain authoritative NPC state")
-    _check(manager.controllers.has("npc_manager_01"), "NPC manager must retain presentation controller")
-    var state: NPCState = manager.get_npc_state("npc_manager_01")
-    _check(state != null and state.definition_id == "human_worker", "NPC manager state must reference the requested definition")
-    manager.despawn_npc("npc_manager_01")
-    _check(not manager.states.has("npc_manager_01"), "NPC manager must remove despawned state")
-    _check(not manager.controllers.has("npc_manager_01"), "NPC manager must remove despawned controller")
-    manager.queue_free()
+	var manager_script := load("res://scripts/npc_manager.gd")
+	var manager: Node3D = manager_script.new()
+	root.add_child(manager)
+	var controller = manager.spawn_npc("npc_manager_01", "human_worker", Vector3(2.0, 0.0, -2.0))
+	_check(controller != null, "NPC manager must spawn a controller for a valid definition")
+	_check(manager.states.has("npc_manager_01"), "NPC manager must retain authoritative NPC state")
+	_check(manager.controllers.has("npc_manager_01"), "NPC manager must retain presentation controller")
+	var state: NPCState = manager.get_npc_state("npc_manager_01")
+	_check(state != null and state.definition_id == "human_worker", "NPC manager state must reference the requested definition")
+	manager.despawn_npc("npc_manager_01")
+	_check(not manager.states.has("npc_manager_01"), "NPC manager must remove despawned state")
+	_check(not manager.controllers.has("npc_manager_01"), "NPC manager must remove despawned controller")
+	manager.queue_free()
 
 
 func _test_resource_respawn_contract() -> void:
