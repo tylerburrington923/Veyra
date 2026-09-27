@@ -172,31 +172,76 @@ func _ground_position(position: Vector3) -> Vector3:
 	return position
 
 func _update_villager_behavior(state: NPCState, delta: float) -> void:
-	if state.current_job != "IDLE" and state.current_job != "Unassigned":
+	if not state.alive:
 		return
 	state.behavior_timer += delta
-	if state.current_task == "IDLE" and state.behavior_timer >= 5.0 + float(abs(state.npc_id.hash()) % 5):
+	var current := _state_position(state.position)
+	var work_target := _get_npc_work_target(state)
+
+	if state.current_task == "IDLE":
+		var delay := 4.0 + float(abs(state.npc_id.hash()) % 4)
+		if state.behavior_timer < delay:
+			return
 		state.behavior_timer = 0.0
-		var current := _state_position(state.position)
-		var phase := float(abs(state.npc_id.hash()) % 360) * 0.0174533
-		var target := _ground_position(current + Vector3(cos(phase), 0.0, sin(phase)) * 3.5)
-		state.target_position = NPCState.make_vector_dict(target.x, target.y, target.z)
-		state.current_task = "WANDER"
+		if state.current_job == "BUILDER" or state.current_job == "Builder":
+			state.current_task = "WORK"
+			state.target_position = _vector_dict(work_target)
+		elif state.current_job == "TRADER" or state.current_job == "Trader":
+			state.current_task = "PATROL"
+			var phase := float((abs(state.npc_id.hash()) + int(Time.get_ticks_msec() / 1000.0)) % 360) * 0.0174533
+			var patrol_target := _ground_position(_get_settlement_center() + Vector3(cos(phase), 0.0, sin(phase)) * 4.0)
+			state.target_position = _vector_dict(patrol_target)
+		else:
+			var phase := float(abs(state.npc_id.hash()) % 360) * 0.0174533
+			state.current_task = "WANDER"
+			state.target_position = _vector_dict(_ground_position(current + Vector3(cos(phase), 0.0, sin(phase)) * 3.5))
 		return
-	if state.current_task == "WANDER":
-		var current := _state_position(state.position)
+
+	if state.current_task == "WORK":
+		if current.distance_to(work_target) > 0.65:
+			_move_state_toward(state, work_target, delta)
+			return
+		if state.behavior_timer >= 3.0:
+			state.behavior_timer = 0.0
+			var settlement := _settlement_manager()
+			if settlement:
+				settlement.add_stock("Wood", 1)
+			state.current_task = "IDLE"
+		return
+
+	if state.current_task == "PATROL" or state.current_task == "WANDER":
 		var target := _state_position(state.target_position)
-		var offset := target - current
-		offset.y = 0.0
-		var distance := offset.length()
-		if distance < 0.25 or state.behavior_timer >= 9.0:
+		if current.distance_to(target) <= 0.35 or state.behavior_timer >= 8.0:
 			state.position = _vector_dict(_ground_position(current))
 			state.current_task = "IDLE"
 			state.behavior_timer = 0.0
 			return
-		var step := minf(3.0 * delta, distance)
-		var next := _ground_position(current + offset.normalized() * step)
-		state.position = _vector_dict(next)
+		_move_state_toward(state, target, delta)
+
+func _get_npc_work_target(state: NPCState) -> Vector3:
+	var settlement := _settlement_manager()
+	if settlement:
+		var preferred_types: Array[String] = ["B02_STORAGE", "B05_TOWNHALL", "B01_CAMPFIRE"]
+		for building_type in preferred_types:
+			for building in settlement.buildings.values():
+				if building is Dictionary and str(building.get("type", "")) == building_type:
+					var raw_position = building.get("position", [])
+					if raw_position is Array and raw_position.size() >= 3:
+						return _ground_position(Vector3(float(raw_position[0]), float(raw_position[1]), float(raw_position[2])))
+	return _ground_position(_get_settlement_center())
+
+func _move_state_toward(state: NPCState, target: Vector3, delta: float) -> void:
+	var current := _state_position(state.position)
+	var offset := target - current
+	offset.y = 0.0
+	var distance := offset.length()
+	if distance <= 0.001:
+		state.position = _vector_dict(_ground_position(target))
+		return
+	var step := minf(3.0 * delta, distance)
+	var next := _ground_position(current + offset.normalized() * step)
+	state.position = _vector_dict(next)
+	state.target_position = _vector_dict(target)
 
 func _state_position(data: Dictionary) -> Vector3:
 	return Vector3(float(data.get("x", 0.0)), float(data.get("y", 0.0)), float(data.get("z", 0.0)))
