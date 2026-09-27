@@ -43,13 +43,14 @@ jobs:
           git config user.name "Veyra Gemini Agent"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Run Gemini engineering agent
+      - name: Run Gemini implementation agent
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           VEYRA_TASK: ${{ inputs.task }}
           VEYRA_SCOPE: ${{ inputs.scope }}
           GEMINI_MODEL: ${{ inputs.model }}
           GEMINI_REVIEW_MODEL: ${{ inputs.review_model }}
+          GEMINI_DEFER_REVIEW: "true"
         run: |
           test -n "$GEMINI_API_KEY" || (echo "Missing GEMINI_API_KEY repository secret" && exit 1)
           python3 .github/gemini_agent.py
@@ -72,6 +73,17 @@ jobs:
 
       - name: Diff validation
         run: git diff --check
+
+      - name: Run independent Gemini review
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          VEYRA_TASK: ${{ inputs.task }}
+          VEYRA_SCOPE: ${{ inputs.scope }}
+          GEMINI_MODEL: ${{ inputs.model }}
+          GEMINI_REVIEW_MODEL: ${{ inputs.review_model }}
+          GEMINI_REVIEW_ONLY: "true"
+        run: |
+          python3 .github/gemini_agent.py
 
       - name: Create engineering branch and PR
         env:
