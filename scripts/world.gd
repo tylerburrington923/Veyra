@@ -11,6 +11,7 @@ var world_time: float = 0.0
 var world_seed: int = 47291
 
 @onready var lunar_cycle: VeyraLunarCycle = get_node_or_null("LunarCycle") as VeyraLunarCycle
+const ANIMAL_MANAGER_SCRIPT = preload("res://scripts/animal_manager.gd")
 
 func _ready() -> void:
     world_seed = default_world_seed
@@ -115,3 +116,10 @@ func save_game() -> bool:
 func _restore_buildings() -> void:
     if BuildingManager and BuildingManager.has_method("restore_from_settlement"):
         BuildingManager.restore_from_settlement()
+
+func _ensure_wildlife_manager() -> void:
+	if get_node_or_null("AnimalManager"):
+		return
+	var manager := ANIMAL_MANAGER_SCRIPT.new()
+	manager.name = "AnimalManager"
+	add_child(manager)
