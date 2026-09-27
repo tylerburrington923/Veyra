@@ -102,7 +102,12 @@ func _sanitize_inventory(inventory: Dictionary) -> Dictionary:
 
 func _sanitize_player_state(player_state: Dictionary) -> Dictionary:
     if player_state.is_empty():
-        return {"tool_id": "T00_HANDS", "tool_durability": 100.0}
+        return {
+        "tool_id": "T00_HANDS",
+        "tool_durability": 100.0,
+        "resonance_charge": 0.0,
+        "resonance_discovered": false
+    }
     var tool_id := str(player_state.get("tool_id", "T00_HANDS"))
     if tool_id != "T00_HANDS" and tool_id not in VeyraItemCatalog.TOOL_IDS:
         tool_id = "T00_HANDS"
