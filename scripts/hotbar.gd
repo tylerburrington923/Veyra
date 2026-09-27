@@ -18,6 +18,7 @@ var toast_time: float = 0.0
 var last_snapshot: Dictionary = {}
 var resonance_panel: Panel
 var resonance_label: Label
+var resonance_seen := false
 
 func _ready() -> void:
 	if inventory and inventory.has_signal("inventory_changed"):
@@ -56,7 +57,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_Q:
 		_cycle_tool()
 
-func _on_resonance_changed(_charge: float, _discovered: bool) -> void:
+func _on_resonance_changed(_charge: float, discovered: bool) -> void:
+	if discovered and not resonance_seen:
+		resonance_seen = true
+		_show_toast("RESONANCE DISCOVERED")
 	_refresh_resonance()
 
 func _build_resonance_hud() -> void:
@@ -91,6 +95,8 @@ func _refresh_resonance() -> void:
 		return
 	var charge := float(player.get_resonance()) if player and player.has_method("get_resonance") else 0.0
 	var discovered := bool(player.get("resonance_discovered")) if player else false
+	if discovered:
+		resonance_seen = true
 	var lux := inventory.get_amount("Vitreous Lux")
 	var echo := inventory.get_amount("Echo-Stone")
 	if discovered or charge > 0.0:
