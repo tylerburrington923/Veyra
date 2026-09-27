@@ -9,6 +9,7 @@ var main_menu_button
 var settings_panel
 var menu_button: Button
 var paused_by_menu := false
+var backdrop: ColorRect
 
 func _ready() -> void:
 	layer = 60
@@ -18,6 +19,7 @@ func _ready() -> void:
 	# Only the pause panel is hidden until the player opens it.
 	visible = true
 	panel.visible = false
+	backdrop.visible = false
 
 func _build() -> void:
 	menu_button = Button.new()
@@ -144,6 +146,7 @@ func _toggle() -> void:
 func _open() -> void:
 	visible = true
 	panel.visible = true
+	backdrop.visible = true
 	menu_button.visible = false
 	settings_panel.visible = false
 	paused_by_menu = not _network_session_active()
@@ -156,6 +159,7 @@ func _open() -> void:
 func _resume() -> void:
 	settings_panel.visible = false
 	panel.visible = false
+	backdrop.visible = false
 	visible = true
 	menu_button.visible = true
 	if paused_by_menu:
@@ -215,6 +219,9 @@ func _notification(what: int) -> void:
 			menu_button.position = Vector2(maxf(16.0, get_viewport().get_visible_rect().size.x - menu_button.size.x - 16.0), 16.0)
 		if panel:
 			_center_control(panel)
+		if backdrop:
+			backdrop.size = get_viewport().get_visible_rect().size
+			backdrop.position = Vector2.ZERO
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and paused_by_menu:
 		get_tree().paused = false
 		paused_by_menu = false
