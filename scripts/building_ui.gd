@@ -89,12 +89,14 @@ func _build_base() -> void:
 	_backdrop.name = "ModalBackdrop"
 	_backdrop.color = Color(0.0, 0.0, 0.0, 0.48)
 	_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+	_backdrop.add_to_group("camera_blocking_ui")
 	_backdrop.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	add_child(_backdrop)
 
 	panel = Panel.new()
 	panel.name = "BuildingPanel"
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	panel.add_to_group("camera_blocking_ui")
 	add_child(panel)
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.025, 0.04, 0.055, 0.985)
@@ -119,6 +121,8 @@ func _build_base() -> void:
 	body_scroll.mouse_filter = Control.MOUSE_FILTER_STOP
 	body_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	body_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	body_scroll.follow_focus = true
+	body_scroll.scroll_deadzone = 18
 	panel.add_child(body_scroll)
 	body_box = VBoxContainer.new()
 	body_box.add_theme_constant_override("separation", 8)
@@ -275,7 +279,19 @@ func _missing_cost(inventory: VeyraInventory, cost: Dictionary) -> String:
 	return " • ".join(missing)
 
 func _refresh_blacksmith() -> void:
-	pass
+	if _mode != "blacksmith" or not _player:
+		return
+	var inventory: VeyraInventory = _player.get_inventory() if _player.has_method("get_inventory") else null
+	if not inventory:
+		return
+	_add_or_update_status(
+		"METAL %d  •  REFINED %d  •  WOOD %d  •  STONE %d" % [
+			inventory.get_amount("Metal"),
+			inventory.get_amount("Refined Metal"),
+			inventory.get_amount("Wood"),
+			inventory.get_amount("Stone")
+		]
+	)
 
 func _add_or_update_status(text: String) -> void:
 	var status := body_box.get_node_or_null("Status") as Label
