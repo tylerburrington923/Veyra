@@ -127,16 +127,21 @@ func _hide_settings() -> void:
 	status.text = "GAME PAUSED" if _paused else "MULTIPLAYER MENU"
 
 func _show_multiplayer() -> void:
-	if NetworkManager.lobby_layer:
+	var network_manager = get_node_or_null("/root/NetworkManager")
+	if network_manager and network_manager.lobby_layer:
 		NetworkManager.lobby_layer.visible = true
 		NetworkManager.lobby_layer.get_node("MultiplayerPanel").position = Vector2(445, 170)
 	status.text = "MULTIPLAYER PANEL OPEN"
 	_update_multiplayer_button()
 
 func _update_multiplayer_button() -> void:
-	multiplayer_button.text = "MULTIPLAYER" if not NetworkManager.session_active else "MULTIPLAYER • ACTIVE"
+	multiplayer_button.text = "MULTIPLAYER" if not _network_session_active() else "MULTIPLAYER • ACTIVE"
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and _paused:
 		get_tree().paused = false
 		_paused = false
+
+func _network_session_active() -> bool:
+	var network_manager = get_node_or_null("/root/NetworkManager")
+	return network_manager != null and bool(network_manager.session_active)
