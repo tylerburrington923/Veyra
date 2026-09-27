@@ -37,7 +37,7 @@ jobs:
           test -f scripts/building_manager.gd
           test -f scripts/building_instance.gd
           test -f scripts/save_manager.gd
-          grep -q 'run/main_scene="res://scenes/world.tscn"' project.godot
+          grep -q 'run/main_scene="res://scenes/main_menu.tscn"' project.godot
           grep -Fq 'BuildingManager="*res://scripts/building_manager.gd"' project.godot
 
       - name: Import project
