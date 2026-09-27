@@ -45,7 +45,7 @@ func _run_tests() -> void:
 	_test_pause_menu_contract()
 	_test_active_npc_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (37 suites)")
+		print("VEYRA CORE TESTS: PASS (38 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -214,6 +214,19 @@ func _test_pause_menu_contract() -> void:
 	_check(menu != null, "pause menu must instantiate")
 	var menu_button := menu.get_node_or_null("MenuButton") as Button if menu else null
 	_check(menu_button != null, "pause menu must expose top-corner menu button")
+	_check(menu != null and not menu.visible, "pause menu must start hidden while the world is active")
+	if menu_button:
+		var viewport_size := menu.get_viewport().get_visible_rect().size
+		_check(menu_button.position.x >= 0.0 and menu_button.position.x + menu_button.size.x <= viewport_size.x, "pause button must remain inside viewport")
+		_check(menu_button.position.y >= 0.0 and menu_button.position.y + menu_button.size.y <= viewport_size.y, "pause button must remain inside viewport vertically")
+		menu_button.emit_signal("pressed")
+		_check(menu.visible, "pause button must open the in-game menu")
+		var multiplayer_button := menu.get_node_or_null("PausePanel/Multiplayer") as Button
+		_check(multiplayer_button != null, "pause menu must expose multiplayer button")
+		var panel := menu.get_node_or_null("PausePanel") as Control
+		_check(panel != null and panel.position.x >= 0.0 and panel.position.y >= 0.0, "pause panel must be positioned inside viewport")
+		menu_button.emit_signal("pressed")
+		_check(not menu.visible, "pause button must close the in-game menu")
 	menu.queue_free()
 	var main_menu_scene := load("res://scenes/main_menu.tscn") as PackedScene
 	_check(main_menu_scene != null, "main menu scene must load")
