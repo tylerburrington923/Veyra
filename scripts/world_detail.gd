@@ -38,21 +38,17 @@ func _generate() -> void:
 		var z := rng.randf_range(-world_radius, world_radius)
 		var ground_y := _ground_height(x, z)
 
-		var rock_basis := Basis(
-			Vector3.UP,
-			rng.randf_range(0.0, TAU)
-		).scaled(
-			Vector3(
-				rng.randf_range(0.6, 1.8),
-				rng.randf_range(0.45, 1.0),
-				rng.randf_range(0.6, 1.5)
-			)
+		var rock_scale := Vector3(
+			rng.randf_range(0.6, 1.8),
+			rng.randf_range(0.45, 1.0),
+			rng.randf_range(0.6, 1.5)
 		)
+		var rock_basis := Basis(Vector3.UP, rng.randf_range(0.0, TAU)).scaled(rock_scale)
 
 		rock_transforms.append(
 			Transform3D(
 				rock_basis,
-				Vector3(x, ground_y + 0.25, z)
+				Vector3(x, ground_y + 0.425 * rock_scale.y, z)
 			)
 		)
 
@@ -96,8 +92,6 @@ func _generate() -> void:
 	)
 	_create_harvest_nodes("PURPLE_LUX", crystal_transforms, "Vitreous Lux", "I02_STONE_PICK", 1, 1.0, crystal_instances)
 
-
-	_make_water()
 
 
 func _create_harvest_nodes(prefix: String, transforms: Array[Transform3D], resource_type: String, required_tool: String, amount: int, durability_cost: float, visual_instance: MultiMeshInstance3D) -> void:
@@ -174,51 +168,5 @@ func _ground_height(x: float, z: float) -> float:
 	if terrain and terrain.has_method("get_height_at_world"):
 		return terrain.get_height_at_world(x, z)
 	return 0.0
-
-
-func _make_water() -> void:
-	var water := MeshInstance3D.new()
-	water.name = "Water"
-
-	var mesh := PlaneMesh.new()
-	mesh.size = Vector2(32, 20)
-	mesh.subdivide_width = 12
-	mesh.subdivide_depth = 8
-	water.mesh = mesh
-	water.position = Vector3(
-		28.0,
-		_ground_height(28.0, 18.0) - 0.25,
-		18.0
-	)
-
-	var material := ShaderMaterial.new()
-	var shader := Shader.new()
-	shader.code = """
-shader_type spatial;
-render_mode blend_mix, depth_prepass_alpha, cull_disabled;
-
-uniform vec4 deep_color : source_color = vec4(0.035, 0.20, 0.24, 0.88);
-uniform vec4 shallow_color : source_color = vec4(0.12, 0.42, 0.45, 0.82);
-
-void vertex() {
-	float wave_a = sin(VERTEX.x * 0.55 + TIME * 0.9) * 0.055;
-	float wave_b = cos(VERTEX.z * 0.72 + TIME * 0.65) * 0.04;
-	VERTEX.y += wave_a + wave_b;
-}
-
-void fragment() {
-	float wave = 0.5 + 0.5 * sin(UV.x * 18.0 + UV.y * 9.0 + TIME * 0.7);
-	vec3 surface = mix(deep_color.rgb, shallow_color.rgb, wave * 0.28);
-	float edge = pow(1.0 - max(dot(NORMAL, VIEW), 0.0), 2.0);
-	ALBEDO = mix(surface, vec3(0.55, 0.80, 0.78), edge * 0.18);
-	ROUGHNESS = 0.16;
-	METALLIC = 0.05;
-	ALPHA = mix(deep_color.a, shallow_color.a, wave * 0.2);
-}
-"""
-	material.shader = shader
-	water.material_override = material
-
-	add_child(water)
 
 
