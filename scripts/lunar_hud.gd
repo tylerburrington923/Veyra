@@ -89,4 +89,4 @@ func _draw_lunar() -> void:
 		var title := "LUNAR  //  " + phase_name
 		font.draw_string(get_canvas_item(), Vector2(54.0, 23.0), title, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 13, Color(0.48, 0.88, 0.90, 1.0))
 		var pct := "%d%% ILLUMINATION" % int(round(illumination * 100.0))
-		font.draw_string(self, Vector2(54.0, 41.0), pct, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10, Color(0.72, 0.80, 0.83, 0.90))
+		font.draw_string(get_canvas_item(), Vector2(54.0, 41.0), pct, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10, Color(0.72, 0.80, 0.83, 0.90))
