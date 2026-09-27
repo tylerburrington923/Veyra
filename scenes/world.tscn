@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scripts/lunar_cycle.gd" id="9_lunar"]
 [ext_resource type="Script" path="res://scripts/echo_stone.gd" id="8_echo"]
 [ext_resource type="Script" path="res://scripts/water_system.gd" id="10_water"]
+[ext_resource type="Script" path="res://scripts/npc_manager.gd" id="11_npc"]
 
 [sub_resource type="SphereMesh" id="ArtifactMesh"]
 radius = 0.75
@@ -87,6 +88,9 @@ mesh = SubResource("ArtifactMesh")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="VeyraArtifact"]
 shape = SubResource("ArtifactShape")
+
+[node name="NPCManager" type="Node3D" parent="."]
+script = ExtResource("11_npc")
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector3(0, 4, 0)
