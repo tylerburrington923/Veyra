@@ -190,6 +190,25 @@ func _toggle_storage(player: Node) -> void:
 
 
 
+func deposit_civic_materials(player: Node, amount_per_resource: int = 10) -> bool:
+    if building_type != "B05_TOWNHALL" or not player or amount_per_resource <= 0:
+        return false
+    var inventory: VeyraInventory = player.get_node_or_null("Inventory") as VeyraInventory
+    var settlement := get_node_or_null("/root/SettlementManager")
+    if not inventory or not settlement or not settlement.has_method("add_stock"):
+        return false
+    var deposited := 0
+    var wood := inventory.remove_resource("Wood", amount_per_resource)
+    var stone := inventory.remove_resource("Stone", amount_per_resource)
+    if wood > 0:
+        settlement.add_stock("Wood", wood)
+        deposited += wood
+    if stone > 0:
+        settlement.add_stock("Stone", stone)
+        deposited += stone
+    _last_interaction_feedback = "Town Hall: deposited %d civic materials." % deposited if deposited > 0 else "Town Hall: nothing to deposit."
+    return deposited > 0
+
 func _open_building_ui(player: Node, mode: String) -> void:
     if not player:
         return
