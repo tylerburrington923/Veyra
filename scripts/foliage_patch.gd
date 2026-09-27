@@ -199,11 +199,11 @@ func _hidden_transform(original: Transform3D) -> Transform3D:
 
 
 func set_visibility_distance(distance: float) -> void:
-	_visibility_distance = maxf(20.0, distance)
-	for child in get_children():
-		if child is MultiMeshInstance3D:
-			child.visibility_range_end = _visibility_distance
-			child.visibility_range_end_margin = 8.0
+    _visibility_distance = maxf(20.0, distance)
+    for child in get_children():
+        if child is MultiMeshInstance3D:
+            child.visibility_range_end = _visibility_distance
+            child.visibility_range_end_margin = 8.0
 
 func _create_multimesh(
     node_name: String,
