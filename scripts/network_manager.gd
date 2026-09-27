@@ -17,6 +17,7 @@ var peer_inputs: Dictionary = {}
 var players: Dictionary = {}
 var _server_interaction_locks: Dictionary = {}
 var _snapshot_accumulator: float = 0.0
+var _state_sync_accumulator: float = 0.0
 
 var lobby_layer: CanvasLayer
 var status_label: Label
@@ -43,10 +44,13 @@ func _process(delta: float) -> void:
 	if not session_active or not is_host:
 		return
 	_snapshot_accumulator += delta
-	if _snapshot_accumulator < SNAPSHOT_INTERVAL:
-		return
-	_snapshot_accumulator = 0.0
-	_broadcast_snapshot()
+	_state_sync_accumulator += delta
+	if _snapshot_accumulator >= SNAPSHOT_INTERVAL:
+		_snapshot_accumulator = 0.0
+		_broadcast_snapshot()
+	if _state_sync_accumulator >= 0.25:
+		_state_sync_accumulator = 0.0
+		_broadcast_game_state()
 
 func host_game() -> bool:
 	if session_active:
@@ -101,6 +105,16 @@ func submit_local_interaction(target: Node) -> void:
 	if not session_active or is_host or not target:
 		return
 	request_interaction.rpc_id(1, target.get_path())
+
+func submit_local_build(building_id: String, position: Vector3) -> void:
+	if not session_active or is_host:
+		return
+	request_build.rpc_id(1, building_id, position)
+
+func submit_local_craft(recipe_id: String) -> void:
+	if not session_active or is_host:
+		return
+	request_craft.rpc_id(1, recipe_id)
 
 @rpc("any_peer", "unreliable")
 func send_input(input_vector: Vector2, yaw: float, pitch: float, jump: bool) -> void:
@@ -267,6 +281,31 @@ func request_interaction(resource_path: NodePath) -> void:
 	_server_interaction_locks.erase(peer_id)
 
 @rpc("authority", "reliable")
+@rpc("any_peer", "reliable")
+func request_build(building_id: String, position: Vector3) -> void:
+	if not multiplayer.is_server():
+		return
+	var peer_id := multiplayer.get_remote_sender_id()
+	var player := players.get(peer_id) as Node3D
+	var manager := get_node_or_null("/root/BuildingManager")
+	var inventory: VeyraInventory = player.get_inventory() if player and player.has_method("get_inventory") else null
+	if not player or not manager or not inventory:
+		return
+	if manager.select_building(building_id) and manager.evaluate_placement(player, position, inventory):
+		manager.confirm_build(player, inventory)
+	manager.cancel_placement()
+
+@rpc("any_peer", "reliable")
+func request_craft(recipe_id: String) -> void:
+	if not multiplayer.is_server():
+		return
+	var peer_id := multiplayer.get_remote_sender_id()
+	var player := players.get(peer_id) as Node
+	var manager := get_node_or_null("/root/CraftingManager")
+	var inventory: VeyraInventory = player.get_inventory() if player and player.has_method("get_inventory") else null
+	if manager and inventory:
+		manager.craft(recipe_id, inventory)
+
 func broadcast_interaction_feedback(peer_id: int, target_name: String) -> void:
 	if status_label and peer_id == local_peer_id:
 		_set_status("USED %s" % target_name)
@@ -393,3 +432,39 @@ func _is_private_ipv4(address: String) -> bool:
 			return false
 		values.append(value)
 	return values[0] == 10 or values[0] == 192 and values[1] == 168 or values[0] == 172 and values[1] >= 16 and values[1] <= 31
+
+
+func _broadcast_game_state() -> void:
+	if not multiplayer.is_server():
+		return
+	var inventories: Dictionary = {}
+	for peer_id in players.keys():
+		var player := players[peer_id] as Node
+		if player and player.has_method("get_inventory"):
+			inventories[int(peer_id)] = player.get_inventory().get_snapshot()
+	var world := get_tree().current_scene
+	var generator := world.get_node_or_null("WorldGenerator") if world else null
+	var resources := generator.get_resource_state() if generator and generator.has_method("get_resource_state") else {}
+	var settlement := get_node_or_null("/root/SettlementManager")
+	var settlement_state := settlement.get_settlement_state() if settlement and settlement.has_method("get_settlement_state") else {}
+	receive_game_state.rpc(inventories, resources, settlement_state)
+
+@rpc("authority", "reliable")
+func receive_game_state(inventories: Dictionary, resources: Dictionary, settlement_state: Dictionary) -> void:
+	if is_host:
+		return
+	var local_player := get_tree().current_scene.get_node_or_null("Player")
+	if local_player and local_player.has_method("get_inventory"):
+		var snapshot = inventories.get(local_peer_id, {})
+		if snapshot is Dictionary:
+			local_player.get_inventory().load_snapshot(snapshot)
+	var world := get_tree().current_scene
+	var generator := world.get_node_or_null("WorldGenerator") if world else null
+	if generator and generator.has_method("apply_resource_state"):
+		generator.apply_resource_state(resources)
+	var settlement := get_node_or_null("/root/SettlementManager")
+	if settlement and settlement.has_method("load_settlement_state"):
+		settlement.load_settlement_state(settlement_state)
+	var building_manager := get_node_or_null("/root/BuildingManager")
+	if building_manager and building_manager.has_method("restore_from_settlement"):
+		building_manager.restore_from_settlement()
