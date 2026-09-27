@@ -51,9 +51,9 @@ def extract_dependencies(rel: str, data: str):
     """Return local repository files referenced by common Godot/GDScript path forms."""
     refs = set()
     patterns = [
-        r'(?:"|\\')((?:res://)?(?:scripts|scenes|tests)/[^"\\']+)',
-        r'preload\\(["\\']([^"\\']+)["\\']\\)',
-        r'load\\(["\\']([^"\\']+)["\\']\\)',
+        r"""(?:"|')((?:res://)?(?:scripts|scenes|tests)/[^"']+)""",
+        r"""preload\\(["']([^"']+)["']\\)""",
+        r"""load\\(["']([^"']+)["']\\)""",
     ]
     for pattern in patterns:
         for raw in re.findall(pattern, data):
