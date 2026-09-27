@@ -172,7 +172,12 @@ func try_interact() -> void:
 		return
 
 	if handler.has_method("interact"):
-		handler.interact()
+		var network_manager := get_tree().get_first_node_in_group("network_manager")
+		var network_active := network_manager and network_manager.has_method("submit_local_interaction") and network_manager.session_active and not network_manager.is_host
+		if network_active:
+			network_manager.submit_local_interaction(handler)
+		else:
+			handler.interact()
 		var player := get_tree().get_first_node_in_group("local_player")
 		if player and player.has_method("play_tool_use"):
 			player.play_tool_use()
