@@ -14,7 +14,7 @@ SCOPE = [x.strip().strip("/") for x in os.environ.get("VEYRA_SCOPE", "scripts,sc
 MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
 FALLBACK_MODELS = [x.strip() for x in os.environ.get("GEMINI_FALLBACK_MODELS", "gemini-3.7-flash").split(",") if x.strip()]
 
-ALLOWED_ROOTS = ("scripts/", "scenes/", "tests/", ".github/", "docs/")
+ALLOWED_ROOTS = ("scripts/", "scenes/", "tests/", "docs/")
 BLOCKED = (".godot/", ".git/", "build/", ".env", "project.godot")
 TEXT_SUFFIXES = {".gd", ".tscn", ".tres", ".cfg", ".yml", ".yaml", ".md"}
 CONTEXT_FILE = ROOT / "docs/AI_ARCHITECTURE_CONTEXT.md"
