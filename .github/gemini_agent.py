@@ -380,7 +380,7 @@ Set approved=false for any error/critical finding or required architectural corr
 diff_text = git_diff()
 
 def static_guard():
-    """Catch cheap, high-confidence mistakes before the expensive model review."""
+    """Catch cheap, high-confidence mistakes before repository validation."""
     findings = []
     for item in report["files"]:
         path = item["path"]
@@ -392,9 +392,6 @@ def static_guard():
             if not stripped.startswith("var ") or ":=" not in stripped:
                 continue
             rhs = stripped.split(":=", 1)[1]
-            # Godot commonly returns Variant from these APIs. Explicit typing is
-            # safer in the strict 4.7.2 parser and catches the exact class of
-            # failure that previously blocked the water regression suite.
             variant_calls = (
                 "Dictionary.get(",
                 ".get(",
@@ -410,18 +407,35 @@ def static_guard():
     if check.returncode != 0:
         findings.append("git diff --check failed: " + check.stderr.strip())
     if findings:
-        raise SystemExit("Pre-review static guard failed:\n" + "\n".join(findings))
+        raise SystemExit("Pre-validation static guard failed:\n" + "\n".join(findings))
 
 static_guard()
+
+# The first phase intentionally stops after generating a validated candidate.
+# The workflow resumes the same workspace in review-only mode after Godot/tests pass.
+if os.environ.get("GEMINI_DEFER_REVIEW", "").lower() in {"1", "true", "yes"}:
+    report["review"] = {
+        "status": "deferred",
+        "reason": "Godot validation must pass before independent Gemini review.",
+    }
+    pathlib.Path("gemini_agent_output.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+    print(json.dumps(report, indent=2))
+    raise SystemExit(0)
+
+if os.environ.get("GEMINI_REVIEW_ONLY", "").lower() in {"1", "true", "yes"}:
+    report_path = pathlib.Path("gemini_agent_output.json")
+    if not report_path.exists():
+        raise SystemExit("Gemini review-only phase requires gemini_agent_output.json.")
+    try:
+        existing = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise SystemExit(f"Existing Gemini report is invalid JSON: {e}")
+    if not isinstance(existing.get("files"), list):
+        raise SystemExit("Existing Gemini report has no files array.")
+    report = existing
+    diff_text = git_diff()
+
 review_model, review = review_generated_changes(diff_text)
-report["review"] = {
-    "model": review_model,
-    "approved": review["approved"],
-    "risk_level": review.get("risk_level", "unknown"),
-    "findings": review.get("findings", []),
-    "required_changes": review.get("required_changes", []),
-    "summary": review.get("summary", ""),
-}
 pathlib.Path("gemini_agent_output.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
 print(json.dumps(report, indent=2))
 if not review["approved"]:
