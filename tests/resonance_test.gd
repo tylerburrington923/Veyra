@@ -47,7 +47,7 @@ func _run() -> void:
 	player.inventory.add_resource("Vitreous Lux", 1)
 
 	var stone := VeyraEchoStone.new()
-	stone.release_threshold = 3.0
+	stone.release_threshold = 6.0
 	root.add_child(stone)
 
 	if not stone.can_interact(player):
