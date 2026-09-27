@@ -73,22 +73,59 @@ var resonance_charge: float = 0.0
 var resonance_discovered: bool = false
 
 signal resonance_changed(charge: float, discovered: bool)
+signal resonance_tier_changed(tier: int, tier_name: String)
 
 func get_resonance() -> float:
 	return resonance_charge
 
+func get_resonance_tier() -> int:
+	if resonance_charge >= 100.0:
+		return 5
+	if resonance_charge >= 75.0:
+		return 4
+	if resonance_charge >= 50.0:
+		return 3
+	if resonance_charge >= 25.0:
+		return 2
+	if resonance_charge >= 10.0:
+		return 1
+	return 0
+
+func get_resonance_tier_name() -> String:
+	match get_resonance_tier():
+		5:
+			return "CONVERGENCE"
+		4:
+			return "RESONANT"
+		3:
+			return "ATTUNED"
+		2:
+			return "AWAKENED"
+		1:
+			return "SENSITIZED"
+		_:
+			return "DORMANT"
+
 func add_resonance(amount: float) -> void:
 	if amount <= 0.0:
 		return
+	var previous_tier := get_resonance_tier()
 	resonance_charge = clampf(resonance_charge + amount, 0.0, 100.0)
 	if not resonance_discovered:
 		resonance_discovered = true
+	var new_tier := get_resonance_tier()
 	resonance_changed.emit(resonance_charge, resonance_discovered)
+	if new_tier != previous_tier:
+		resonance_tier_changed.emit(new_tier, get_resonance_tier_name())
 
 func set_resonance_state(charge: float, discovered: bool) -> void:
+	var previous_tier := get_resonance_tier()
 	resonance_charge = clampf(charge, 0.0, 100.0)
 	resonance_discovered = discovered
 	resonance_changed.emit(resonance_charge, resonance_discovered)
+	var new_tier := get_resonance_tier()
+	if new_tier != previous_tier:
+		resonance_tier_changed.emit(new_tier, get_resonance_tier_name())
 
 # Multiplayer alpha: the server owns movement state; clients send input and
 # receive authoritative transforms. Offline play remains unchanged.
