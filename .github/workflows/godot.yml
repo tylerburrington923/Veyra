@@ -51,6 +51,10 @@ jobs:
         timeout-minutes: 2
         run: godot --headless --path . --script res://tests/core_test.gd
 
+      - name: Run resonance regression test
+        timeout-minutes: 2
+        run: godot --headless --path . --script res://tests/resonance_test.gd
+
       - name: Check for import/parser errors
         shell: bash
         run: |
