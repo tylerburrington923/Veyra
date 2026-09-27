@@ -102,11 +102,47 @@ func sync_settlement_villagers() -> void:
 			state = states.get(id)
 			index += 1
 		if state:
-			state.current_job = job if not job.is_empty() else "IDLE"
+			state.current_job = job if not job.is_empty() else _default_role_for_npc(id)
 
 	for existing_id in states.keys():
 		if not live_ids.has(existing_id):
 			despawn_npc(str(existing_id))
+
+func _default_role_for_npc(npc_id: String) -> String:
+	return "TRADER" if abs(npc_id.hash()) % 3 == 0 else "BUILDER"
+
+func interact_with_npc(npc_id: String, player: Node) -> String:
+	var state := states.get(npc_id) as NPCState
+	if not state or not state.alive or not player:
+		return "No response."
+	var inventory: VeyraInventory = player.get_inventory() if player.has_method("get_inventory") else null
+	if not inventory:
+		return "No inventory available."
+	match state.current_job:
+		"TRADER":
+			if inventory.has_resource("Stone", 5):
+				var paid := inventory.remove_resource("Stone", 5)
+				if paid == 5 and inventory.add_resource("Metal", 1) == 1:
+					return "%s traded 5 Stone for 1 Metal." % _npc_name(npc_id)
+				if paid > 0:
+					inventory.add_resource("Stone", paid)
+			return "%s: bring 5 Stone for 1 Metal." % _npc_name(npc_id)
+		"BUILDER":
+			if inventory.has_item("I01_STONE_AXE"):
+				return "%s: I can service your tools, but your Stone Axe is already made." % _npc_name(npc_id)
+			if inventory.has_resource("Wood", 2) and inventory.has_resource("Stone", 2):
+				if inventory.remove_resource("Wood", 2) == 2 and inventory.remove_resource("Stone", 2) == 2 and inventory.add_item("I01_STONE_AXE", 1) == 1:
+					return "%s crafted a Stone Axe for you." % _npc_name(npc_id)
+				inventory.add_resource("Wood", 2)
+				inventory.add_resource("Stone", 2)
+			return "%s service: 2 Wood + 2 Stone for a Stone Axe." % _npc_name(npc_id)
+	return "%s has nothing to offer right now." % _npc_name(npc_id)
+
+func _npc_name(npc_id: String) -> String:
+	var settlement := _settlement_manager()
+	if settlement and settlement.villagers.has(npc_id):
+		return str(settlement.villagers[npc_id].get("name", "Villager"))
+	return "Villager"
 
 func _get_villager_spawn_position(record: Dictionary, index: int) -> Vector3:
 	var position_data = record.get("position", {})
