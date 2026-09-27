@@ -203,8 +203,9 @@ scale = Vector3(1.0, 0.55, 1.25)
 mesh = SubResource("FootMesh")
 material_override = SubResource("Pants")
 [node name="Camera3D" type="Camera3D" parent="."]
-position = Vector3(0.0, 1.64, 0.035)
-rotation_degrees = Vector3(-8, 0, 0)
+position = Vector3(0.0, 1.72, 0.08)
+rotation_degrees = Vector3(-5, 0, 0)
+fov = 66.0
 current = true
 cull_mask = 3
 near = 0.05
