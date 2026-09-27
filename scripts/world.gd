@@ -118,8 +118,8 @@ func _restore_buildings() -> void:
         BuildingManager.restore_from_settlement()
 
 func _ensure_wildlife_manager() -> void:
-	if get_node_or_null("AnimalManager"):
-		return
-	var manager := ANIMAL_MANAGER_SCRIPT.new()
-	manager.name = "AnimalManager"
-	add_child(manager)
+    if get_node_or_null("AnimalManager"):
+        return
+    var manager := ANIMAL_MANAGER_SCRIPT.new()
+    manager.name = "AnimalManager"
+    add_child(manager)
