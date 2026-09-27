@@ -72,28 +72,29 @@ func despawn_animal(animal_id: String) -> void:
 	visuals.erase(animal_id)
 
 func _update_behavior(state: AnimalState, definition: AnimalDefinition, delta: float) -> void:
+	state.behavior_timer += delta
 	if state.behavior_state == "IDLE":
-		state.target_position = state.position.duplicate()
-		if fmod(Time.get_ticks_msec() / 1000.0 + float(state.animal_id.hash() % 7), 7.0) > 5.8:
+		if state.behavior_timer >= 4.0 + float(abs(state.animal_id.hash()) % 4):
+			state.behavior_timer = 0.0
 			var origin := _state_position(state.position)
-			var phase := float((state.animal_id.hash() & 1023)) * 0.013
-			var target := origin + Vector3(cos(phase + Time.get_ticks_msec() * 0.00008), 0.0, sin(phase + Time.get_ticks_msec() * 0.00008)) * 5.0
-			state.target_position = _get_grounded_position(target)
+			var phase := float(abs(state.animal_id.hash()) % 360) * 0.0174533
+			var target := origin + Vector3(cos(phase), 0.0, sin(phase)) * 5.0
+			state.target_position = _vector_dict(_get_grounded_position(target))
 			state.behavior_state = "WANDER"
-			return
+		return
 	if state.behavior_state == "WANDER":
 		var current := _state_position(state.position)
 		var target := _state_position(state.target_position)
 		var offset := target - current
 		offset.y = 0.0
 		var distance := offset.length()
-		if distance < 0.35:
+		if distance < 0.35 or state.behavior_timer >= 8.0:
 			state.position = _vector_dict(_get_grounded_position(current))
 			state.behavior_state = "IDLE"
+			state.behavior_timer = 0.0
 			return
 		var step := minf(definition.movement_speed * delta, distance)
-		var next := current + offset.normalized() * step
-		next = _get_grounded_position(next)
+		var next := _get_grounded_position(current + offset.normalized() * step)
 		state.position = _vector_dict(next)
 		state.stamina = clampf(state.stamina - 0.08 * delta, 0.0, 100.0)
 
