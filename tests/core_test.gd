@@ -889,6 +889,7 @@ func _test_multiplayer_contract() -> void:
 	_check(manager.has_method("join_game"), "multiplayer manager must expose join_game")
 	_check(manager.has_method("submit_local_input"), "multiplayer manager must expose client input submission")
 	_check(manager.has_method("receive_snapshot"), "multiplayer manager must expose authoritative snapshot handling")
+	_check(manager.has_method("receive_animal_snapshot"), "multiplayer manager must expose wildlife snapshot handling")
 	_check(manager.has_method("submit_local_interaction"), "multiplayer manager must expose interaction requests")
 	_check(manager.has_method("request_interaction"), "multiplayer manager must validate interaction requests on host")
 	_check(manager._is_private_ipv4("192.168.43.1"), "192.168 hotspot address must be recognized")
