@@ -26,6 +26,7 @@ var host_button: Button
 var join_button: Button
 var leave_button: Button
 var copy_ip_button: Button
+var close_lobby_button: Button
 
 func _ready() -> void:
 	add_to_group("network_manager")
@@ -152,6 +153,7 @@ func network_spawn_player(peer_id: int) -> void:
 	var player := scene.instantiate() as CharacterBody3D
 	if not player:
 		return
+	player.global_position = _get_network_spawn_position(peer_id)
 	player.set_meta("network_mode", true)
 	player.set_meta("network_local", peer_id == local_peer_id)
 	player.set_meta("network_peer_id", peer_id)
@@ -357,6 +359,19 @@ func _despawn_all_network_players() -> void:
 	if local_player and local_player.has_method("configure_offline_role"):
 		local_player.configure_offline_role()
 
+func _get_network_spawn_position(peer_id: int) -> Vector3:
+	var world := get_tree().current_scene
+	var local_player := world.get_node_or_null("Player") as CharacterBody3D if world else null
+	var spawn := local_player.global_position if local_player else Vector3(0.0, 4.0, 0.0)
+	if peer_id != local_peer_id:
+		spawn += Vector3(2.5, 0.0, 1.5)
+	var generator := world.get_node_or_null("WorldGenerator") if world else null
+	if generator and generator.has_method("get_height_at_world"):
+		spawn.y = maxf(spawn.y, float(generator.get_height_at_world(spawn.x, spawn.z)) + 2.0)
+	else:
+		spawn.y = maxf(spawn.y, 4.0)
+	return spawn
+
 func _build_lobby_ui() -> void:
 	if lobby_layer:
 		return
@@ -368,7 +383,7 @@ func _build_lobby_ui() -> void:
 
 	var panel := Panel.new()
 	panel.name = "MultiplayerPanel"
-	panel.size = Vector2(360, 190)
+	panel.size = Vector2(360, 220)
 	_center_lobby_panel(panel)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	lobby_layer.add_child(panel)
@@ -426,9 +441,32 @@ func _build_lobby_ui() -> void:
 	copy_ip_button.pressed.connect(_copy_host_address)
 	panel.add_child(copy_ip_button)
 
+	close_lobby_button = Button.new()
+	close_lobby_button.name = "CLOSE"
+	close_lobby_button.text = "CLOSE"
+	close_lobby_button.position = Vector2(16, 184)
+	close_lobby_button.size = Vector2(320, 30)
+	close_lobby_button.add_to_group("camera_blocking_ui")
+	close_lobby_button.pressed.connect(close_lobby_ui)
+	panel.add_child(close_lobby_button)
+
 func _center_lobby_panel(panel: Control) -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
+	panel.size.x = minf(360.0, maxf(280.0, viewport_size.x - 24.0))
+	panel.size.y = minf(220.0, maxf(210.0, viewport_size.y - 24.0))
 	panel.position = (viewport_size - panel.size) * 0.5
+	var width := panel.size.x
+	if ip_field:
+		ip_field.size.x = maxf(150.0, width - 150.0)
+	if host_button:
+		host_button.position.x = width - 124.0
+	if join_button:
+		join_button.size.x = (width - 42.0) * 0.5
+	if leave_button:
+		leave_button.position.x = 21.0 + join_button.size.x
+		leave_button.size.x = join_button.size.x
+	if close_lobby_button:
+		close_lobby_button.size.x = width - 32.0
 
 func _copy_host_address() -> void:
 	var addresses := _get_lan_addresses()
@@ -445,6 +483,13 @@ func _notification(what: int) -> void:
 		var lobby_panel := lobby_layer.get_node_or_null("MultiplayerPanel") as Control
 		if lobby_panel:
 			_center_lobby_panel(lobby_panel)
+
+func close_lobby_ui() -> void:
+	if lobby_layer:
+		lobby_layer.visible = false
+	var pause_menu := get_tree().current_scene.get_node_or_null("PauseMenu")
+	if pause_menu and pause_menu.has_method("show_pause_panel"):
+		pause_menu.show_pause_panel()
 
 func _set_status(message: String) -> void:
 	if status_label:
