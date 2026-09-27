@@ -10,6 +10,7 @@ var _building: Node
 var _player: Node
 var _mode := ""
 var _backdrop: ColorRect
+var _townhall_buttons: Dictionary = {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -27,9 +28,11 @@ func open_townhall(building: Node, player: Node) -> void:
 	_open(building, player, "TOWN HALL")
 	_add_text("Settlement control. Build from here once the Town Hall exists.")
 	_add_text("Select a structure below. The world will close behind this menu and placement begins after selection.")
+	_townhall_buttons.clear()
 	for building_id in VeyraBuildingCatalog.all_building_ids():
 		var definition := VeyraBuildingCatalog.get_building(building_id)
 		_add_build_option(building_id, definition)
+	_refresh_townhall()
 
 func open_blacksmith(building: Node, player: Node) -> void:
 	_open(building, player, "BLACKSMITH")
@@ -45,6 +48,7 @@ func close_ui() -> void:
 	_building = null
 	_player = null
 	_mode = ""
+	_townhall_buttons.clear()
 
 func is_modal_open() -> bool:
 	return visible
@@ -171,6 +175,7 @@ func _add_build_option(id: String, definition: Dictionary) -> void:
 	var row := VBoxContainer.new()
 	row.add_theme_constant_override("separation", 2)
 	var button := Button.new()
+	button.name = "Build_%s" % id
 	button.text = str(definition.get("name", id))
 	button.tooltip_text = "Select %s" % button.text
 	button.custom_minimum_size = Vector2(0, 48)
@@ -178,6 +183,7 @@ func _add_build_option(id: String, definition: Dictionary) -> void:
 	button.pressed.connect(_begin_build.bind(id))
 	_style_button(button)
 	row.add_child(button)
+	_townhall_buttons[id] = button
 	var cost := Label.new()
 	cost.text = _format_cost(definition.get("cost", {}))
 	cost.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -217,7 +223,34 @@ func _refresh_campfire() -> void:
 	_add_or_update_status("Heat remaining: %.0f sec" % heat)
 
 func _refresh_townhall() -> void:
-	pass
+	if _mode != "townhall" or not _player:
+		return
+	var inventory := _player.get_node_or_null("Inventory") as VeyraInventory
+	if not inventory:
+		return
+	for building_id in _townhall_buttons.keys():
+		var button := _townhall_buttons[building_id] as Button
+		if not button:
+			continue
+		var definition := VeyraBuildingCatalog.get_building(str(building_id))
+		var affordable := _can_afford(inventory, definition.get("cost", {}))
+		button.disabled = not affordable
+		button.tooltip_text = "Select %s" % button.text if affordable else "Missing: %s" % _missing_cost(inventory, definition.get("cost", {}))
+
+func _can_afford(inventory: VeyraInventory, cost: Dictionary) -> bool:
+	for resource_type in cost.keys():
+		if not inventory.has_resource(str(resource_type), int(cost[resource_type])):
+			return false
+	return true
+
+func _missing_cost(inventory: VeyraInventory, cost: Dictionary) -> String:
+	var missing: Array[String] = []
+	for resource_type in cost.keys():
+		var required := int(cost[resource_type])
+		var have := int(inventory.get_amount(str(resource_type)))
+		if have < required:
+			missing.append("%s %d/%d" % [str(resource_type), have, required])
+	return " • ".join(missing)
 
 func _refresh_blacksmith() -> void:
 	pass
