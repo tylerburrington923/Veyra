@@ -26,11 +26,13 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if delta <= 0.0:
 		return
+	var network_manager = get_node_or_null("/root/NetworkManager")
+	var network_client := network_manager != null and bool(network_manager.get("session_active")) and not bool(network_manager.get("is_host"))
 	var typed_states: Array[NPCState] = []
 	for state in states.values():
 		if state is NPCState:
 			typed_states.append(state)
-	if not typed_states.is_empty():
+	if not typed_states.is_empty() and not network_client:
 		NPCSimulation.process_batch(typed_states, definitions, delta)
 		for state in typed_states:
 			_update_villager_behavior(state, delta)
@@ -165,3 +167,50 @@ func _state_position(data: Dictionary) -> Vector3:
 
 func _vector_dict(position: Vector3) -> Dictionary:
 	return {"x": position.x, "y": position.y, "z": position.z}
+
+
+func get_network_snapshot() -> Array:
+	var snapshot: Array = []
+	for state_value in states.values():
+		if state_value is NPCState:
+			snapshot.append(state_value.to_dict())
+	return snapshot
+
+func apply_network_snapshot(snapshot: Array) -> void:
+	var live_ids: Dictionary = {}
+	for value in snapshot:
+		if not value is Dictionary:
+			continue
+		var data: Dictionary = value
+		var npc_id := str(data.get("npc_id", ""))
+		var definition_id := str(data.get("definition_id", "human_villager"))
+		if npc_id.is_empty() or not definitions.has(definition_id):
+			continue
+		live_ids[npc_id] = true
+		var state: NPCState = states.get(npc_id)
+		if not state:
+			var position_data: Dictionary = data.get("position", {})
+			var position := Vector3(float(position_data.get("x", 0.0)), float(position_data.get("y", 0.0)), float(position_data.get("z", 0.0)))
+			spawn_npc(npc_id, definition_id, position)
+			state = states.get(npc_id)
+		if state:
+			var restored := NPCState.from_dict(data)
+			state.position = restored.position
+			state.rotation = restored.rotation
+			state.target_position = restored.target_position
+			state.health = restored.health
+			state.hunger = restored.hunger
+			state.thirst = restored.thirst
+			state.stamina = restored.stamina
+			state.alive = restored.alive
+			state.current_job = restored.current_job
+			state.current_task = restored.current_task
+			state.schedule_state = restored.schedule_state
+			state.settlement_id = restored.settlement_id
+			state.home_building_id = restored.home_building_id
+			state.work_building_id = restored.work_building_id
+			state.behavior_timer = restored.behavior_timer
+			state.home_position = restored.home_position
+	for existing_id in states.keys().duplicate():
+		if not live_ids.has(str(existing_id)):
+			despawn_npc(str(existing_id))
