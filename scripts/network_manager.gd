@@ -292,7 +292,9 @@ func _build_lobby_ui() -> void:
 		return
 	lobby_layer = CanvasLayer.new()
 	lobby_layer.layer = 40
+	lobby_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(lobby_layer)
+	lobby_layer.visible = false
 
 	var panel := Panel.new()
 	panel.name = "MultiplayerPanel"
