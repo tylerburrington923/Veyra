@@ -237,7 +237,7 @@ func _configure_camera() -> void:
 	camera.current = true
 	camera.fov = camera_fov
 	camera.far = camera_far
-	camera.position = Vector3(0.09, camera_height, 0.035 + camera_distance)
+	camera.position = Vector3(0.0, camera_height, 0.035 + camera_distance)
 	camera.rotation = Vector3(look_pitch, 0.0, 0.0)
 	look_pitch = camera.rotation.x
 	target_yaw = rotation.y
@@ -510,16 +510,22 @@ func _update_player_visuals(delta: float, direction: Vector3) -> void:
 		right_leg.rotation.x = opposite_stride * 0.32
 		right_leg.position.y = 0.48 + opposite_lift
 
+	# Keep the visible body aligned with the camera's facing direction.
+	# The body already follows target_yaw, so pitch is the only extra axis needed.
+	var hand_pitch := deg_to_rad(-62.0) + look_pitch * 0.42
+	var hand_reach := 0.46
 	if left_arm:
-		left_arm.rotation.x = -arm_swing
-		left_arm.rotation.z = deg_to_rad(-8.0) + absf(stride) * 0.035
+		left_arm.rotation.x = hand_pitch - arm_swing * 0.35
+		left_arm.rotation.z = deg_to_rad(-10.0) + absf(stride) * 0.035
+		left_arm.position = Vector3(-0.37, 1.10, -0.16)
 	if right_arm:
-		right_arm.rotation.x = arm_swing
-		right_arm.rotation.z = deg_to_rad(8.0) - absf(stride) * 0.035
+		right_arm.rotation.x = hand_pitch + arm_swing * 0.35
+		right_arm.rotation.z = deg_to_rad(10.0) - absf(stride) * 0.035
+		right_arm.position = Vector3(0.37, 1.10, -0.16)
 	if left_hand:
-		left_hand.position.y = 0.73 + maxf(0.0, -stride) * 0.035
+		left_hand.position = Vector3(-0.40, 0.93, -hand_reach) + Vector3(0.0, maxf(0.0, -stride) * 0.035, 0.0)
 	if right_hand:
-		right_hand.position.y = 0.73 + maxf(0.0, stride) * 0.035
+		right_hand.position = Vector3(0.40, 0.93, -hand_reach) + Vector3(0.0, maxf(0.0, stride) * 0.035, 0.0)
 
 	if torso:
 		var target_y := 1.15 + (absf(stride) * 0.025 if moving else 0.0)
