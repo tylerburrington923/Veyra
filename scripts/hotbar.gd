@@ -10,6 +10,7 @@ const TOOL_ORDER: Array[String] = ["T00_HANDS", "I01_STONE_AXE", "I02_STONE_PICK
 @onready var axe_slot: Button = get_node_or_null("ToolHotbar/AxeSlot") as Button
 @onready var pick_slot: Button = get_node_or_null("ToolHotbar/PickSlot") as Button
 @onready var inventory_panel: Panel = get_node_or_null("InventoryPanel") as Panel
+@onready var backpack_button: Button = get_node_or_null("BackpackButton") as Button
 @onready var inventory_label: Label = get_node_or_null("InventoryPanel/Label") as Label
 @onready var toast: Label = get_node_or_null("PickupToast") as Label
 
@@ -32,6 +33,8 @@ func _ready() -> void:
 	_refresh()
 	if inventory_panel:
 		inventory_panel.visible = false
+	if backpack_button and not backpack_button.pressed.is_connected(_toggle_inventory):
+		backpack_button.pressed.connect(_toggle_inventory)
 
 func _process(delta: float) -> void:
 	if toast_time <= 0.0:
@@ -164,3 +167,5 @@ func _show_toast(message: String) -> void:
 func _toggle_inventory() -> void:
 	if inventory_panel:
 		inventory_panel.visible = not inventory_panel.visible
+	if backpack_button:
+		backpack_button.text = "CLOSE BAG" if inventory_panel and inventory_panel.visible else "BACKPACK"
