@@ -18,10 +18,10 @@ func _ready() -> void:
 func _build() -> void:
 	var menu_button := Button.new()
 	menu_button.name = "MenuButton"
-	menu_button.text = "MENU"
+	menu_button.text = "PAUSE"
 	menu_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	menu_button.position = Vector2(-122, 18)
-	menu_button.size = Vector2(104, 44)
+	menu_button.position = Vector2(-118, 16)
+	menu_button.size = Vector2(100, 42)
 	menu_button.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_style_button(menu_button)
 	menu_button.add_to_group("camera_blocking_ui")
@@ -31,7 +31,7 @@ func _build() -> void:
 	panel = Panel.new()
 	panel.name = "PausePanel"
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	panel.size = Vector2(360, 350)
+	panel.size = Vector2(370, 360)
 	panel.custom_minimum_size = Vector2(320, 300)
 	panel.position = -panel.size * 0.5
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -42,23 +42,24 @@ func _build() -> void:
 	title.position = Vector2(20, 18)
 	title.size = Vector2(320, 38)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_font_size_override("font_size", 26)
+	title.add_theme_color_override("font_color", Color(0.42, 0.82, 0.84, 1))
 	panel.add_child(title)
 
 	status = Label.new()
 	status.text = "GAME PAUSED"
-	status.position = Vector2(25, 64)
+	status.position = Vector2(25, 62)
 	status.size = Vector2(310, 32)
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	panel.add_child(status)
 
-	resume_button = _make_button("RESUME", Vector2(25, 112), Vector2(310, 50))
+	resume_button = _make_button("RESUME", Vector2(25, 108), Vector2(320, 50))
 	resume_button.pressed.connect(_resume)
-	settings_button = _make_button("SETTINGS", Vector2(25, 172), Vector2(310, 50))
+	settings_button = _make_button("SETTINGS", Vector2(25, 168), Vector2(320, 50))
 	settings_button.pressed.connect(_show_settings)
-	multiplayer_button = _make_button("MULTIPLAYER", Vector2(25, 232), Vector2(150, 50))
+	multiplayer_button = _make_button("MULTIPLAYER", Vector2(25, 228), Vector2(154, 50))
 	multiplayer_button.pressed.connect(_show_multiplayer)
-	main_menu_button = _make_button("MAIN MENU", Vector2(185, 232), Vector2(150, 50))
+	main_menu_button = _make_button("MAIN MENU", Vector2(191, 228), Vector2(154, 50))
 	main_menu_button.pressed.connect(_return_to_main_menu)
 	panel.add_child(resume_button)
 	panel.add_child(settings_button)
