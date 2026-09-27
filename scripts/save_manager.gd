@@ -110,9 +110,13 @@ func _sanitize_player_state(player_state: Dictionary) -> Dictionary:
     var clean_position := [0.0, 1.5, 0.0]
     if position is Array and position.size() >= 3:
         clean_position = [float(position[0]), float(position[1]), float(position[2])]
+    var resonance_charge := clampf(float(player_state.get("resonance_charge", 0.0)), 0.0, 100.0)
+    var resonance_discovered := bool(player_state.get("resonance_discovered", resonance_charge > 0.0))
     return {
         "tool_id": tool_id,
         "tool_durability": clampf(float(player_state.get("tool_durability", 100.0)), 0.0, 100.0),
+        "resonance_charge": resonance_charge,
+        "resonance_discovered": resonance_discovered,
         "position": clean_position,
         "yaw": float(player_state.get("yaw", 0.0)),
         "pitch": clampf(float(player_state.get("pitch", deg_to_rad(-8.0))), deg_to_rad(-70.0), deg_to_rad(55.0))
