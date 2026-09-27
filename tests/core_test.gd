@@ -36,7 +36,7 @@ func _run_tests() -> void:
 	_test_building_interaction_contract()
 	_test_building_storage_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (26 suites)")
+		print("VEYRA CORE TESTS: PASS (28 suites)")
 		quit(0)
 	else:
 		for failure in failures:
