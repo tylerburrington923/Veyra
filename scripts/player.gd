@@ -240,11 +240,8 @@ func _configure_first_person_view() -> void:
 	for mesh in [head, hair, left_eye, right_eye]:
 		if mesh:
 			mesh.visible = false
-	# The camera-attached hands remain a presentation layer for readable tool use. The authoritative
-	# body arms/hands stay present in the world model for later third-person/NPC reuse.
-	for mesh in [viewmodel_left_arm, viewmodel_right_arm, viewmodel_left_hand, viewmodel_right_hand]:
-		if mesh:
-			mesh.visible = true
+	# Keep the coherent world-body presentation. Dedicated FP arm/hand meshes were removed
+	# because they produced disconnected geometry at the near camera.
 
 func _stabilize_spawn() -> void:
 	var world_generator := get_parent().get_node_or_null("WorldGenerator")
@@ -323,14 +320,6 @@ func configure_network_role(peer_id: int, local_control: bool) -> void:
 	else:
 		remove_from_group("local_player")
 		_disable_local_presentation()
-
-func _ensure_pause_menu() -> void:
-	if _pause_menu and is_instance_valid(_pause_menu):
-		return
-	_pause_menu = PAUSE_MENU_SCRIPT.new()
-	_pause_menu.name = "PauseMenu"
-	add_child(_pause_menu)
-
 
 func configure_offline_role() -> void:
 	_network_mode = false
