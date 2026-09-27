@@ -7,7 +7,9 @@ class_name VeyraSettlementManager
 
 signal settlement_changed
 
-const SETTLEMENT_VERSION := 1
+const SETTLEMENT_VERSION := 2
+const PLAYER_WATER_PER_CYCLE := 1
+const VILLAGER_WATER_PER_CYCLE := 1
 
 var settlement_name: String = "New Settlement"
 var population: int = 0
@@ -18,6 +20,8 @@ var stone_stock: int = 0
 
 var buildings: Dictionary = {}
 var villagers: Dictionary = {}
+var water_cycle_index: int = 0
+var last_water_shortage: int = 0
 
 func _ready() -> void:
     add_to_group("settlement_manager")
@@ -111,6 +115,8 @@ func add_stock(resource_type: String, amount: int) -> void:
 func get_settlement_state() -> Dictionary:
     return {
         "version": SETTLEMENT_VERSION,
+        "water_cycle_index": water_cycle_index,
+        "water_shortage": last_water_shortage,
         "name": settlement_name,
         "population": population,
         "stock": {
