@@ -537,7 +537,7 @@ func _broadcast_game_state() -> void:
 		if player and player.has_method("get_resonance"):
 			resonance_states[int(peer_id)] = {
 				"charge": float(player.get_resonance()),
-				"discovered": bool(player.resonance_discovered)
+				"discovered": bool(player.get_resonance_discovered())
 			}
 	var world := get_tree().current_scene
 	var generator := world.get_node_or_null("WorldGenerator") if world else null
