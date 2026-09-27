@@ -115,8 +115,11 @@ func _on_animal_death(state: AnimalState, player: Node = null) -> void:
 		var inventory: VeyraInventory = recipient.get_inventory()
 		if inventory:
 			var definition: AnimalDefinition = definitions.get(state.definition_id)
-			var drop_type := "Wood" if definition and definition.id == "mireback" else "Stone"
-			inventory.add_resource(drop_type, 2)
+			if definition:
+				var meat_amount := 3 if definition.id == "lumen_grazer" else 4
+				var hide_amount := 1 if definition.id == "lumen_grazer" else 2
+				inventory.add_resource("Meat", meat_amount)
+				inventory.add_resource("Hide", hide_amount)
 
 func _update_dead_animals(delta: float) -> void:
 	for animal_id in death_timers.keys().duplicate():
