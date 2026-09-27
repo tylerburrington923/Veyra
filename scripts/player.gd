@@ -59,10 +59,6 @@ var touch_start: Dictionary = {}
 @onready var right_eye: MeshInstance3D = get_node_or_null("RightEye") as MeshInstance3D
 @onready var left_hand: MeshInstance3D = get_node_or_null("LeftHand") as MeshInstance3D
 @onready var right_hand: MeshInstance3D = get_node_or_null("RightHand") as MeshInstance3D
-@onready var viewmodel_left_arm: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftArmFP") as MeshInstance3D
-@onready var viewmodel_right_arm: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightArmFP") as MeshInstance3D
-@onready var viewmodel_left_hand: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftHandFP") as MeshInstance3D
-@onready var viewmodel_right_hand: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightHandFP") as MeshInstance3D
 @onready var tool_holder: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder") as Node3D
 @onready var equipped_tool_visual: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool") as Node3D
 var walk_time: float = 0.0
@@ -87,8 +83,6 @@ var _network_target_position: Vector3 = Vector3.ZERO
 var _network_target_yaw: float = 0.0
 var _network_input_accumulator: float = 0.0
 var _network_input_interval: float = 0.05
-var _pause_menu: CanvasLayer
-const PAUSE_MENU_SCRIPT = preload("res://scripts/pause_menu.gd")
 
 
 func get_tool_id() -> String:
@@ -220,7 +214,6 @@ func _ready() -> void:
 		_configure_camera()
 		_configure_first_person_view()
 		_hide_joystick()
-		_ensure_pause_menu()
 	else:
 		_disable_local_presentation()
 	_update_equipped_tool_visual()
@@ -525,8 +518,14 @@ func _update_player_visuals(delta: float, direction: Vector3) -> void:
 
 	if left_arm:
 		left_arm.rotation.x = -arm_swing
+		left_arm.rotation.z = deg_to_rad(-8.0) + absf(stride) * 0.035
 	if right_arm:
 		right_arm.rotation.x = arm_swing
+		right_arm.rotation.z = deg_to_rad(8.0) - absf(stride) * 0.035
+	if left_hand:
+		left_hand.position.y = 0.73 + maxf(0.0, -stride) * 0.035
+	if right_hand:
+		right_hand.position.y = 0.73 + maxf(0.0, stride) * 0.035
 
 	if torso:
 		var target_y := 1.15 + (absf(stride) * 0.025 if moving else 0.0)
