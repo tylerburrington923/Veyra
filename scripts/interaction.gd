@@ -40,6 +40,9 @@ func _ready() -> void:
 	_update_target_debug()
 
 func _physics_process(delta: float) -> void:
+	if _is_modal_ui_open():
+		_set_target_state("NONE", "", "", Vector3.ZERO, false)
+		return
 	_target_update_accumulator += delta
 	if _target_update_accumulator < target_update_interval:
 		return
@@ -47,6 +50,8 @@ func _physics_process(delta: float) -> void:
 	_update_target_debug()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _is_modal_ui_open():
+		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E:
 		try_interact()
 
@@ -327,3 +332,11 @@ func _find_handler(start: Node, method_name: String) -> Node:
 		current = current.get_parent()
 		depth += 1
 	return null
+
+
+func _is_modal_ui_open() -> bool:
+	for group_name in ["building_ui", "modal_ui", "craft_build_ui"]:
+		for ui in get_tree().get_nodes_in_group(group_name):
+			if ui and ui.has_method("is_modal_open") and bool(ui.is_modal_open()):
+				return true
+	return false
