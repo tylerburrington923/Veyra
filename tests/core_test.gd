@@ -710,7 +710,7 @@ func _test_mobile_backpack_contract() -> void:
 
 
 func _test_building_interaction_contract() -> void:
-	for building_type in ["B01_CAMPFIRE", "B02_STORAGE", "B03_SHELTER", "B04_WELL", "B05_TOWNHALL"]:
+	for building_type in ["B01_CAMPFIRE", "B02_STORAGE", "B03_SHELTER", "B04_WELL", "B05_TOWNHALL", "B06_SHRINE", "B07_WATCHTOWER", "B08_GARDEN"]:
 		var building := VeyraBuildingInstance.new()
 		root.add_child(building)
 		building.setup("INTERACTION-" + building_type, building_type, Vector3.ZERO)
@@ -798,17 +798,17 @@ func _test_wildlife_beta_contract() -> void:
 	var manager_script := load("res://scripts/animal_manager.gd")
 	var manager: Node3D = manager_script.new()
 	root.add_child(manager)
-	var animal = manager.spawn_animal("deer_test_01", "deer", Vector3(3.0, 0.0, 3.0))
+	var animal = manager.spawn_animal("grazer_test_01", "lumen_grazer", Vector3(3.0, 0.0, 3.0))
 	_check(animal != null, "wildlife beta must spawn a deer visual")
-	_check(manager.states.has("deer_test_01"), "wildlife manager must retain deer state")
-	var state: AnimalState = manager.states["deer_test_01"]
+	_check(manager.states.has("grazer_test_01"), "wildlife manager must retain deer state")
+	var state: AnimalState = manager.states["grazer_test_01"]
 	var hunger := state.hunger
-	_check(AnimalSimulation.process_tick(state, manager.definitions["deer"], 6.0), "wildlife simulation tick should succeed")
+	_check(AnimalSimulation.process_tick(state, manager.definitions["lumen_grazer"], 6.0), "wildlife simulation tick should succeed")
 	manager._update_behavior(state, manager.definitions["deer"], 6.0)
 	_check(state.hunger < hunger, "wildlife simulation must update needs")
 	_check(state.behavior_state == "WANDER", "deer beta should enter wander behavior")
-	manager.despawn_animal("deer_test_01")
-	_check(not manager.states.has("deer_test_01"), "wildlife despawn must remove authoritative state")
+	manager.despawn_animal("grazer_test_01")
+	_check(not manager.states.has("grazer_test_01"), "wildlife despawn must remove authoritative state")
 	manager.queue_free()
 
 
