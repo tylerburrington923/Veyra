@@ -506,6 +506,14 @@ func _network_physics(delta: float) -> void:
 		global_position = global_position.lerp(_network_target_position, 1.0 - exp(-12.0 * delta))
 		rotation.y = lerp_angle(rotation.y, _network_target_yaw, 1.0 - exp(-12.0 * delta))
 
+	# Presentation is updated on interpolated network clients too. This keeps
+	# first-person hand actions responsive and remote bodies visually animated
+	# without changing authoritative movement.
+	var visual_input := _get_local_move_input() if _network_local else _network_input
+	var visual_direction := _camera_relative_direction(visual_input) if _network_local else _yaw_relative_direction(rotation.y, visual_input)
+	_update_player_visuals(delta, visual_direction)
+	_update_tool_animation(delta)
+
 func _simulate_movement(delta: float, input_vector: Vector2, jump: bool) -> void:
 	if input_vector.length() > 1.0:
 		input_vector = input_vector.normalized()
