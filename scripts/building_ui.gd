@@ -26,7 +26,7 @@ func open_townhall(building: Node, player: Node) -> void:
 	_building = building
 	_player = player
 	title_label.text = "TOWN HALL"
-	action_button.text = "CLOSE"
+	action_button.text = "DEPOSIT 10"
 	_refresh_townhall()
 	visible = true
 
@@ -51,7 +51,9 @@ func _on_action_pressed() -> void:
 			_building.add_campfire_fuel(_player, 1)
 			_refresh_campfire()
 	else:
-		close_ui()
+		if _building.has_method("deposit_civic_materials"):
+			_building.deposit_civic_materials(_player, 10)
+			_refresh_townhall()
 
 func _build_base() -> void:
 	panel = Panel.new()
@@ -120,4 +122,8 @@ func _refresh_townhall() -> void:
 		int(stock.get("water", 0)), demand, float(days),
 		int(stock.get("food", 0)), int(stock.get("wood", 0)), int(stock.get("stone", 0))
 	]
-	action_button.disabled = false
+	var can_deposit := false
+	if _player and _player.has_method("get_inventory"):
+		var inventory: Node = _player.get_inventory()
+		can_deposit = inventory != null and (inventory.get_amount("Wood") > 0 or inventory.get_amount("Stone") > 0)
+	action_button.disabled = not can_deposit
