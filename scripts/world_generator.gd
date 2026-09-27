@@ -22,6 +22,7 @@ var resource_collision_shape := SphereShape3D.new()
 var saved_resource_state: Dictionary = {}
 
 func _ready() -> void:
+    add_to_group("world_generator")
     resource_collision_shape.radius = 0.58
     call_deferred("generate")
 
