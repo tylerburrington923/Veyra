@@ -121,6 +121,11 @@ func _style_button(button: Button) -> void:
 	button.add_theme_stylebox_override("hover", hover)
 	button.add_theme_stylebox_override("pressed", pressed)
 	button.add_theme_stylebox_override("disabled", disabled)
+	button.add_theme_color_override("font_color", Color(0.90, 0.96, 0.96, 1.0))
+	button.add_theme_color_override("font_hover_color", Color(0.98, 1.0, 1.0, 1.0))
+	button.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0, 1.0))
+	button.focus_mode = Control.FOCUS_ALL
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
 func _make_button(text_value: String, button_position: Vector2, button_size: Vector2) -> Button:
 	var button := Button.new()
