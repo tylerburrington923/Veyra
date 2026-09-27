@@ -16,6 +16,8 @@ const TOOL_ORDER: Array[String] = ["T00_HANDS", "I01_STONE_AXE", "I02_STONE_PICK
 
 var toast_time: float = 0.0
 var last_snapshot: Dictionary = {}
+var resonance_panel: Panel
+var resonance_label: Label
 
 func _ready() -> void:
 	if inventory and inventory.has_signal("inventory_changed"):
@@ -30,6 +32,9 @@ func _ready() -> void:
 		pick_slot.pressed.connect(_select_pick)
 	if inventory and inventory.has_method("get_snapshot"):
 		last_snapshot = inventory.get_snapshot()
+	_build_resonance_hud()
+	if player and player.has_signal("resonance_changed"):
+		player.resonance_changed.connect(_on_resonance_changed)
 	_refresh()
 	if inventory_panel:
 		inventory_panel.visible = false
@@ -51,6 +56,48 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_Q:
 		_cycle_tool()
 
+func _on_resonance_changed(_charge: float, _discovered: bool) -> void:
+	_refresh_resonance()
+
+func _build_resonance_hud() -> void:
+	resonance_panel = Panel.new()
+	resonance_panel.name = "ResonanceHUD"
+	resonance_panel.position = Vector2(24, 148)
+	resonance_panel.size = Vector2(300, 54)
+	resonance_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.025, 0.04, 0.055, 0.88)
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.36, 0.25, 0.55, 0.62)
+	style.corner_radius_top_left = 10
+	style.corner_radius_top_right = 10
+	style.corner_radius_bottom_left = 10
+	style.corner_radius_bottom_right = 10
+	resonance_panel.add_theme_stylebox_override("panel", style)
+	add_child(resonance_panel)
+
+	resonance_label = Label.new()
+	resonance_label.position = Vector2(10, 7)
+	resonance_label.size = Vector2(280, 40)
+	resonance_label.add_theme_font_size_override("font_size", 13)
+	resonance_panel.add_child(resonance_label)
+	_refresh_resonance()
+
+func _refresh_resonance() -> void:
+	if not resonance_label or not inventory:
+		return
+	var charge := float(player.get_resonance()) if player and player.has_method("get_resonance") else 0.0
+	var discovered := bool(player.get("resonance_discovered")) if player else false
+	var lux := inventory.get_amount("Vitreous Lux")
+	var echo := inventory.get_amount("Echo-Stone")
+	if discovered or charge > 0.0:
+		resonance_label.text = "RESONANCE  %02d%%   •   LUX %d   •   ECHO %d" % [int(round(charge)), lux, echo]
+	else:
+		resonance_label.text = "LUX %d   •   ECHO %d   •   ANOMALY UNKNOWN" % [lux, echo]
+
 func _on_tool_changed(_tool_id: String, _durability: float) -> void:
 	_refresh()
 
@@ -65,6 +112,7 @@ func _refresh() -> void:
 	var snapshot: Dictionary = inventory.get_snapshot()
 	if hotbar_label:
 		hotbar_label.text = _format_hotbar(snapshot)
+	_refresh_resonance()
 	if inventory_label:
 		inventory_label.text = _format_inventory(snapshot)
 	var current := str(player.get_tool_id()) if player and player.has_method("get_tool_id") else "T00_HANDS"
@@ -123,7 +171,7 @@ func _tool_name(tool_id: String) -> String:
 func _format_hotbar(snapshot: Dictionary) -> String:
 	var resources: Dictionary = snapshot.get("resources", snapshot)
 	var parts: Array[String] = []
-	for resource_type in RESOURCE_TYPES:
+	for resource_type in ["Stone", "Wood", "Metal"]:
 		parts.append("%s  %d" % [_short_name(resource_type), int(resources.get(resource_type, 0))])
 	return "  |  ".join(parts)
 
@@ -141,6 +189,8 @@ func _format_inventory(snapshot: Dictionary) -> String:
 	for value in items.values():
 		total += int(value)
 	var capacity: Dictionary = inventory.get_capacity_state() if inventory.has_method("get_capacity_state") else {}
+	lines.append("Echo-Stone     %d" % int(resources.get("Echo-Stone", 0)))
+	lines.append("Vitreous Lux   %d" % int(resources.get("Vitreous Lux", 0)))
 	lines.append("")
 	lines.append("TOTAL ITEMS: %d" % total)
 	if not capacity.is_empty():
