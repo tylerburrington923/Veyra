@@ -28,6 +28,8 @@ func _process(delta: float) -> void:
 			typed_states.append(state)
 	if not typed_states.is_empty():
 		NPCSimulation.process_batch(typed_states, definitions, delta)
+		for state in typed_states:
+			_update_villager_behavior(state, delta)
 	for npc_id in controllers:
 		var controller: NPCController = controllers[npc_id]
 		var state: NPCState = states.get(npc_id)
@@ -123,3 +125,36 @@ func _ground_position(position: Vector3) -> Vector3:
 	if generator and generator.has_method("get_height_at_world"):
 		position.y = float(generator.get_height_at_world(position.x, position.z)) + 0.05
 	return position
+
+func _update_villager_behavior(state: NPCState, delta: float) -> void:
+	if state.current_job != "IDLE" and state.current_job != "Unassigned":
+		return
+	state.behavior_timer += delta
+	if state.current_task == "IDLE" and state.behavior_timer >= 5.0 + float(abs(state.npc_id.hash()) % 5):
+		state.behavior_timer = 0.0
+		var current := _state_position(state.position)
+		var phase := float(abs(state.npc_id.hash()) % 360) * 0.0174533
+		var target := _ground_position(current + Vector3(cos(phase), 0.0, sin(phase)) * 3.5)
+		state.target_position = NPCState.make_vector_dict(target.x, target.y, target.z)
+		state.current_task = "WANDER"
+		return
+	if state.current_task == "WANDER":
+		var current := _state_position(state.position)
+		var target := _state_position(state.target_position)
+		var offset := target - current
+		offset.y = 0.0
+		var distance := offset.length()
+		if distance < 0.25 or state.behavior_timer >= 9.0:
+			state.position = _vector_dict(_ground_position(current))
+			state.current_task = "IDLE"
+			state.behavior_timer = 0.0
+			return
+		var step := minf(3.0 * delta, distance)
+		var next := _ground_position(current + offset.normalized() * step)
+		state.position = _vector_dict(next)
+
+func _state_position(data: Dictionary) -> Vector3:
+	return Vector3(float(data.get("x", 0.0)), float(data.get("y", 0.0)), float(data.get("z", 0.0)))
+
+func _vector_dict(position: Vector3) -> Dictionary:
+	return {"x": position.x, "y": position.y, "z": position.z}
