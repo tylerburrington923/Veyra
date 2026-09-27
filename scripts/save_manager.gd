@@ -131,7 +131,46 @@ func _sanitize_settlement(settlement: Dictionary) -> Dictionary:
 
     var buildings = settlement.get("buildings", {})
     if buildings is Dictionary:
-        clean["buildings"] = buildings.duplicate(true)
+        for building_id in buildings.keys():
+            var record = buildings[building_id]
+            if not (record is Dictionary):
+                continue
+            var clean_record := {
+                "id": str(record.get("id", building_id)),
+                "type": str(record.get("type", "")),
+                "position": [],
+                "condition": clampf(float(record.get("condition", 1.0)), 0.0, 1.0),
+                "door_open": bool(record.get("door_open", false)),
+                "storage": {
+                    "resources": {},
+                    "items": {}
+                }
+            }
+            var position = record.get("position", [])
+            if position is Array and position.size() >= 3:
+                clean_record["position"] = [
+                    float(position[0]),
+                    float(position[1]),
+                    float(position[2])
+                ]
+            else:
+                clean_record["position"] = [0.0, 0.0, 0.0]
+
+            var storage = record.get("storage", {})
+            if storage is Dictionary:
+                var stored_resources = storage.get("resources", {})
+                if stored_resources is Dictionary:
+                    for key in stored_resources.keys():
+                        var value = stored_resources[key]
+                        if key is String and (value is int or value is float) and int(value) > 0 and VeyraResourceCatalog.is_valid(key):
+                            clean_record["storage"]["resources"][key] = int(value)
+                var stored_items = storage.get("items", {})
+                if stored_items is Dictionary:
+                    for key in stored_items.keys():
+                        var value = stored_items[key]
+                        if key is String and (value is int or value is float) and int(value) > 0 and VeyraItemCatalog.is_valid(key):
+                            clean_record["storage"]["items"][key] = int(value)
+            clean["buildings"][str(building_id)] = clean_record
 
     var villagers = settlement.get("villagers", {})
     if villagers is Dictionary:
