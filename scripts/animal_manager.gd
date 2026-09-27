@@ -1,6 +1,7 @@
 class_name AnimalManager
 extends Node3D
 
+const ANIMAL_ACTOR_SCRIPT = preload("res://scripts/animal_actor.gd")
 ## Lightweight Veyra wildlife runtime.
 ## Host owns simulation in multiplayer; clients only present authoritative snapshots.
 ## Creatures use primitive meshes/materials so the build stays small and mobile-friendly.
