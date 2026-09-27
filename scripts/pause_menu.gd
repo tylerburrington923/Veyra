@@ -22,6 +22,15 @@ func _ready() -> void:
 	backdrop.visible = false
 
 func _build() -> void:
+	backdrop = ColorRect.new()
+	backdrop.name = "PauseBackdrop"
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.color = Color(0.01, 0.025, 0.03, 0.72)
+	backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+	backdrop.add_to_group("camera_blocking_ui")
+	backdrop.visible = false
+	add_child(backdrop)
+
 	menu_button = Button.new()
 	menu_button.name = "MenuButton"
 	menu_button.text = "PAUSE"
