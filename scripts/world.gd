@@ -80,9 +80,6 @@ func _apply_seed_to_generators() -> void:
 	if foliage:
 		foliage.set("seed_value", world_seed)
 
-	var detail := get_node_or_null("WorldDetail")
-	if detail:
-		detail.set("seed_value", world_seed)
 
 	var water := get_node_or_null("Water")
 	if water:
@@ -160,9 +157,6 @@ func _apply_graphics_profile() -> void:
 	var foliage := get_node_or_null("Foliage")
 	if foliage and foliage.has_method("set_visibility_distance"):
 		foliage.set_visibility_distance(GraphicsSettings.get_foliage_distance())
-	var detail := get_node_or_null("WorldDetail")
-	if detail and detail.has_method("set_visibility_distance"):
-		detail.set_visibility_distance(GraphicsSettings.get_detail_distance())
 	var environment := get_node_or_null("Environment")
 	if environment and environment.environment:
 		environment.environment.fog_density = GraphicsSettings.get_fog_density()
