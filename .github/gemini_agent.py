@@ -47,19 +47,37 @@ def score_file(rel: str, data: str, terms):
         score += 3
     return score
 
+def extract_dependencies(rel: str, data: str):
+    """Return local repository files referenced by common Godot/GDScript path forms."""
+    refs = set()
+    patterns = [
+        r'(?:"|\\')((?:res://)?(?:scripts|scenes|tests)/[^"\\']+)',
+        r'preload\\(["\\']([^"\\']+)["\\']\\)',
+        r'load\\(["\\']([^"\\']+)["\\']\\)',
+    ]
+    for pattern in patterns:
+        for raw in re.findall(pattern, data):
+            ref = raw
+            if ref.startswith("res://"):
+                ref = ref[6:]
+            ref = ref.replace("\\\\", "/")
+            if allowed(ref):
+                refs.add(ref)
+    return refs
+
 def collect_files():
     terms = task_terms()
-    candidates = []
-    seen = set()
+    candidates = {}
+    all_files = {}
 
-    # Compact architecture memory is always included.
+    # Read the compact architecture memory first.
     if CONTEXT_FILE.exists():
         data = read_text(CONTEXT_FILE)
         if data:
-            candidates.append(("docs/AI_ARCHITECTURE_CONTEXT.md", data, 1000))
+            candidates["docs/AI_ARCHITECTURE_CONTEXT.md"] = ("docs/AI_ARCHITECTURE_CONTEXT.md", data, 1000)
 
-    # Prefer explicitly requested scope, but rank files inside that scope by relevance.
-    for base in SCOPE:
+    # Index source files once. This enables dependency expansion without loading everything into the prompt.
+    for base in ("scripts", "scenes", "tests", ".github", "docs"):
         base_path = ROOT / base
         if not base_path.exists():
             continue
@@ -67,43 +85,53 @@ def collect_files():
             if not p.is_file():
                 continue
             rel = p.relative_to(ROOT).as_posix()
-            if rel in seen or not allowed(rel) or p.suffix.lower() not in TEXT_SUFFIXES:
+            if not allowed(rel) or p.suffix.lower() not in TEXT_SUFFIXES:
                 continue
             data = read_text(p)
-            if data is None:
-                continue
-            seen.add(rel)
-            candidates.append((rel, data, score_file(rel, data, terms)))
+            if data is not None:
+                all_files[rel] = data
 
-    # Relevant architecture/test files outside a narrow task scope get a small bonus.
-    # This prevents a scope like "scripts/water*" from hiding the terrain contract.
-    for base in ("scripts", "tests"):
-        base_path = ROOT / base
-        if not base_path.exists():
+    # Explicit scope remains the first relevance source.
+    for rel, data in all_files.items():
+        in_scope = any(rel == base or rel.startswith(base + "/") for base in SCOPE)
+        if in_scope:
+            candidates[rel] = (rel, data, score_file(rel, data, terms))
+
+    # Task-relevant files outside the requested scope are included when strongly related.
+    for rel, data in all_files.items():
+        if rel in candidates:
             continue
-        for p in base_path.rglob("*"):
-            if not p.is_file():
-                continue
-            rel = p.relative_to(ROOT).as_posix()
-            if rel in seen or not allowed(rel) or p.suffix.lower() not in TEXT_SUFFIXES:
-                continue
-            data = read_text(p)
-            if data is None:
-                continue
-            score = score_file(rel, data, terms)
-            if score >= 10:
-                candidates.append((rel, data, score))
-                seen.add(rel)
+        score = score_file(rel, data, terms)
+        if score >= 10:
+            candidates[rel] = (rel, data, score)
 
-    candidates.sort(key=lambda x: (-x[2], x[0]))
+    # Expand one hop through local Godot dependencies from already-selected files.
+    # This catches contracts such as a water system referencing terrain/world generators
+    # even when the task words do not explicitly name those files.
+    queue = list(candidates.keys())
+    visited = set(queue)
+    while queue:
+        rel = queue.pop(0)
+        data = all_files.get(rel)
+        if data is None:
+            continue
+        for dep in extract_dependencies(rel, data):
+            if dep in visited or dep not in all_files:
+                continue
+            visited.add(dep)
+            score = max(score_file(dep, all_files[dep], terms), 14)
+            candidates[dep] = (dep, all_files[dep], score)
+            queue.append(dep)
 
-    # Hard context budget. The lead agent's compact context is protected.
+    ranked = sorted(candidates.values(), key=lambda x: (-x[2], x[0]))
+
+    # Hard context budget. The compact architecture memory is protected.
     budget = 115000
     used = 0
     out = []
     max_files = 70
-    for rel, data, _score in candidates:
-        block = f"\n===== {rel} =====\n{data}\n"
+    for rel, data, _score in ranked:
+        block = f"\\n===== {rel} =====\\n{data}\\n"
         if used + len(block) > budget:
             continue
         out.append(block)
@@ -111,6 +139,7 @@ def collect_files():
         if len(out) >= max_files:
             break
     return "".join(out), len(out), used
+
 
 context, file_count, context_chars = collect_files()
 
@@ -137,7 +166,7 @@ prompt = f"""Engineering task:
 Requested priority scope:
 {", ".join(SCOPE)}
 
-The context loader supplied {file_count} relevant files using {context_chars} characters of repository context.
+The context loader supplied {file_count} relevant files using {context_chars} characters of repository context, including one-hop local dependency expansion.
 
 Repository context:
 {context}
