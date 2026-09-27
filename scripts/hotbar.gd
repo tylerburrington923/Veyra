@@ -39,10 +39,56 @@ func _ready() -> void:
 	if player and player.has_signal("resonance_tier_changed"):
 		player.resonance_tier_changed.connect(_on_resonance_tier_changed)
 	_refresh()
+	_polish_hud()
 	if inventory_panel:
 		inventory_panel.visible = false
 	if backpack_button and not backpack_button.pressed.is_connected(_toggle_inventory):
 		backpack_button.pressed.connect(_toggle_inventory)
+
+func _polish_hud() -> void:
+	# Keep the persistent HUD compact and non-overlapping on phone aspect ratios.
+	if backpack_button:
+		backpack_button.text = "PACK"
+		backpack_button.size = Vector2(96, 42)
+		backpack_button.position = Vector2(
+			maxf(12.0, get_viewport().get_visible_rect().size.x - 220.0),
+			16.0
+		)
+		_style_hud_button(backpack_button)
+	if hotbar_label:
+		hotbar_label.add_theme_font_size_override("font_size", 13)
+	if resonance_panel:
+		resonance_panel.position = Vector2(24, 120)
+		resonance_panel.size = Vector2(320, 48)
+	if hands_slot:
+		hands_slot.custom_minimum_size = Vector2(94, 64)
+	if axe_slot:
+		axe_slot.custom_minimum_size = Vector2(94, 64)
+	if pick_slot:
+		pick_slot.custom_minimum_size = Vector2(94, 64)
+
+func _style_hud_button(button: Button) -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.025, 0.07, 0.08, 0.90)
+	normal.border_width_left = 1
+	normal.border_width_top = 1
+	normal.border_width_right = 1
+	normal.border_width_bottom = 1
+	normal.border_color = Color(0.25, 0.58, 0.62, 0.55)
+	normal.corner_radius_top_left = 12
+	normal.corner_radius_top_right = 12
+	normal.corner_radius_bottom_left = 12
+	normal.corner_radius_bottom_right = 12
+	var hover := normal.duplicate()
+	hover.bg_color = Color(0.06, 0.16, 0.18, 0.96)
+	var pressed := normal.duplicate()
+	pressed.bg_color = Color(0.08, 0.24, 0.26, 1.0)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_color_override("font_color", Color(0.90, 0.96, 0.96, 1.0))
+	button.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0, 1.0))
+	button.add_theme_font_size_override("font_size", 15)
 
 func _process(delta: float) -> void:
 	if toast_time <= 0.0:
@@ -234,3 +280,7 @@ func _toggle_inventory() -> void:
 		inventory_panel.visible = not inventory_panel.visible
 	if backpack_button:
 		backpack_button.text = "CLOSE BAG" if inventory_panel and inventory_panel.visible else "BACKPACK"
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_SIZE_CHANGED:
+		_polish_hud()
