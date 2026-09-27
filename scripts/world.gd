@@ -39,31 +39,31 @@ func _process(delta: float) -> void:
 
 
 func _apply_loaded_state(save_data: Dictionary) -> void:
-    if save_data.is_empty():
-        return
+	if save_data.is_empty():
+		return
 
-    var saved_world: Dictionary = save_data.get("world", {})
-    if not saved_world.is_empty():
-        world_time = maxf(0.0, float(saved_world.get("world_time", 0.0)))
-        var generator: Node = get_node_or_null("WorldGenerator")
-        var resource_state = saved_world.get("resources", {})
-        if generator and resource_state is Dictionary and generator.has_method("set_saved_resource_state"):
-            generator.set_saved_resource_state(resource_state)
+	var saved_world: Dictionary = save_data.get("world", {})
+	if not saved_world.is_empty():
+		world_time = maxf(0.0, float(saved_world.get("world_time", 0.0)))
+		var generator: Node = get_node_or_null("WorldGenerator")
+		var resource_state = saved_world.get("resources", {})
+		if generator and resource_state is Dictionary and generator.has_method("set_saved_resource_state"):
+			generator.set_saved_resource_state(resource_state)
 
-    var settlement_state: Dictionary = save_data.get("settlement", {})
-    if SettlementManager and not settlement_state.is_empty():
-        SettlementManager.load_settlement_state(settlement_state)
+	var settlement_state: Dictionary = save_data.get("settlement", {})
+	if SettlementManager and not settlement_state.is_empty():
+		SettlementManager.load_settlement_state(settlement_state)
 
-    var player: Node = get_tree().get_first_node_in_group("local_player")
-    var inventory_state: Dictionary = save_data.get("inventory", {})
-    if player and player.has_method("get_inventory"):
-        var inventory: VeyraInventory = player.get_inventory()
-        if inventory:
-            inventory.load_snapshot(inventory_state)
+	var player: Node = get_tree().get_first_node_in_group("local_player")
+	var inventory_state: Dictionary = save_data.get("inventory", {})
+	if player and player.has_method("get_inventory"):
+		var inventory: VeyraInventory = player.get_inventory()
+		if inventory:
+			inventory.load_snapshot(inventory_state)
 
-    var player_state: Dictionary = save_data.get("player", {})
-    if player and player.has_method("load_save_state") and player_state is Dictionary:
-        player.load_save_state(player_state)
+	var player_state: Dictionary = save_data.get("player", {})
+	if player and player.has_method("load_save_state") and player_state is Dictionary:
+		player.load_save_state(player_state)
 
 
 func _apply_seed_to_generators() -> void:
