@@ -96,7 +96,7 @@ func _toggle() -> void:
 func _open() -> void:
 	visible = true
 	settings_panel.visible = false
-	_paused = not NetworkManager.session_active
+	_paused = not _network_session_active()
 	if _paused:
 		get_tree().paused = true
 	status.text = "GAME PAUSED"
@@ -129,8 +129,8 @@ func _hide_settings() -> void:
 func _show_multiplayer() -> void:
 	var network_manager = get_node_or_null("/root/NetworkManager")
 	if network_manager and network_manager.lobby_layer:
-		NetworkManager.lobby_layer.visible = true
-		NetworkManager.lobby_layer.get_node("MultiplayerPanel").position = Vector2(445, 170)
+		network_manager.lobby_layer.visible = true
+		network_manager.lobby_layer.get_node("MultiplayerPanel").position = Vector2(445, 170)
 	status.text = "MULTIPLAYER PANEL OPEN"
 	_update_multiplayer_button()
 
