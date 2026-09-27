@@ -26,25 +26,27 @@ func _process(delta: float) -> void:
 		return
 	_simulation_accumulator += minf(delta, 0.25)
 	if _simulation_accumulator < SIMULATION_INTERVAL:
+		_update_visuals(delta)
+		_update_dead_animals(delta)
 		return
 	var sim_delta := _simulation_accumulator
 	_simulation_accumulator = 0.0
-		if delta <= 0.0:
-		return
 	var network := get_node_or_null("/root/NetworkManager")
 	if network and bool(network.get("session_active")) and not bool(network.get("is_host")):
 		_update_visuals(delta)
+		_update_dead_animals(delta)
 		return
 	for animal_id in states:
 		var state: AnimalState = states[animal_id]
 		var definition: AnimalDefinition = definitions.get(state.definition_id)
 		if state and definition and state.alive:
-			AnimalSimulation.process_tick(state, definition, delta)
-			_update_behavior(state, definition, delta)
+			AnimalSimulation.process_tick(state, definition, sim_delta)
+			_update_behavior(state, definition, sim_delta)
 			if not state.alive:
 				_on_animal_death(state)
 	_update_dead_animals(delta)
 	_update_visuals(delta)
+
 
 func _register_definitions() -> void:
 	# Veyra species deliberately echo Earth silhouettes without copying them.
