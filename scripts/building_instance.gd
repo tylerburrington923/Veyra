@@ -62,17 +62,6 @@ func interact(player_override: Node = null) -> void:
                 _last_interaction_feedback = "Town Hall: population %d." % population
             else:
                 _last_interaction_feedback = "Town Hall: settlement system unavailable."
-        "B06_SHRINE":
-            _last_interaction_feedback = "The shrine hums softly. The Lux remembers you."
-        "B07_WATCHTOWER":
-            _last_interaction_feedback = "The high ground reveals the lunar horizon."
-        "B08_GARDEN":
-            var garden_settlement := get_node_or_null("/root/SettlementManager")
-            if garden_settlement and garden_settlement.has_method("add_stock"):
-                garden_settlement.add_stock("Food", 1)
-                _last_interaction_feedback = "Lunar Garden: +1 Food."
-            else:
-                _last_interaction_feedback = "Lunar Garden: settlement reserve unavailable."
         _:
             _last_interaction_feedback = "Nothing to use here."
 
@@ -123,12 +112,6 @@ func get_interaction_text() -> String:
             return "Use Well"
         "B05_TOWNHALL":
             return "Open Town Hall"
-        "B06_SHRINE":
-            return "Attune Resonance Shrine"
-        "B07_WATCHTOWER":
-            return "Survey from Watchtower"
-        "B08_GARDEN":
-            return "Tend Lunar Garden"
         _:
             return "Use"
 
@@ -326,12 +309,6 @@ func _build_visual() -> void:
             _build_well()
         "B05_TOWNHALL":
             _build_townhall()
-        "B06_SHRINE":
-            _build_shrine()
-        "B07_WATCHTOWER":
-            _build_watchtower()
-        "B08_GARDEN":
-            _build_garden()
         _:
             _build_generic()
 
@@ -630,44 +607,6 @@ func _build_well() -> void:
     _mesh_box(Vector3(2.4, 0.18, 1.25), Vector3(0, 2.25, 0), roof, Vector3(deg_to_rad(2.0), 0, 0))
     _mesh_box(Vector3(2.2, 0.18, 1.15), Vector3(0, 2.35, 0), roof, Vector3(deg_to_rad(-2.0), 0, 0))
     _add_box_collision(Vector3(2.2, 0.55, 2.2), Vector3(0, 0.28, 0))
-
-
-func _build_shrine() -> void:
-	var stone := _material(Color(0.25, 0.30, 0.31), 0.9)
-	var lux := _emissive_material(Color(0.08, 0.62, 0.68), 1.4)
-	for i in range(8):
-		var angle := TAU * float(i) / 8.0
-		_mesh_cylinder(0.20, 0.35, Vector3(cos(angle) * 0.9, 0.18, sin(angle) * 0.9), stone, 6)
-	_mesh_cylinder(0.78, 0.18, Vector3(0, 0.48, 0), stone, 8)
-	_mesh_cylinder(0.30, 1.8, Vector3(0, 1.38, 0), lux, 7)
-	_mesh_sphere(0.34, Vector3(0, 2.34, 0), lux, Vector3(0.75, 1.25, 0.75))
-	_add_box_collision(Vector3(1.8, 0.8, 1.8), Vector3(0, 0.4, 0))
-
-func _build_watchtower() -> void:
-	var wood := _material(Color(0.30, 0.17, 0.075))
-	var dark := _material(Color(0.12, 0.10, 0.075))
-	var roof := _material(Color(0.11, 0.15, 0.16), 0.75)
-	for x in [-0.95, 0.95]:
-		for z in [-0.95, 0.95]:
-			_mesh_box(Vector3(0.18, 4.4, 0.18), Vector3(x, 2.2, z), wood)
-	_mesh_box(Vector3(2.25, 0.18, 2.25), Vector3(0, 3.9, 0), wood)
-	_mesh_box(Vector3(2.5, 0.18, 2.5), Vector3(0, 4.35, 0), roof)
-	_mesh_cylinder(0.11, 1.2, Vector3(0, 4.95, 0), dark, 6)
-	_mesh_sphere(0.16, Vector3(0, 5.58, 0), _emissive_material(Color(0.10, 0.48, 0.52), 0.7))
-	_add_box_collision(Vector3(2.1, 4.0, 2.1), Vector3(0, 2.0, 0))
-
-func _build_garden() -> void:
-	var soil := _material(Color(0.20, 0.14, 0.08))
-	var wood := _material(Color(0.29, 0.16, 0.07))
-	var plant := _emissive_material(Color(0.18, 0.52, 0.32), 0.45)
-	var lux := _emissive_material(Color(0.08, 0.48, 0.55), 0.8)
-	_mesh_box(Vector3(3.6, 0.16, 3.6), Vector3(0, 0.08, 0), soil)
-	for x in [-1.2, -0.4, 0.4, 1.2]:
-		_mesh_box(Vector3(0.16, 0.28, 3.0), Vector3(x, 0.25, 0), wood)
-	for z in [-1.1, -0.35, 0.35, 1.1]:
-		_mesh_sphere(0.15, Vector3(-0.8, 0.43, z), plant, Vector3(0.7, 1.4, 0.7))
-		_mesh_sphere(0.13, Vector3(0.8, 0.46, z), lux, Vector3(0.7, 1.7, 0.7))
-	_add_box_collision(Vector3(3.6, 0.22, 3.6), Vector3(0, 0.11, 0))
 
 
 func _build_generic() -> void:
