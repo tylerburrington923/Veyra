@@ -50,10 +50,6 @@ func _polish_hud() -> void:
 	if backpack_button:
 		backpack_button.text = "PACK"
 		backpack_button.size = Vector2(96, 42)
-		backpack_button.position = Vector2(
-			maxf(12.0, get_viewport().get_visible_rect().size.x - 220.0),
-			16.0
-		)
 		_style_hud_button(backpack_button)
 	if hotbar_label:
 		hotbar_label.add_theme_font_size_override("font_size", 13)
@@ -232,7 +228,7 @@ func _tool_name(tool_id: String) -> String:
 func _format_hotbar(snapshot: Dictionary) -> String:
 	var resources: Dictionary = snapshot.get("resources", snapshot)
 	var parts: Array[String] = []
-	for resource_type in ["Stone", "Wood", "Metal"]:
+	for resource_type in ["Stone", "Wood", "Metal", "Vitreous Lux"]:
 		parts.append("%s  %d" % [_short_name(resource_type), int(resources.get(resource_type, 0))])
 	return "  |  ".join(parts)
 
