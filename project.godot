@@ -5,6 +5,7 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 config/version="0.3.0-beta"
 
 [autoload]
+GraphicsSettings="*res://scripts/graphics_settings.gd"
 SettlementManager="*res://scripts/settlement_manager.gd"
 GameManager="*res://scripts/game_manager.gd"
 SaveManager="*res://scripts/save_manager.gd"
