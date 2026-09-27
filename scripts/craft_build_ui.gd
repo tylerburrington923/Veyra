@@ -20,6 +20,10 @@ var mode := ""
 var selected_id := ""
 var crafting_button: Button
 var backdrop: ColorRect
+var placement_hud: Panel
+var placement_status: Label
+var placement_place: Button
+var placement_cancel: Button
 
 func _ready() -> void:
 	add_to_group("modal_ui")
@@ -156,7 +160,58 @@ func _build_ui() -> void:
 	crafting_button.pressed.connect(_toggle_panel)
 	crafting_button.add_to_group("camera_blocking_ui")
 	add_child(crafting_button)
+	_build_placement_hud()
 	_layout_panel()
+
+func _build_placement_hud() -> void:
+	placement_hud = Panel.new()
+	placement_hud.name = "PlacementHUD"
+	placement_hud.visible = false
+	placement_hud.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(placement_hud)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.025, 0.04, 0.06, 0.96)
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.30, 0.65, 0.68, 0.70)
+	style.corner_radius_top_left = 12
+	style.corner_radius_top_right = 12
+	style.corner_radius_bottom_left = 12
+	style.corner_radius_bottom_right = 12
+	placement_hud.add_theme_stylebox_override("panel", style)
+
+	placement_status = Label.new()
+	placement_status.text = "Move to a clear location."
+	placement_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	placement_status.add_theme_font_size_override("font_size", 14)
+	placement_hud.add_child(placement_status)
+
+	placement_place = Button.new()
+	placement_place.text = "PLACE"
+	placement_place.pressed.connect(_confirm_build)
+	placement_hud.add_child(placement_place)
+
+	placement_cancel = Button.new()
+	placement_cancel.text = "CANCEL"
+	placement_cancel.pressed.connect(_cancel_build)
+	placement_hud.add_child(placement_cancel)
+	_layout_placement_hud()
+
+func _layout_placement_hud() -> void:
+	if not placement_hud:
+		return
+	var size := get_viewport().get_visible_rect().size
+	var width := minf(420.0, size.x - 24.0)
+	placement_hud.size = Vector2(width, 112)
+	placement_hud.position = Vector2((size.x - width) * 0.5, size.y - 132.0)
+	placement_status.position = Vector2(12, 8)
+	placement_status.size = Vector2(width - 24, 28)
+	placement_place.position = Vector2(12, 48)
+	placement_place.size = Vector2((width - 28) * 0.5, 48)
+	placement_cancel.position = Vector2(16 + (width - 28) * 0.5, 48)
+	placement_cancel.size = Vector2((width - 28) * 0.5, 48)
 
 func _input(event: InputEvent) -> void:
 	if not panel.visible:
@@ -177,6 +232,7 @@ func _layout_panel() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_SIZE_CHANGED:
 		_layout_panel()
+		_layout_placement_hud()
 
 func _toggle_panel() -> void:
 	panel.visible = not panel.visible
@@ -190,6 +246,8 @@ func _toggle_panel() -> void:
 		set_process(false)
 		if building:
 			building.cancel_placement()
+		if placement_hud:
+			placement_hud.visible = false
 		status.text = "Choose Tools or Building."
 	else:
 		_close_panel()
@@ -200,6 +258,8 @@ func _close_panel() -> void:
 	panel.visible = false
 	backdrop.visible = false
 	crafting_button.visible = true
+	if placement_hud:
+		placement_hud.visible = false
 	mode = ""
 	set_process(false)
 
@@ -276,10 +336,16 @@ func _craft(recipe_id: String) -> void:
 
 func _select_building(building_id: String) -> void:
 	selected_id = building_id
-	if building and building.select_building(building_id):
-		status.text = "Move to a clear location."
-		confirm_button.visible = true
-		confirm_button.disabled = false
+	if not building or not building.select_building(building_id):
+		return
+	panel.visible = false
+	backdrop.visible = false
+	crafting_button.visible = false
+	mode = "build"
+	set_process(true)
+	placement_hud.visible = true
+	placement_status.text = "Move to a clear location."
+	placement_place.disabled = false
 
 func _confirm_build() -> void:
 	var network_manager = get_node_or_null("/root/NetworkManager")
@@ -303,6 +369,8 @@ func _cancel_build() -> void:
 	mode = ""
 	set_process(false)
 	_clear_options()
+	if placement_hud:
+		placement_hud.visible = false
 	confirm_button.visible = false
 	cancel_button.visible = false
 	status.text = "Choose Tools or Building."
@@ -314,12 +382,21 @@ func _update_build_status() -> void:
 	if building.placement_location_valid and can_afford:
 		status.text = "Location ready. Tap PLACE."
 		confirm_button.disabled = false
+		if placement_status:
+			placement_status.text = "Location ready. Tap PLACE."
+			placement_place.disabled = false
 	elif building.placement_location_valid:
 		status.text = "Gather the listed materials."
 		confirm_button.disabled = true
+		if placement_status:
+			placement_status.text = "Gather the listed materials."
+			placement_place.disabled = true
 	else:
 		status.text = "Move to a clear location."
 		confirm_button.disabled = true
+		if placement_status:
+			placement_status.text = "Move to a clear location."
+			placement_place.disabled = true
 
 func _has_cost(cost: Dictionary) -> bool:
 	if not inventory:
