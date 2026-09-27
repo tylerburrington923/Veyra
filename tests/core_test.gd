@@ -852,6 +852,8 @@ func _test_npc_work_contract() -> void:
 	var state: NPCState = manager.get_npc_state("npc_worker_contract")
 	state.current_job = "BUILDER"
 	state.current_task = "WORK"
+	var work_target := manager._get_npc_work_target(state)
+	state.position = NPCState.make_vector_dict(work_target.x, work_target.y, work_target.z)
 	state.behavior_timer = 3.0
 	manager._update_villager_behavior(state, 0.1)
 	_check(settlement.wood_stock == old_wood + 1, "working NPC should contribute wood to settlement stock")
