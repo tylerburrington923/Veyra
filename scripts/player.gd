@@ -69,6 +69,28 @@ signal tool_changed(tool_id: String, durability: float)
 
 var selected_tool_id: String = "T00_HANDS"
 var tool_durability: float = 100.0
+var resonance_charge: float = 0.0
+var resonance_discovered: bool = false
+
+signal resonance_changed(charge: float, discovered: bool)
+
+func get_resonance() -> float:
+	return resonance_charge
+
+func add_resonance(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	resonance_charge = clampf(resonance_charge + amount, 0.0, 100.0)
+	if not resonance_discovered:
+		resonance_discovered = true
+	resonance_changed.emit(resonance_charge, resonance_discovered)
+	else:
+		resonance_changed.emit(resonance_charge, resonance_discovered)
+
+func set_resonance_state(charge: float, discovered: bool) -> void:
+	resonance_charge = clampf(charge, 0.0, 100.0)
+	resonance_discovered = discovered
+	resonance_changed.emit(resonance_charge, resonance_discovered)
 
 # Multiplayer alpha: the server owns movement state; clients send input and
 # receive authoritative transforms. Offline play remains unchanged.
@@ -120,6 +142,8 @@ func get_save_state() -> Dictionary:
 	return {
 		"tool_id": selected_tool_id,
 		"tool_durability": clampf(tool_durability, 0.0, 100.0),
+		"resonance_charge": resonance_charge,
+		"resonance_discovered": resonance_discovered,
 		"position": [global_position.x, global_position.y, global_position.z],
 		"yaw": rotation.y,
 		"pitch": look_pitch
@@ -143,6 +167,8 @@ func load_save_state(state: Dictionary) -> void:
 		tool_id = "T00_HANDS"
 	selected_tool_id = tool_id
 	tool_durability = clampf(float(state.get("tool_durability", 100.0)), 0.0, 100.0)
+	resonance_charge = clampf(float(state.get("resonance_charge", 0.0)), 0.0, 100.0)
+	resonance_discovered = bool(state.get("resonance_discovered", resonance_charge > 0.0))
 	if selected_tool_id == "T00_HANDS":
 		tool_durability = 100.0
 	tool_changed.emit(selected_tool_id, tool_durability)
