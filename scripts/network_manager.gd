@@ -3,8 +3,8 @@ class_name VeyraNetworkManager
 
 ## Multiplayer alpha coordinator.
 ## ENet host/client session, server-authoritative player movement, and LAN lobby UI.
-## World/gameplay state remains authoritative on the host; this first slice only
-## replicates player presence and movement so the two-device test loop is safe.
+## Host-authoritative gameplay: player movement, NPC simulation, and validated interactions.
+## Clients receive state snapshots and never simulate authoritative NPC behavior.
 
 const PORT: int = 24567
 const MAX_PLAYERS: int = 4
@@ -210,6 +210,17 @@ func _broadcast_snapshot() -> void:
 			"yaw": float(state.yaw)
 		})
 	receive_snapshot.rpc(snapshot)
+	var npc_manager := get_tree().current_scene.get_node_or_null("NPCManager")
+	if npc_manager and npc_manager.has_method("get_network_snapshot"):
+		receive_npc_snapshot.rpc(npc_manager.get_network_snapshot())
+
+@rpc("authority", "unreliable")
+func receive_npc_snapshot(snapshot: Array) -> void:
+	if is_host:
+		return
+	var npc_manager := get_tree().current_scene.get_node_or_null("NPCManager")
+	if npc_manager and npc_manager.has_method("apply_network_snapshot"):
+		npc_manager.apply_network_snapshot(snapshot)
 
 func _on_peer_connected(peer_id: int) -> void:
 	if not is_host:
