@@ -110,11 +110,13 @@ func resonate(strength: float) -> void:
 	var force := maxf(0.0, strength)
 	stored_energy = minf(release_threshold * 1.5, stored_energy + force / maxf(hardness, 0.1))
 	resonance_state = clampf(resonance_state + force * 0.08, 0.0, 1.0)
+	set_process(true)
 	_refresh_visual()
 
 func heat(amount: float) -> void:
 	thermal_state = clampf(thermal_state + amount, 0.0, 1.0)
 	stored_energy = minf(release_threshold * 1.5, stored_energy + amount * 0.5)
+	set_process(true)
 	_refresh_visual()
 
 func get_material_state() -> Dictionary:
