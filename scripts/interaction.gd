@@ -243,10 +243,18 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 			var requirement_text := ""
 			if not eligible and last_requirement != "":
 				requirement_text = "\\nREQUIRES: %s" % last_requirement
-			target_label.text = "%s  •  %s%s" % [
-				action_label,
-				target_name if target_name != "" else "Unknown",
-				requirement_text if requirement_text != "" else "  •  %s" % distance_text
+			if requirement_text != "":
+				target_label.text = "%s  •  %s\nREQUIRES: %s  •  %s" % [
+					action_label,
+					target_name if target_name != "" else "Unknown",
+					last_requirement,
+					distance_text
+				]
+			else:
+				target_label.text = "%s  •  %s  •  %s" % [
+					action_label,
+					target_name if target_name != "" else "Unknown",
+					distance_text
 			]
 
 func _find_handler_from_name(handler_name: String) -> Node:
