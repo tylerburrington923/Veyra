@@ -22,6 +22,8 @@ var buildings: Dictionary = {}
 var villagers: Dictionary = {}
 var water_cycle_index: int = 0
 var last_water_shortage: int = 0
+var _last_world_time: float = 0.0
+var _water_clock_initialized: bool = false
 
 func _ready() -> void:
     add_to_group("settlement_manager")
