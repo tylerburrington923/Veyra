@@ -132,15 +132,7 @@ func _align_anomalies_to_terrain() -> void:
 		var p := node.position
 		p.y = float(generator.get_height_at_world(p.x, p.z)) + 0.9
 		node.position = p
-		var mesh := node.get_node_or_null("MeshInstance3D") as MeshInstance3D
-		if mesh:
-			var material := StandardMaterial3D.new()
-			material.albedo_color = Color(0.12, 0.28, 0.32, 1.0)
-			material.roughness = 0.78
-			material.emission_enabled = true
-			material.emission = Color(0.04, 0.42, 0.48, 1.0)
-			material.emission_energy_multiplier = 0.55
-			mesh.material_override = material
+		# Echo-Stone owns its own material/emission state; terrain alignment only moves it.
 
 func _restore_buildings() -> void:
 	if BuildingManager and BuildingManager.has_method("restore_from_settlement"):
