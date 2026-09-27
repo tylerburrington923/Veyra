@@ -5,6 +5,7 @@ var status
 var resume_button
 var settings_button
 var multiplayer_button
+var main_menu_button
 var settings_panel
 var paused_by_menu := false
 
@@ -52,11 +53,14 @@ func _build() -> void:
 	resume_button.pressed.connect(_resume)
 	settings_button = _make_button("SETTINGS", Vector2(35, 176), Vector2(320, 52))
 	settings_button.pressed.connect(_show_settings)
-	multiplayer_button = _make_button("MULTIPLAYER", Vector2(35, 240), Vector2(320, 52))
+	multiplayer_button = _make_button("MULTIPLAYER", Vector2(35, 240), Vector2(155, 52))
 	multiplayer_button.pressed.connect(_show_multiplayer)
+	main_menu_button = _make_button("MAIN MENU", Vector2(200, 240), Vector2(155, 52))
+	main_menu_button.pressed.connect(_return_to_main_menu)
 	panel.add_child(resume_button)
 	panel.add_child(settings_button)
 	panel.add_child(multiplayer_button)
+	panel.add_child(main_menu_button)
 
 	settings_panel = Panel.new()
 	settings_panel.position = Vector2(25, 105)
@@ -113,6 +117,7 @@ func _show_settings() -> void:
 	resume_button.visible = false
 	settings_button.visible = false
 	multiplayer_button.visible = false
+	main_menu_button.visible = false
 	status.text = "SETTINGS"
 
 func _hide_settings() -> void:
@@ -120,6 +125,7 @@ func _hide_settings() -> void:
 	resume_button.visible = true
 	settings_button.visible = true
 	multiplayer_button.visible = true
+	main_menu_button.visible = true
 	status.text = "GAME PAUSED" if paused_by_menu else "MULTIPLAYER MENU"
 
 func _show_multiplayer() -> void:
@@ -147,3 +153,16 @@ func _network_session_active() -> bool:
 	if not network_manager:
 		return false
 	return bool(network_manager.get("session_active"))
+
+func _return_to_main_menu() -> void:
+	if paused_by_menu:
+		get_tree().paused = false
+	paused_by_menu = false
+	var world := get_tree().current_scene
+	var manager := get_node_or_null("/root/GameManager")
+	if manager and world:
+		manager.save_current_game(world)
+	var network_manager := get_node_or_null("/root/NetworkManager")
+	if network_manager and bool(network_manager.get("session_active")):
+		network_manager.leave_game()
+	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
