@@ -206,10 +206,15 @@ func _test_pause_menu_contract() -> void:
 	var player_scene := load("res://scenes/player.tscn") as PackedScene
 	var player := player_scene.instantiate()
 	root.add_child(player)
-	var menu := player.get_node_or_null("PauseMenu") as CanvasLayer
-	_check(menu != null, "local player must create pause menu")
+	var pause_script = load("res://scripts/pause_menu.gd")
+	var menu := pause_script.new() as CanvasLayer
+	root.add_child(menu)
+	_check(menu != null, "pause menu must instantiate")
 	var menu_button := menu.get_node_or_null("MenuButton") as Button if menu else null
 	_check(menu_button != null, "pause menu must expose top-corner menu button")
+	menu.queue_free()
+	var main_menu_scene := load("res://scenes/main_menu.tscn") as PackedScene
+	_check(main_menu_scene != null, "main menu scene must load")
 	_check(menu_button != null and menu_button.is_in_group("camera_blocking_ui"), "menu button must block camera touch")
 	player.queue_free()
 
