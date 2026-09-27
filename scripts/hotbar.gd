@@ -279,7 +279,7 @@ func _toggle_inventory() -> void:
 	if inventory_panel:
 		inventory_panel.visible = not inventory_panel.visible
 	if backpack_button:
-		backpack_button.text = "CLOSE BAG" if inventory_panel and inventory_panel.visible else "BACKPACK"
+		backpack_button.text = "CLOSE" if inventory_panel and inventory_panel.visible else "PACK"
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_SIZE_CHANGED:
