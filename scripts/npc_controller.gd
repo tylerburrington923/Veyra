@@ -31,8 +31,7 @@ func apply_authoritative_state(p_state: NPCState) -> void:
 	if not authoritative_state:
 		return
 	if not is_inside_tree():
-		global_position = _state_position(authoritative_state.position)
-		rotation = _state_rotation(authoritative_state.rotation)
+		return
 
 func _process(delta: float) -> void:
 	if not authoritative_state or not authoritative_state.alive:
