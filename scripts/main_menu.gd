@@ -9,7 +9,6 @@ func _ready() -> void:
 	$Center/Panel/SettingsButton.pressed.connect(_show_settings)
 	$Center/Panel/ExitButton.pressed.connect(_exit_game)
 	$Center/Panel/SettingsPanel/BackButton.pressed.connect(_hide_settings)
-	_$Center_unused = null
 	$Center/Panel/SettingsPanel.visible = false
 	_build_graphics_controls()
 	var save_exists := not SaveManager.load_world().is_empty() if SaveManager else false
