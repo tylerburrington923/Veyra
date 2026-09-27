@@ -1,6 +1,8 @@
 extends StaticBody3D
 class_name VeyraBuildingInstance
 
+const BUILDING_UI_SCRIPT = preload("res://scripts/building_ui.gd")
+
 signal door_state_changed(building_id: String, open: bool)
 
 var building_id: String = ""
@@ -9,6 +11,8 @@ var door_open := false
 var _door_root: Node3D
 var _door_collision: CollisionShape3D
 var _last_interaction_feedback := ""
+var campfire_heat_seconds: float = 0.0
+var _campfire_save_accumulator: float = 0.0
 
 const HOUSE_WIDTH := 5.8
 const HOUSE_DEPTH := 4.8
@@ -27,6 +31,8 @@ func setup(id: String, type_id: String, position_value: Vector3, door_open_value
     add_to_group("interactable")
     _build_visual()
     _last_interaction_feedback = ""
+    _load_campfire_state()
+    set_process(type_id == "B01_CAMPFIRE")
 
 
 func interact(player_override: Node = null) -> void:
@@ -34,7 +40,7 @@ func interact(player_override: Node = null) -> void:
     var player: Node = player_override if player_override else get_tree().get_first_node_in_group("local_player")
     match building_type:
         "B01_CAMPFIRE":
-            _last_interaction_feedback = "Campfire: warmth is ready."
+            _open_building_ui(player, "campfire")
         "B02_STORAGE":
             _toggle_storage(player)
         "B03_SHELTER":
@@ -49,6 +55,7 @@ func interact(player_override: Node = null) -> void:
             else:
                 _last_interaction_feedback = "Well: settlement reserve unavailable."
         "B05_TOWNHALL":
+            _open_building_ui(player, "townhall")
             var town_settlement := get_node_or_null("/root/SettlementManager")
             if town_settlement:
                 var population := int(town_settlement.get("population"))
@@ -90,7 +97,7 @@ func get_interaction_point() -> Vector3:
 func get_interaction_text() -> String:
     match building_type:
         "B01_CAMPFIRE":
-            return "Use Campfire"
+            return "Open Campfire"
         "B02_STORAGE":
             return "Open Storage"
         "B03_SHELTER":
@@ -98,7 +105,7 @@ func get_interaction_text() -> String:
         "B04_WELL":
             return "Use Well"
         "B05_TOWNHALL":
-            return "Enter Town Hall"
+            return "Open Town Hall"
         _:
             return "Use"
 
@@ -181,6 +188,72 @@ func _toggle_storage(player: Node) -> void:
     settlement.set_building_storage(building_id, storage)
     _last_interaction_feedback = "Storage: withdrew %d items." % withdrawn if withdrawn > 0 else "Storage is empty."
 
+
+
+func _open_building_ui(player: Node, mode: String) -> void:
+    if not player:
+        return
+    var ui := player.get_node_or_null("BuildingUI")
+    if not ui:
+        ui = BUILDING_UI_SCRIPT.new()
+        ui.name = "BuildingUI"
+        player.add_child(ui)
+    if mode == "campfire" and ui.has_method("open_campfire"):
+        ui.open_campfire(self, player)
+    elif mode == "townhall" and ui.has_method("open_townhall"):
+        ui.open_townhall(self, player)
+
+func add_campfire_fuel(player: Node, amount: int = 1) -> bool:
+    if building_type != "B01_CAMPFIRE" or not player or amount <= 0:
+        return false
+    var inventory: VeyraInventory = player.get_node_or_null("Inventory") as VeyraInventory
+    if not inventory:
+        return false
+    var removed := inventory.remove_resource("Wood", amount)
+    if removed <= 0:
+        return false
+    campfire_heat_seconds += float(removed) * 30.0
+    _campfire_save_accumulator = 0.0
+    set_process(true)
+    _persist_campfire_state()
+    _last_interaction_feedback = "Campfire: +%d wood fuel." % removed
+    return true
+
+func get_campfire_heat() -> float:
+    return maxf(0.0, campfire_heat_seconds)
+
+func _load_campfire_state() -> void:
+    campfire_heat_seconds = 0.0
+    if building_type != "B01_CAMPFIRE":
+        return
+    var settlement := get_node_or_null("/root/SettlementManager")
+    if not settlement or not settlement.has_method("get_building_storage"):
+        return
+    var storage: Dictionary = settlement.get_building_storage(building_id)
+    campfire_heat_seconds = maxf(0.0, float(storage.get("campfire_heat", 0.0)))
+
+func _persist_campfire_state() -> void:
+    if building_type != "B01_CAMPFIRE":
+        return
+    var settlement := get_node_or_null("/root/SettlementManager")
+    if not settlement or not settlement.has_method("get_building_storage"):
+        return
+    var storage: Dictionary = settlement.get_building_storage(building_id)
+    storage["campfire_heat"] = maxf(0.0, campfire_heat_seconds)
+    settlement.set_building_storage(building_id, storage)
+
+func _process(delta: float) -> void:
+    if building_type != "B01_CAMPFIRE" or campfire_heat_seconds <= 0.0:
+        if building_type == "B01_CAMPFIRE":
+            set_process(false)
+        return
+    campfire_heat_seconds = maxf(0.0, campfire_heat_seconds - maxf(0.0, delta))
+    _campfire_save_accumulator += maxf(0.0, delta)
+    if _campfire_save_accumulator >= 1.0 or campfire_heat_seconds <= 0.0:
+        _campfire_save_accumulator = 0.0
+        _persist_campfire_state()
+    if campfire_heat_seconds <= 0.0:
+        set_process(false)
 
 func set_door_open(open: bool) -> void:
     if building_type != "B03_SHELTER" or not _door_root:
