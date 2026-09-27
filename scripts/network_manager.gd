@@ -368,9 +368,8 @@ func _build_lobby_ui() -> void:
 
 	var panel := Panel.new()
 	panel.name = "MultiplayerPanel"
-	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	panel.position = Vector2(-180, -95)
 	panel.size = Vector2(360, 190)
+	_center_lobby_panel(panel)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	lobby_layer.add_child(panel)
 
@@ -427,6 +426,10 @@ func _build_lobby_ui() -> void:
 	copy_ip_button.pressed.connect(_copy_host_address)
 	panel.add_child(copy_ip_button)
 
+func _center_lobby_panel(panel: Control) -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	panel.position = (viewport_size - panel.size) * 0.5
+
 func _copy_host_address() -> void:
 	var addresses := _get_lan_addresses()
 	var prefix := "HOTSPOT/LAN IP: "
@@ -436,6 +439,12 @@ func _copy_host_address() -> void:
 		return
 	DisplayServer.clipboard_set(value)
 	_set_status("IP COPIED • %s" % value)
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and lobby_layer:
+		var lobby_panel := lobby_layer.get_node_or_null("MultiplayerPanel") as Control
+		if lobby_panel:
+			_center_lobby_panel(lobby_panel)
 
 func _set_status(message: String) -> void:
 	if status_label:
