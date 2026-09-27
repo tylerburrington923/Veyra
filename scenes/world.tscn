@@ -78,6 +78,58 @@ material_override = SubResource("EchoStoneMaterial")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="EchoStone"]
 shape = SubResource("EchoStoneShape")
 
+[node name="EchoStone2" type="StaticBody3D" parent="."]
+position = Vector3(-14, 0, -10)
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("8_echo")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="EchoStone2"]
+mesh = SubResource("EchoStoneMesh")
+material_override = SubResource("EchoStoneMaterial")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EchoStone2"]
+shape = SubResource("EchoStoneShape")
+
+[node name="EchoStone3" type="StaticBody3D" parent="."]
+position = Vector3(18, 0, 8)
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("8_echo")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="EchoStone3"]
+mesh = SubResource("EchoStoneMesh")
+material_override = SubResource("EchoStoneMaterial")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EchoStone3"]
+shape = SubResource("EchoStoneShape")
+
+[node name="EchoStone4" type="StaticBody3D" parent="."]
+position = Vector3(-22, 0, 18)
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("8_echo")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="EchoStone4"]
+mesh = SubResource("EchoStoneMesh")
+material_override = SubResource("EchoStoneMaterial")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EchoStone4"]
+shape = SubResource("EchoStoneShape")
+
+[node name="EchoStone5" type="StaticBody3D" parent="."]
+position = Vector3(26, 0, -20)
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("8_echo")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="EchoStone5"]
+mesh = SubResource("EchoStoneMesh")
+material_override = SubResource("EchoStoneMaterial")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EchoStone5"]
+shape = SubResource("EchoStoneShape")
+
 [node name="VeyraArtifact" type="StaticBody3D" parent="."]
 position = Vector3(0, 0.85, -4)
 collision_layer = 2
