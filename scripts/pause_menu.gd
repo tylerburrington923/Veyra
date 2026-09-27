@@ -13,7 +13,10 @@ func _ready() -> void:
 	layer = 60
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build()
-	visible = false
+	# Keep the CanvasLayer visible so the PAUSE button is always available.
+	# Only the pause panel is hidden until the player opens it.
+	visible = true
+	panel.visible = false
 
 func _build() -> void:
 	var menu_button := Button.new()
@@ -138,6 +141,7 @@ func _toggle() -> void:
 
 func _open() -> void:
 	visible = true
+	panel.visible = true
 	settings_panel.visible = false
 	paused_by_menu = not _network_session_active()
 	if paused_by_menu:
@@ -148,7 +152,8 @@ func _open() -> void:
 
 func _resume() -> void:
 	settings_panel.visible = false
-	visible = false
+	panel.visible = false
+	visible = true
 	if paused_by_menu:
 		get_tree().paused = false
 	paused_by_menu = false
@@ -186,7 +191,7 @@ func _update_multiplayer_button() -> void:
 	multiplayer_button.text = "MULTIPLAYER" if not _network_session_active() else "MULTIPLAYER - ACTIVE"
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED:
+	if what == NOTIFICATION_WM_SIZE_CHANGED:
 		var menu_button := get_node_or_null("MenuButton") as Control
 		if menu_button:
 			menu_button.position = Vector2(maxf(16.0, get_viewport().get_visible_rect().size.x - menu_button.size.x - 16.0), 16.0)
