@@ -311,21 +311,23 @@ script = ExtResource("2_interaction")
 [node name="MobileControls" type="CanvasLayer" parent="."]
 [node name="TargetHUD" type="Label" parent="MobileControls"]
 offset_left = 24.0
-offset_top = 82.0
-offset_right = 430.0
-offset_bottom = 175.0
+offset_top = 86.0
+offset_right = 520.0
+offset_bottom = 142.0
 mouse_filter = 2
-theme_override_font_sizes/font_size = 18
-text = "TARGET: NONE\\nNAME: --\\nDIST: --\\nHANDLER: --"
+theme_override_colors/font_color = Color(0.84, 0.91, 0.92, 0.95)
+theme_override_font_sizes/font_size = 14
+text = "USE  •  TARGET\\n--"
 
 [node name="DebugHUD" type="Label" parent="MobileControls"]
 offset_left = 24.0
 offset_top = 24.0
 offset_right = 430.0
-offset_bottom = 78.0
+offset_bottom = 58.0
 mouse_filter = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 14
 text = "MOVE: 0.00, 0.00 | GROUND: NO"
+visible = false
 
 [node name="JoystickBase" type="Panel" parent="MobileControls"]
 offset_left = 55.0
@@ -348,14 +350,14 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -350.0
-offset_top = -125.0
-offset_right = -200.0
-offset_bottom = -35.0
+offset_left = -300.0
+offset_top = -112.0
+offset_right = -166.0
+offset_bottom = -36.0
 grow_horizontal = 0
 grow_vertical = 0
 text = "JUMP"
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("JumpStyle")
 
 [node name="InteractButton" type="Button" parent="MobileControls"]
@@ -363,14 +365,14 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -190.0
-offset_top = -125.0
-offset_right = -40.0
-offset_bottom = -35.0
+offset_left = -158.0
+offset_top = -112.0
+offset_right = -24.0
+offset_bottom = -36.0
 grow_horizontal = 0
 grow_vertical = 0
 text = "USE"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("InteractStyle")
 
 [node name="CraftBuildUI" type="CanvasLayer" parent="."]
@@ -384,14 +386,14 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -174.0
-offset_top = -125.0
-offset_right = 174.0
-offset_bottom = -40.0
+offset_left = -150.0
+offset_top = -104.0
+offset_right = 150.0
+offset_bottom = -42.0
 theme_override_constants/separation = 6
 
 [node name="HandsSlot" type="Button" parent="HUDInventory/ToolHotbar" groups=["camera_blocking_ui"]]
-custom_minimum_size = Vector2(112, 78)
+custom_minimum_size = Vector2(96, 58)
 text = "1\nHANDS"
 theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("InteractStyle")
@@ -409,26 +411,26 @@ theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("InteractStyle")
 
 [node name="Hotbar" type="Panel" parent="HUDInventory"]
-offset_left = 28.0
-offset_top = 92.0
-offset_right = 620.0
-offset_bottom = 142.0
+offset_left = 24.0
+offset_top = 72.0
+offset_right = 420.0
+offset_bottom = 112.0
 mouse_filter = 2
 
 [node name="Label" type="Label" parent="HUDInventory/Hotbar"]
-offset_left = 14.0
-offset_top = 10.0
-offset_right = 578.0
-offset_bottom = 42.0
+offset_left = 10.0
+offset_top = 7.0
+offset_right = 390.0
+offset_bottom = 34.0
 mouse_filter = 2
-theme_override_font_sizes/font_size = 18
-text = "STONE  0  |  WOOD  0  |  METAL  0  |  LUX  0"
+theme_override_font_sizes/font_size = 14
+text = "STONE 0  •  WOOD 0  •  METAL 0  •  LUX 0"
 
 [node name="PickupToast" type="Label" parent="HUDInventory"]
-offset_left = 28.0
-offset_top = 150.0
+offset_left = 24.0
+offset_top = 120.0
 offset_right = 400.0
-offset_bottom = 188.0
+offset_bottom = 152.0
 mouse_filter = 2
 theme_override_font_sizes/font_size = 22
 text = "Picked up"
@@ -450,10 +452,10 @@ theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("InteractStyle")
 
 [node name="InventoryPanel" type="Panel" parent="HUDInventory"]
-offset_left = 28.0
-offset_top = 205.0
+offset_left = 24.0
+offset_top = 165.0
 offset_right = 360.0
-offset_bottom = 420.0
+offset_bottom = 390.0
 
 [node name="Label" type="Label" parent="HUDInventory/InventoryPanel"]
 offset_left = 18.0
