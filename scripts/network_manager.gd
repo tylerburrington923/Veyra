@@ -529,19 +529,25 @@ func _broadcast_game_state() -> void:
 	if not multiplayer.is_server():
 		return
 	var inventories: Dictionary = {}
+	var resonance_states: Dictionary = {}
 	for peer_id in players.keys():
 		var player := players[peer_id] as Node
 		if player and player.has_method("get_inventory"):
 			inventories[int(peer_id)] = player.get_inventory().get_snapshot()
+		if player and player.has_method("get_resonance"):
+			resonance_states[int(peer_id)] = {
+				"charge": float(player.get_resonance()),
+				"discovered": bool(player.resonance_discovered)
+			}
 	var world := get_tree().current_scene
 	var generator := world.get_node_or_null("WorldGenerator") if world else null
 	var resources: Dictionary = generator.get_resource_state() if generator and generator.has_method("get_resource_state") else {}
 	var settlement := get_node_or_null("/root/SettlementManager")
 	var settlement_state: Dictionary = settlement.get_settlement_state() if settlement and settlement.has_method("get_settlement_state") else {}
-	receive_game_state.rpc(inventories, resources, settlement_state)
+	receive_game_state.rpc(inventories, resonance_states, resources, settlement_state)
 
 @rpc("authority", "reliable")
-func receive_game_state(inventories: Dictionary, resources: Dictionary, settlement_state: Dictionary) -> void:
+func receive_game_state(inventories: Dictionary, resonance_states: Dictionary, resources: Dictionary, settlement_state: Dictionary) -> void:
 	if is_host:
 		return
 	var local_player := get_tree().current_scene.get_node_or_null("Player")
@@ -549,6 +555,12 @@ func receive_game_state(inventories: Dictionary, resources: Dictionary, settleme
 		var snapshot = inventories.get(local_peer_id, {})
 		if snapshot is Dictionary:
 			local_player.get_inventory().load_snapshot(snapshot)
+	var resonance_snapshot = resonance_states.get(local_peer_id, {})
+	if local_player and local_player.has_method("set_resonance_state") and resonance_snapshot is Dictionary:
+		local_player.set_resonance_state(
+			float(resonance_snapshot.get("charge", 0.0)),
+			bool(resonance_snapshot.get("discovered", false))
+		)
 	var world := get_tree().current_scene
 	var generator := world.get_node_or_null("WorldGenerator") if world else null
 	if generator and generator.has_method("apply_resource_state"):
