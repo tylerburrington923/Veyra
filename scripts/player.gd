@@ -71,7 +71,7 @@ var _tool_swing_active: bool = false
 var _tool_base_rotation: Vector3 = Vector3.ZERO
 var _punch_time: float = 0.0
 var _punch_active: bool = false
-const PUNCH_DURATION := 0.20
+const PUNCH_DURATION := 0.26
 signal tool_changed(tool_id: String, durability: float)
 
 var selected_tool_id: String = "T00_HANDS"
@@ -612,15 +612,15 @@ func _update_punch_animation(delta: float) -> void:
 	var arc := sin(progress * PI)
 	var thrust := sin(progress * PI * 0.5)
 	if fp_left_arm:
-		fp_left_arm.rotation = Vector3(deg_to_rad(-18.0 - 28.0 * arc), deg_to_rad(-8.0), deg_to_rad(-7.0 + 10.0 * arc))
-		fp_left_arm.position = Vector3(-0.24, -0.48 - 0.05 * thrust, -0.66 - 0.22 * thrust)
+		fp_left_arm.rotation = Vector3(deg_to_rad(-18.0 - 42.0 * arc), deg_to_rad(-8.0), deg_to_rad(-7.0 + 12.0 * arc))
+		fp_left_arm.position = Vector3(-0.24, -0.48 - 0.07 * thrust, -0.66 - 0.42 * thrust)
 	if fp_right_arm:
-		fp_right_arm.rotation = Vector3(deg_to_rad(-18.0 - 62.0 * arc), deg_to_rad(6.0), deg_to_rad(8.0 - 18.0 * arc))
-		fp_right_arm.position = Vector3(0.24, -0.48 - 0.08 * thrust, -0.66 - 0.34 * thrust)
+		fp_right_arm.rotation = Vector3(deg_to_rad(-18.0 - 86.0 * arc), deg_to_rad(6.0), deg_to_rad(8.0 - 24.0 * arc))
+		fp_right_arm.position = Vector3(0.24, -0.48 - 0.10 * thrust, -0.66 - 0.58 * thrust)
 	if fp_left_hand:
-		fp_left_hand.position = Vector3(-0.24, -0.93 - 0.04 * thrust, -0.94 - 0.22 * thrust)
+		fp_left_hand.position = Vector3(-0.24, -0.93 - 0.05 * thrust, -0.94 - 0.45 * thrust)
 	if fp_right_hand:
-		fp_right_hand.position = Vector3(0.24, -0.93 - 0.06 * thrust, -0.96 - 0.34 * thrust)
+		fp_right_hand.position = Vector3(0.24, -0.93 - 0.08 * thrust, -0.96 - 0.62 * thrust)
 	if progress >= 1.0:
 		_punch_active = false
 		if fp_left_arm:
