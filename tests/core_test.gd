@@ -422,7 +422,7 @@ func _test_first_person_presentation_contract() -> void:
 	var hotbar := player.get_node_or_null("HUDInventory/ToolHotbar") as Control
 	_check(tool_holder != null, "tool holder must exist for first-person presentation")
 	_check(chest != null and left_leg != null and right_leg != null, "first-person body viewmodel must include torso and legs")
-	_check(chest != null and chest.layers == 2, "first-person chest must use viewmodel layer")
+	_check(chest != null and chest.layers == 0, "first-person body torso must stay out of the camera view layer")
 	_check(hotbar != null and is_equal_approx(hotbar.anchor_left, 0.5) and is_equal_approx(hotbar.anchor_right, 0.5), "tool hotbar must be centered")
 	_check(player.has_method("play_tool_use"), "player must expose tool use presentation")
 	var fp_left_arm := player.get_node_or_null("Camera3D/ViewModel/LeftArmFP") as MeshInstance3D
