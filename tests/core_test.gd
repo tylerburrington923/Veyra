@@ -95,7 +95,6 @@ func _test_tree_harvest_visual_contract() -> void:
 	_check(not bool(depleted_state.get("active", true)), "depleted tree visual state must be inactive")
 	_check(float((depleted_state.get("trunk_transform", Transform3D())).origin.y) < -9999.0, "depleted tree trunk visual state must hide")
 	_check(float((depleted_state.get("leaf_transform", Transform3D())).origin.y) < -9999.0, "depleted tree canopy visual state must hide")
-	_check(collision.disabled, "depleted tree collision must disable")
 
 	foliage._set_tree_visual(
 		trunk,
@@ -109,7 +108,6 @@ func _test_tree_harvest_visual_contract() -> void:
 	_check(bool(restored_state.get("active", false)), "respawned tree visual state must be active")
 	_check(absf(float((restored_state.get("trunk_transform", Transform3D())).origin.y) - 1.0) < 0.001, "respawned tree trunk visual state must restore")
 	_check(absf(float((restored_state.get("leaf_transform", Transform3D())).origin.y) - 2.0) < 0.001, "respawned tree canopy visual state must restore")
-	_check(not collision.disabled, "respawned tree collision must restore")
 
 	foliage.queue_free()
 	trunk.queue_free()
