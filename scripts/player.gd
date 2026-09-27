@@ -417,7 +417,7 @@ func _network_physics(delta: float) -> void:
 func _simulate_movement(delta: float, input_vector: Vector2, jump: bool) -> void:
 	if input_vector.length() > 1.0:
 		input_vector = input_vector.normalized()
-	var direction := _camera_relative_direction(input_vector)
+	var direction := _yaw_relative_direction(rotation.y, input_vector) if _network_mode and not _network_local else _camera_relative_direction(input_vector)
 	if direction.length_squared() > 0.001:
 		direction = direction.normalized()
 		velocity.x = move_toward(velocity.x, direction.x * speed, acceleration * delta)
@@ -541,6 +541,13 @@ func _recover_from_fall() -> void:
 		global_position.y = terrain_y + 1.5
 		velocity = Vector3.ZERO
 
+
+func _yaw_relative_direction(yaw: float, input_vector: Vector2) -> Vector3:
+	if input_vector.length_squared() < 0.0001:
+		return Vector3.ZERO
+	var forward := Vector3(-sin(yaw), 0.0, -cos(yaw)).normalized()
+	var right := forward.cross(Vector3.UP).normalized()
+	return right * input_vector.x + forward * input_vector.y
 
 func _camera_relative_direction(input_vector: Vector2) -> Vector3:
 	if input_vector.length_squared() < 0.0001:
