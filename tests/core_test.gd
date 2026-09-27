@@ -321,25 +321,22 @@ func _test_first_person_viewmodel_contract() -> void:
 
 	var camera := player.get_node_or_null("Camera3D") as Camera3D
 	var viewmodel := player.get_node_or_null("Camera3D/ViewModel") as Node3D
-	var left_arm := player.get_node_or_null("Camera3D/ViewModel/LeftArmFP") as MeshInstance3D
-	var right_arm := player.get_node_or_null("Camera3D/ViewModel/RightArmFP") as MeshInstance3D
-	var left_hand := player.get_node_or_null("Camera3D/ViewModel/LeftHandFP") as MeshInstance3D
-	var right_hand := player.get_node_or_null("Camera3D/ViewModel/RightHandFP") as MeshInstance3D
 	var holder := player.get_node_or_null("Camera3D/ViewModel/ToolHolder") as Node3D
 	var tool := player.get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool") as Node3D
+	var body_left_arm := player.get_node_or_null("LeftArm") as MeshInstance3D
+	var body_right_arm := player.get_node_or_null("RightArm") as MeshInstance3D
+	var body_left_hand := player.get_node_or_null("LeftHand") as MeshInstance3D
+	var body_right_hand := player.get_node_or_null("RightHand") as MeshInstance3D
 
 	_check(camera != null, "first-person camera missing")
 	_check(camera != null and camera.current, "first-person camera must be current")
-	_check(viewmodel != null, "viewmodel missing")
-	_check(left_arm != null and right_arm != null, "first-person arms missing")
-	_check(left_hand != null and right_hand != null, "first-person hands missing")
+	_check(viewmodel != null, "viewmodel root missing")
 	_check(holder != null and tool != null, "tool holder hierarchy missing")
-	_check(left_arm != null and left_arm.layers == 2, "left arm must use viewmodel render layer")
-	_check(right_arm != null and right_arm.layers == 2, "right arm must use viewmodel render layer")
-	_check(left_hand != null and left_hand.layers == 2, "left hand must use viewmodel render layer")
-	_check(right_hand != null and right_hand.layers == 2, "right hand must use viewmodel render layer")
+	_check(body_left_arm != null and body_right_arm != null, "coherent world-body arms missing")
+	_check(body_left_hand != null and body_right_hand != null, "coherent world-body hands missing")
 	_check(camera != null and (camera.cull_mask & 2) != 0, "camera must render viewmodel layer")
-	_check(right_hand != null and right_hand.position.z < -0.5, "right hand must be in front of camera")
+	_check(player.get_node_or_null("Camera3D/ViewModel/LeftArmFP") == null, "disconnected FP arm must remain removed")
+	_check(player.get_node_or_null("Camera3D/ViewModel/RightArmFP") == null, "disconnected FP arm must remain removed")
 	_check(holder != null and holder.position.z < -0.5, "tool holder must be in front of camera")
 	player.queue_free()
 
@@ -836,14 +833,14 @@ func _test_wildlife_beta_contract() -> void:
 	var manager: Node3D = manager_script.new()
 	root.add_child(manager)
 	var animal = manager.spawn_animal("grazer_test_01", "lumen_grazer", Vector3(3.0, 0.0, 3.0))
-	_check(animal != null, "wildlife beta must spawn a deer visual")
-	_check(manager.states.has("grazer_test_01"), "wildlife manager must retain deer state")
+	_check(animal != null, "wildlife beta must spawn a Lumen Grazer visual")
+	_check(manager.states.has("grazer_test_01"), "wildlife manager must retain Lumen Grazer state")
 	var state: AnimalState = manager.states["grazer_test_01"]
 	var hunger := state.hunger
 	_check(AnimalSimulation.process_tick(state, manager.definitions["lumen_grazer"], 6.0), "wildlife simulation tick should succeed")
-	manager._update_behavior(state, manager.definitions["deer"], 6.0)
+	manager._update_behavior(state, manager.definitions["lumen_grazer"], 6.0)
 	_check(state.hunger < hunger, "wildlife simulation must update needs")
-	_check(state.behavior_state == "WANDER", "deer beta should enter wander behavior")
+	_check(state.behavior_state == "WANDER", "Lumen Grazer beta should enter wander behavior")
 	manager.despawn_animal("grazer_test_01")
 	_check(not manager.states.has("grazer_test_01"), "wildlife despawn must remove authoritative state")
 	manager.queue_free()
