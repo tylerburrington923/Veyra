@@ -19,6 +19,7 @@ var cancel_button: Button
 var mode := ""
 var selected_id := ""
 var crafting_button: Button
+var backdrop: ColorRect
 
 func _ready() -> void:
 	add_to_group("modal_ui")
@@ -41,13 +42,16 @@ func _process(_delta: float) -> void:
 		_update_build_status()
 
 func _build_ui() -> void:
+	backdrop = ColorRect.new()
+	backdrop.name = "ModalBackdrop"
+	backdrop.color = Color(0.0, 0.0, 0.0, 0.48)
+	backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.visible = false
+	add_child(backdrop)
+
 	panel = Panel.new()
 	panel.name = "CraftingPanel"
-	panel.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	panel.offset_left = -350
-	panel.offset_right = -18
-	panel.offset_top = -270
-	panel.offset_bottom = 220
 	panel.visible = false
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(panel)
@@ -150,7 +154,9 @@ func _build_ui() -> void:
 	crafting_button.offset_top = -190
 	crafting_button.offset_bottom = -140
 	crafting_button.pressed.connect(_toggle_panel)
+	crafting_button.add_to_group("camera_blocking_ui")
 	add_child(crafting_button)
+	_layout_panel()
 
 func _input(event: InputEvent) -> void:
 	if not panel.visible:
@@ -159,9 +165,24 @@ func _input(event: InputEvent) -> void:
 		_close_panel()
 		get_viewport().set_input_as_handled()
 
+func _layout_panel() -> void:
+	if not panel:
+		return
+	var viewport_size := get_viewport().get_visible_rect().size
+	var width := minf(560.0, maxf(320.0, viewport_size.x - 32.0))
+	var height := minf(680.0, maxf(360.0, viewport_size.y - 32.0))
+	panel.size = Vector2(width, height)
+	panel.position = (viewport_size - panel.size) * 0.5
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_SIZE_CHANGED:
+		_layout_panel()
+
 func _toggle_panel() -> void:
 	panel.visible = not panel.visible
 	if panel.visible:
+		backdrop.visible = true
+		crafting_button.visible = false
 		mode = ""
 		selected_id = ""
 		confirm_button.visible = false
@@ -177,6 +198,8 @@ func _close_panel() -> void:
 	if building:
 		building.cancel_placement()
 	panel.visible = false
+	backdrop.visible = false
+	crafting_button.visible = true
 	mode = ""
 	set_process(false)
 
