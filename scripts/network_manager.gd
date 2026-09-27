@@ -425,6 +425,7 @@ func _build_lobby_ui() -> void:
 	host_button.size = Vector2(100, 42)
 	host_button.add_to_group("camera_blocking_ui")
 	host_button.pressed.connect(host_game)
+	_style_lobby_button(host_button)
 	panel.add_child(host_button)
 
 	join_button = Button.new()
@@ -433,6 +434,7 @@ func _build_lobby_ui() -> void:
 	join_button.size = Vector2(150, 38)
 	join_button.add_to_group("camera_blocking_ui")
 	join_button.pressed.connect(func() -> void: join_game(ip_field.text))
+	_style_lobby_button(join_button)
 	panel.add_child(join_button)
 
 	leave_button = Button.new()
@@ -441,6 +443,7 @@ func _build_lobby_ui() -> void:
 	leave_button.size = Vector2(154, 38)
 	leave_button.add_to_group("camera_blocking_ui")
 	leave_button.pressed.connect(leave_game)
+	_style_lobby_button(leave_button)
 	panel.add_child(leave_button)
 
 	copy_ip_button = Button.new()
@@ -449,6 +452,7 @@ func _build_lobby_ui() -> void:
 	copy_ip_button.size = Vector2(90, 34)
 	copy_ip_button.add_to_group("camera_blocking_ui")
 	copy_ip_button.pressed.connect(_copy_host_address)
+	_style_lobby_button(copy_ip_button)
 	panel.add_child(copy_ip_button)
 
 	close_lobby_button = Button.new()
@@ -458,7 +462,54 @@ func _build_lobby_ui() -> void:
 	close_lobby_button.size = Vector2(320, 30)
 	close_lobby_button.add_to_group("camera_blocking_ui")
 	close_lobby_button.pressed.connect(close_lobby_ui)
+	_style_lobby_button(close_lobby_button)
 	panel.add_child(close_lobby_button)
+func _style_lobby_button(button: Button, min_height: float = 42.0) -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.055, 0.095, 0.115, 0.98)
+	normal.border_width_left = 1
+	normal.border_width_top = 1
+	normal.border_width_right = 1
+	normal.border_width_bottom = 1
+	normal.border_color = Color(0.28, 0.58, 0.62, 0.72)
+	normal.corner_radius_top_left = 10
+	normal.corner_radius_top_right = 10
+	normal.corner_radius_bottom_left = 10
+	normal.corner_radius_bottom_right = 10
+	normal.content_margin_left = 12
+	normal.content_margin_right = 12
+	normal.content_margin_top = 9
+	normal.content_margin_bottom = 9
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = Color(0.09, 0.18, 0.21, 1.0)
+	hover.border_color = Color(0.38, 0.78, 0.82, 0.95)
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = Color(0.13, 0.29, 0.31, 1.0)
+	pressed.border_color = Color(0.46, 0.88, 0.86, 1.0)
+	pressed.content_margin_top = 10
+	pressed.content_margin_bottom = 8
+	var focus := normal.duplicate() as StyleBoxFlat
+	focus.border_width_left = 2
+	focus.border_width_top = 2
+	focus.border_width_right = 2
+	focus.border_width_bottom = 2
+	focus.border_color = Color(0.50, 0.90, 0.88, 1.0)
+	var disabled := normal.duplicate() as StyleBoxFlat
+	disabled.bg_color = Color(0.045, 0.06, 0.065, 0.78)
+	disabled.border_color = Color(0.20, 0.24, 0.25, 0.45)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("focus", focus)
+	button.add_theme_stylebox_override("disabled", disabled)
+	button.add_theme_color_override("font_color", Color(0.90, 0.96, 0.96, 1.0))
+	button.add_theme_color_override("font_hover_color", Color(0.98, 1.0, 1.0, 1.0))
+	button.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0, 1.0))
+	button.add_theme_color_override("font_disabled_color", Color(0.45, 0.50, 0.51, 1.0))
+	button.focus_mode = Control.FOCUS_ALL
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	button.custom_minimum_size.y = maxf(button.custom_minimum_size.y, min_height)
+
 
 func _center_lobby_panel(panel: Control) -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
