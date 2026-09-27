@@ -67,8 +67,8 @@ func set_building_storage(building_id: String, storage: Dictionary) -> bool:
     return true
 
 func get_building_record(building_id: String) -> Dictionary:
-	var record = buildings.get(building_id, {})
-	return record.duplicate(true) if record is Dictionary else {}
+    var record = buildings.get(building_id, {})
+    return record.duplicate(true) if record is Dictionary else {}
 
 func add_villager(villager_id: String, name_value: String = "Villager") -> bool:
     if villager_id.is_empty() or villagers.has(villager_id):
