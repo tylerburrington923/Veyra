@@ -48,8 +48,11 @@ func _run_tests() -> void:
 	_test_pause_menu_contract()
 	_test_active_npc_contract()
 	_test_npc_work_contract()
+	_test_blacksmith_contract()
+	_test_building_catalog_contract()
+	_test_simulation_cadence_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (42 suites)")
+		print("VEYRA CORE TESTS: PASS (45 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -986,6 +989,38 @@ func _test_campfire_and_townhall_contract() -> void:
 	_check(settlement.wood_stock > 0, "town hall deposit must increase settlement wood stock")
 	townhall.queue_free()
 	player.queue_free()
+
+func _test_blacksmith_contract() -> void:
+	var instance := VeyraBuildingInstance.new()
+	root.add_child(instance)
+	instance.setup("BLACKSMITH-TEST", "B09_BLACKSMITH", Vector3.ZERO)
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var inventory := player.get_node_or_null("Inventory") as VeyraInventory
+	inventory.add_resource("Metal", 4)
+	inventory.add_resource("Wood", 4)
+	_check(instance.blacksmith_refine(player), "blacksmith should refine raw metal")
+	_check(inventory.get_amount("Refined Metal") == 1, "refining must produce refined metal")
+	_check(instance.blacksmith_forge(player, "I01_STONE_AXE") == false, "forge should require stone")
+	inventory.add_resource("Stone", 1)
+	_check(instance.blacksmith_forge(player, "I01_STONE_AXE"), "blacksmith should forge a tool")
+	_check(inventory.has_item("I01_STONE_AXE"), "forged axe must enter inventory")
+	player.queue_free()
+	instance.queue_free()
+
+func _test_building_catalog_contract() -> void:
+	_check(VeyraBuildingCatalog.exists("B05_TOWNHALL"), "Town Hall must remain buildable")
+	_check(VeyraBuildingCatalog.exists("B09_BLACKSMITH"), "Blacksmith must be catalogued")
+	var blacksmith := VeyraBuildingCatalog.get_building("B09_BLACKSMITH")
+	_check(int(blacksmith.get("cost", {}).get("Metal", 0)) == 10, "Blacksmith must require raw Metal")
+
+func _test_simulation_cadence_contract() -> void:
+	var npc_manager := load("res://scripts/npc_manager.gd")
+	var animal_manager := load("res://scripts/animal_manager.gd")
+	_check(npc_manager != null and animal_manager != null, "simulation managers must remain loadable")
+	_check(float(npc_manager.SIMULATION_INTERVAL) <= 0.12, "NPC simulation cadence must remain responsive")
+	_check(float(animal_manager.SIMULATION_INTERVAL) <= 0.12, "wildlife simulation cadence must remain responsive")
 
 func _test_settlement_water_contract() -> void:
 	var settlement: Node = root.get_node_or_null("/root/SettlementManager")
