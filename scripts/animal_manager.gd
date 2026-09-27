@@ -102,6 +102,11 @@ func _on_animal_death(state: AnimalState, player: Node = null) -> void:
 	if death_timers.has(state.animal_id):
 		return
 	death_timers[state.animal_id] = 6.0
+	var dead_visual: Node3D = visuals.get(state.animal_id)
+	if dead_visual:
+		dead_visual.visible = false
+		if dead_visual is CollisionObject3D:
+			(dead_visual as CollisionObject3D).collision_layer = 0
 	var recipient := player
 	if not recipient:
 		recipient = get_tree().get_first_node_in_group("local_player")
