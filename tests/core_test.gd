@@ -216,9 +216,9 @@ func _test_pause_menu_contract() -> void:
 
 func _test_active_npc_contract() -> void:
 	var manager_script := load("res://scripts/npc_manager.gd")
-	var manager := manager_script.new()
+	var manager: NPCManager = manager_script.new()
 	root.add_child(manager)
-	var npc := manager.spawn_npc("test_active_npc", "human_villager", Vector3.ZERO)
+	var npc: NPCController = manager.spawn_npc("test_active_npc", "human_villager", Vector3.ZERO)
 	_check(npc != null, "NPC manager must spawn an active villager controller")
 	_check(manager.get_npc_state("test_active_npc") != null, "active NPC state must exist")
 	if npc:
