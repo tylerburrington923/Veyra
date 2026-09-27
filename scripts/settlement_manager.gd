@@ -170,6 +170,9 @@ func load_settlement_state(state: Dictionary) -> void:
     if state.is_empty():
         return
     settlement_name = str(state.get("name", settlement_name))
+    water_cycle_index = maxi(0, int(state.get("water_cycle_index", 0)))
+    last_water_shortage = maxi(0, int(state.get("water_shortage", 0)))
+    _water_clock_initialized = false
     var stock: Dictionary = state.get("stock", {})
     food_stock = maxi(0, int(stock.get("food", 0)))
     water_stock = maxi(0, int(stock.get("water", 0)))
