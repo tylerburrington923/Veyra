@@ -120,15 +120,15 @@ func get_resource_state() -> Dictionary:
 
 
 	func apply_resource_state(state: Dictionary) -> void:
-	if state.is_empty():
-	return
-	for child in get_children():
-	if not child.is_in_group("resource_node"):
-	continue
-	var resource: Node = child
-	var resource_id := str(resource.get("resource_id"))
-	if state.has(resource_id) and resource.has_method("apply_save_state"):
-	resource.apply_save_state(state[resource_id])
+    if state.is_empty():
+        return
+    for child in get_children():
+        if not child.is_in_group("resource_node"):
+            continue
+        var resource: Node = child
+        var resource_id := str(resource.get("resource_id"))
+        if state.has(resource_id) and resource.has_method("apply_save_state"):
+            resource.apply_save_state(state[resource_id])
 
 func get_height_at_world(x: float, z: float) -> float:
     var sample_x := x / cell_size + grid_size * 0.5
