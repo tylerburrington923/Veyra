@@ -76,6 +76,10 @@ func _apply_seed_to_generators() -> void:
     if detail:
         detail.set("seed_value", world_seed)
 
+    var water := get_node_or_null("Water")
+    if water:
+        water.set("seed_value", world_seed)
+
 
 func get_world_time() -> float:
     return world_time
