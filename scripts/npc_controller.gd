@@ -12,6 +12,7 @@ var authoritative_state: NPCState
 var definition: NPCDefinition
 var visual: NPCVisual
 var interaction_cooldown := 0.0
+var last_interaction_feedback := ""
 
 func _ready() -> void:
 	collision_layer = 2
@@ -80,12 +81,19 @@ func can_interact(player: Node = null) -> bool:
 	return authoritative_state != null and authoritative_state.alive
 
 func get_interaction_text() -> String:
+	if authoritative_state:
+		if authoritative_state.current_job == "TRADER":
+			return "TRADE"
+		if authoritative_state.current_job == "BUILDER":
+			return "SERVICE"
 	return "TALK"
 
 func get_interaction_point() -> Vector3:
 	return global_position + Vector3.UP * 1.0
 
 func get_interaction_feedback() -> String:
+	if not last_interaction_feedback.is_empty():
+		return last_interaction_feedback
 	if authoritative_state:
 		return "VILLAGER • %s" % (authoritative_state.current_job if not authoritative_state.current_job.is_empty() else "IDLE")
 	return "VILLAGER"
@@ -94,3 +102,6 @@ func interact(player: Node = null) -> void:
 	if not can_interact(player):
 		return
 	interaction_cooldown = 0.6
+	var manager := get_parent() as NPCManager
+	if manager and manager.has_method("interact_with_npc"):
+		last_interaction_feedback = str(manager.interact_with_npc(authoritative_state.npc_id, player))
