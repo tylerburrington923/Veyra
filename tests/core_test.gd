@@ -53,6 +53,7 @@ func _run_tests() -> void:
 	_test_blacksmith_contract()
 	_test_building_catalog_contract()
 	_test_simulation_cadence_contract()
+	_test_alpha_presentation_contract()
 	if failures.is_empty():
 		print("VEYRA CORE TESTS: PASS (45 suites)")
 		quit(0)
@@ -403,8 +404,10 @@ func _test_first_person_viewmodel_contract() -> void:
 	_check(body_left_arm != null and body_right_arm != null, "coherent world-body arms missing")
 	_check(body_left_hand != null and body_right_hand != null, "coherent world-body hands missing")
 	_check(camera != null and (camera.cull_mask & 2) != 0, "camera must render viewmodel layer")
-	_check(player.get_node_or_null("Camera3D/ViewModel/LeftArmFP") == null, "disconnected FP arm must remain removed")
-	_check(player.get_node_or_null("Camera3D/ViewModel/RightArmFP") == null, "disconnected FP arm must remain removed")
+	_check(player.get_node_or_null("Camera3D/ViewModel/LeftArmFP") != null, "first-person left arm presentation must exist")
+	_check(player.get_node_or_null("Camera3D/ViewModel/RightArmFP") != null, "first-person right arm presentation must exist")
+	_check(player.get_node_or_null("Camera3D/ViewModel/LeftHandFP") != null, "first-person left hand presentation must exist")
+	_check(player.get_node_or_null("Camera3D/ViewModel/RightHandFP") != null, "first-person right hand presentation must exist")
 	_check(holder != null and holder.position.z < -0.5, "tool holder must be in front of camera")
 	player.queue_free()
 
@@ -1052,6 +1055,36 @@ func _test_building_catalog_contract() -> void:
 	_check(VeyraBuildingCatalog.exists("B09_BLACKSMITH"), "Blacksmith must be catalogued")
 	var blacksmith := VeyraBuildingCatalog.get_building("B09_BLACKSMITH")
 	_check(int(blacksmith.get("cost", {}).get("Metal", 0)) == 10, "Blacksmith must require raw Metal")
+
+func _test_alpha_presentation_contract() -> void:
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var camera := player.get_node_or_null("Camera3D") as Camera3D
+	_check(camera != null and camera.fov <= 68.0 and camera.fov >= 64.0, "first-person camera FOV must stay in the alpha comfort range")
+	_check(camera != null and camera.position.y >= 1.70, "first-person camera must sit above the legacy body intersection point")
+	_check(player.get_node_or_null("MobileControls/InteractionReticle") != null, "center interaction reticle must exist")
+	var interaction_hud := player.get_node_or_null("MobileControls/InteractionHUD") as Control
+	_check(interaction_hud != null and interaction_hud.visible, "center interaction HUD must be visible")
+	_check(player.get_node_or_null("MobileControls/LunarHUD") != null, "lunar phase HUD must exist")
+	_check(load("res://scripts/lunar_hud.gd") != null, "lunar HUD script must remain loadable")
+	_check(not FileAccess.file_exists("res://scripts/strange_object.gd") or not FileAccess.file_exists("res://scenes/world.tscn"), "placeholder artifact script may remain only as an unused legacy file")
+	var world_text := FileAccess.get_file_as_string("res://scenes/world.tscn") if FileAccess.file_exists("res://scenes/world.tscn") else ""
+	_check(not world_text.contains("WorldDetail"), "world scene must not instantiate duplicate floating detail resources")
+	_check(not world_text.contains("VeyraArtifact"), "world scene must not instantiate placeholder artifact geometry")
+	player.queue_free()
+
+	var manager := NPCManager.new()
+	root.add_child(manager)
+	var npc := manager.spawn_npc("rotation_contract", "human_villager", Vector3.ZERO)
+	var state: NPCState = manager.get_npc_state("rotation_contract")
+	state.current_task = "WANDER"
+	state.target_position = NPCState.make_vector_dict(0.0, 0.0, -4.0)
+	manager._move_state_toward(state, Vector3(0.0, 0.0, -4.0), 0.1)
+	_check(absf(float(state.rotation.get("y", 99.0))) < 0.05, "NPC must face its forward travel direction")
+	manager.despawn_npc("rotation_contract")
+	manager.queue_free()
+
 
 func _test_simulation_cadence_contract() -> void:
 	var npc_manager := load("res://scripts/npc_manager.gd")
