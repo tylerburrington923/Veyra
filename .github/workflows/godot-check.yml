@@ -16,21 +16,12 @@ jobs:
         with:
           version: "4.7.2"
           use-dotnet: false
-          include-templates: true
+          include-templates: false
       - name: Validate project
         run: godot --headless --path . --editor --quit
       - name: Headless runtime smoke test
         run: timeout 12s godot --headless --path . --quit-after 4
 
-      - name: Export Android APK
-        run: mkdir -p build && godot --headless --path . --export-debug "Veyra Android" build/Veyra-debug.apk
-      - name: Upload Android APK
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
-        with:
-          name: Veyra-APK
-          path: build/Veyra-debug.apk
-          retention-days: 7
       - name: Package source for testing
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: zip -r Veyra-source.zip . -x ".git/*" ".godot/*"
