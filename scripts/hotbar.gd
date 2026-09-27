@@ -36,6 +36,8 @@ func _ready() -> void:
 	_build_resonance_hud()
 	if player and player.has_signal("resonance_changed"):
 		player.resonance_changed.connect(_on_resonance_changed)
+	if player and player.has_signal("resonance_tier_changed"):
+		player.resonance_tier_changed.connect(_on_resonance_tier_changed)
 	_refresh()
 	if inventory_panel:
 		inventory_panel.visible = false
@@ -61,6 +63,10 @@ func _on_resonance_changed(_charge: float, discovered: bool) -> void:
 	if discovered and not resonance_seen:
 		resonance_seen = true
 		_show_toast("RESONANCE DISCOVERED")
+	_refresh_resonance()
+
+func _on_resonance_tier_changed(_tier: int, tier_name: String) -> void:
+	_show_toast("RESONANCE: %s" % tier_name)
 	_refresh_resonance()
 
 func _build_resonance_hud() -> void:
@@ -99,8 +105,11 @@ func _refresh_resonance() -> void:
 		resonance_seen = true
 	var lux: int = int(inventory.get_amount("Vitreous Lux"))
 	var echo: int = int(inventory.get_amount("Echo-Stone"))
+	var tier_name := "DORMANT"
+	if player and player.has_method("get_resonance_tier_name"):
+		tier_name = str(player.get_resonance_tier_name())
 	if discovered or charge > 0.0:
-		resonance_label.text = "RESONANCE  %02d%%   •   LUX %d   •   ECHO %d" % [int(round(charge)), lux, echo]
+		resonance_label.text = "%s  •  %02d%%   •   LUX %d   •   ECHO %d" % [tier_name, int(round(charge)), lux, echo]
 	else:
 		resonance_label.text = "LUX %d   •   ECHO %d   •   ANOMALY UNKNOWN" % [lux, echo]
 
