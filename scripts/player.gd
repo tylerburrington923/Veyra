@@ -327,6 +327,32 @@ func configure_network_role(peer_id: int, local_control: bool) -> void:
 		remove_from_group("local_player")
 		_disable_local_presentation()
 
+func configure_offline_role() -> void:
+	_network_mode = false
+	_network_local = true
+	_network_peer_id = 1
+	_network_input = Vector2.ZERO
+	_network_jump = false
+	set_meta("network_mode", false)
+	set_meta("network_local", true)
+	set_multiplayer_authority(1, true)
+	add_to_group("local_player")
+	_configure_camera()
+	_configure_first_person_view()
+	_hide_joystick()
+	var controls := get_node_or_null("MobileControls") as CanvasLayer
+	if controls:
+		controls.visible = true
+	var craft_ui := get_node_or_null("CraftBuildUI") as CanvasLayer
+	if craft_ui:
+		craft_ui.visible = true
+	var inventory_ui := get_node_or_null("HUDInventory") as CanvasLayer
+	if inventory_ui:
+		inventory_ui.visible = true
+	var viewmodel := get_node_or_null("Camera3D/ViewModel") as Node3D
+	if viewmodel:
+		viewmodel.visible = true
+
 func set_network_input(input_vector: Vector2, jump: bool, yaw: float) -> void:
 	_network_input = input_vector.limit_length(1.0)
 	_network_jump = jump
