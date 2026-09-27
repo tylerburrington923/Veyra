@@ -161,9 +161,32 @@ func _build_ui() -> void:
 	crafting_button.offset_bottom = -140
 	crafting_button.pressed.connect(_toggle_panel)
 	crafting_button.add_to_group("camera_blocking_ui")
+	_style_hud_button(crafting_button)
 	add_child(crafting_button)
 	_build_placement_hud()
 	_layout_panel()
+
+func _style_hud_button(button: Button) -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.025, 0.07, 0.08, 0.90)
+	normal.border_width_left = 1
+	normal.border_width_top = 1
+	normal.border_width_right = 1
+	normal.border_width_bottom = 1
+	normal.border_color = Color(0.25, 0.58, 0.62, 0.55)
+	normal.corner_radius_top_left = 12
+	normal.corner_radius_top_right = 12
+	normal.corner_radius_bottom_left = 12
+	normal.corner_radius_bottom_right = 12
+	var hover := normal.duplicate()
+	hover.bg_color = Color(0.06, 0.16, 0.18, 0.96)
+	var pressed := normal.duplicate()
+	pressed.bg_color = Color(0.08, 0.24, 0.26, 1.0)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_color_override("font_color", Color(0.90, 0.96, 0.96, 1.0))
+	button.add_theme_font_size_override("font_size", 15)
 
 func _build_placement_hud() -> void:
 	placement_hud = Panel.new()
