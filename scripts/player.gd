@@ -599,7 +599,7 @@ func _update_tool_animation(delta: float) -> void:
 	var side := 18.0 * arc
 	tool_holder.rotation_degrees = _tool_base_rotation + Vector3(lift, side, -10.0 * arc)
 	tool_holder.position = Vector3(0.25 + 0.035 * arc, -0.73 - 0.035 * arc, -1.02 + 0.07 * arc)
-if progress >= 1.0:
+	if progress >= 1.0:
 		_tool_swing_active = false
 		tool_holder.position = Vector3(0.25, -0.73, -1.02)
 		tool_holder.rotation_degrees = _tool_base_rotation
