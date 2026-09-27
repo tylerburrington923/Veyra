@@ -193,7 +193,7 @@ func _broadcast_snapshot() -> void:
 		var player := players[peer_id] as CharacterBody3D
 		if not player or not is_instance_valid(player):
 			continue
-		var state := player.get_network_state()
+		var state: Dictionary = player.get_network_state()
 		snapshot.append({
 			"peer_id": int(peer_id),
 			"position": {
