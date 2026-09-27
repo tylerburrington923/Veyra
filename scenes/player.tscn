@@ -258,36 +258,6 @@ scale = Vector3(1.0, 0.55, 1.25)
 mesh = SubResource("FootMesh")
 material_override = SubResource("Pants")
 
-[node name="LeftArmFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
-layers = 2
-position = Vector3(-0.27, -0.52, -0.84)
-rotation_degrees = Vector3(10, -5, -17)
-scale = Vector3(0.86, 0.86, 0.86)
-mesh = SubResource("FPLimbMesh")
-material_override = SubResource("FPSkinMaterial")
-
-[node name="RightArmFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
-layers = 2
-position = Vector3(0.27, -0.52, -0.84)
-rotation_degrees = Vector3(10, 5, 17)
-scale = Vector3(0.86, 0.86, 0.86)
-mesh = SubResource("FPLimbMesh")
-material_override = SubResource("FPSkinMaterial")
-
-[node name="LeftHandFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
-layers = 2
-position = Vector3(-0.29, -0.76, -0.98)
-scale = Vector3(0.62, 0.62, 0.62)
-mesh = SubResource("HandMesh")
-material_override = SubResource("FPSkinMaterial")
-
-[node name="RightHandFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
-layers = 2
-position = Vector3(0.29, -0.76, -0.98)
-scale = Vector3(0.62, 0.62, 0.62)
-mesh = SubResource("HandMesh")
-material_override = SubResource("FPSkinMaterial")
-
 [node name="ToolHolder" type="Node3D" parent="Camera3D/ViewModel"]
 position = Vector3(0.25, -0.73, -1.02)
 rotation_degrees = Vector3(4, -6, -8)
