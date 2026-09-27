@@ -458,6 +458,22 @@ func _test_npc_controller_presentation_contract() -> void:
 	controller.queue_free()
 
 
+func _test_npc_manager_contract() -> void:
+    var manager_script := load("res://scripts/npc_manager.gd")
+    var manager: Node3D = manager_script.new()
+    root.add_child(manager)
+    var controller = manager.spawn_npc("npc_manager_01", "human_worker", Vector3(2.0, 0.0, -2.0))
+    _check(controller != null, "NPC manager must spawn a controller for a valid definition")
+    _check(manager.states.has("npc_manager_01"), "NPC manager must retain authoritative NPC state")
+    _check(manager.controllers.has("npc_manager_01"), "NPC manager must retain presentation controller")
+    var state: NPCState = manager.get_npc_state("npc_manager_01")
+    _check(state != null and state.definition_id == "human_worker", "NPC manager state must reference the requested definition")
+    manager.despawn_npc("npc_manager_01")
+    _check(not manager.states.has("npc_manager_01"), "NPC manager must remove despawned state")
+    _check(not manager.controllers.has("npc_manager_01"), "NPC manager must remove despawned controller")
+    manager.queue_free()
+
+
 func _test_resource_respawn_contract() -> void:
 	var resource_scene := load("res://scenes/resource_node.tscn") as PackedScene
 	var resource := resource_scene.instantiate()
@@ -676,7 +692,7 @@ func _test_building_interaction_contract() -> void:
 
 
 func _test_building_storage_contract() -> void:
-	var settlement := get_node_or_null("/root/SettlementManager")
+	var settlement: Node = root.get_node_or_null("/root/SettlementManager")
 	_check(settlement != null, "settlement manager must exist for building storage")
 	if not settlement:
 		return
@@ -695,11 +711,11 @@ func _test_building_storage_contract() -> void:
 	building.setup(building_id, "B02_STORAGE", Vector3.ZERO)
 	building.interact()
 	_check(inventory.get_amount("Wood") == 0, "storage deposit must remove carried wood")
-	var stored := settlement.get_building_storage(building_id)
+	var stored: Dictionary = settlement.get_building_storage(building_id)
 	_check(int(stored.get("resources", {}).get("Wood", 0)) == 7, "storage must persist deposited wood")
 	building.interact()
 	_check(inventory.get_amount("Wood") == 7, "storage withdrawal must restore deposited wood")
-	var emptied_storage := settlement.get_building_storage(building_id)
+	var emptied_storage: Dictionary = settlement.get_building_storage(building_id)
 	_check(
 		int(emptied_storage.get("resources", {}).get("Wood", 0)) == 0
 		and emptied_storage.get("items", {}).is_empty(),
