@@ -501,6 +501,8 @@ func _notification(what: int) -> void:
 func close_lobby_ui() -> void:
 	if lobby_layer:
 		lobby_layer.visible = false
+	if lobby_backdrop:
+		lobby_backdrop.visible = false
 	var pause_menu := get_tree().current_scene.get_node_or_null("PauseMenu")
 	if pause_menu and pause_menu.has_method("show_pause_panel"):
 		pause_menu.show_pause_panel()
