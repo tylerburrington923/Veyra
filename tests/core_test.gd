@@ -30,8 +30,11 @@ func _run_tests() -> void:
 	_test_starter_inventory_contract()
 	_test_mobile_action_layout_contract()
 	_test_water_system_contract()
+	_test_mobile_backpack_contract()
+	_test_building_interaction_contract()
+	_test_building_storage_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (23 suites)")
+		print("VEYRA CORE TESTS: PASS (26 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -638,6 +641,64 @@ func _test_npc_state_validation_vs_sanitization() -> void:
 	corrupted.sanitize()
 	_check(corrupted.health == 0.0, "sanitize must clamp negative health")
 	_check(not corrupted.alive, "sanitize must mark zero-health NPC dead")
+
+
+func _test_mobile_backpack_contract() -> void:
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var button := player.get_node_or_null("HUDInventory/BackpackButton") as Button
+	var panel := player.get_node_or_null("HUDInventory/InventoryPanel") as Panel
+	_check(button != null, "mobile backpack button must exist")
+	_check(panel != null, "backpack inventory panel must exist")
+	_check(button != null and "camera_blocking_ui" in button.get_groups(), "backpack button must block camera touch input")
+	_check(panel != null and not panel.visible, "backpack panel must start closed")
+	button.emit_signal("pressed")
+	_check(panel != null and panel.visible, "backpack button must open inventory")
+	button.emit_signal("pressed")
+	_check(panel != null and not panel.visible, "backpack button must close inventory")
+	player.queue_free()
+
+
+func _test_building_interaction_contract() -> void:
+	for building_type in ["B01_CAMPFIRE", "B02_STORAGE", "B03_SHELTER", "B04_WELL", "B05_TOWNHALL"]:
+		var building := VeyraBuildingInstance.new()
+		root.add_child(building)
+		building.setup("INTERACTION-" + building_type, building_type, Vector3.ZERO)
+		_check(building.is_in_group("interactable"), "%s must register as an interactable" % building_type)
+		_check(building.has_method("get_interaction_text"), "%s must expose interaction text" % building_type)
+		_check(not building.get_interaction_text().is_empty(), "%s must expose a usable interaction action" % building_type)
+		building.queue_free()
+
+
+func _test_building_storage_contract() -> void:
+	var settlement := get_node_or_null("/root/SettlementManager")
+	_check(settlement != null, "settlement manager must exist for building storage")
+	if not settlement:
+		return
+	var building_id := "STORAGE-TEST-001"
+	settlement.add_building(building_id, "B02_STORAGE", Vector3.ZERO)
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var inventory: VeyraInventory = player.get_inventory()
+	inventory.resources.clear()
+	inventory.items.clear()
+	inventory.total_weight = 0.0
+	_check(inventory.add_resource("Wood", 7) == 7, "storage test must seed carried wood")
+	var building := VeyraBuildingInstance.new()
+	root.add_child(building)
+	building.setup(building_id, "B02_STORAGE", Vector3.ZERO)
+	building.interact()
+	_check(inventory.get_amount("Wood") == 0, "storage deposit must remove carried wood")
+	var stored := settlement.get_building_storage(building_id)
+	_check(int(stored.get("resources", {}).get("Wood", 0)) == 7, "storage must persist deposited wood")
+	building.interact()
+	_check(inventory.get_amount("Wood") == 7, "storage withdrawal must restore deposited wood")
+	_check(settlement.get_building_storage(building_id).is_empty(), "storage must be empty after full withdrawal")
+	settlement.buildings.erase(building_id)
+	building.queue_free()
+	player.queue_free()
 
 
 func _test_water_system_contract() -> void:
