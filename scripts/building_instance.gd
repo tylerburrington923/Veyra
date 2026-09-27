@@ -29,9 +29,9 @@ func setup(id: String, type_id: String, position_value: Vector3, door_open_value
     _last_interaction_feedback = ""
 
 
-func interact() -> void:
+func interact(player_override: Node = null) -> void:
     _last_interaction_feedback = ""
-    var player := get_tree().get_first_node_in_group("local_player")
+    var player: Node = player_override if player_override else get_tree().get_first_node_in_group("local_player")
     match building_type:
         "B01_CAMPFIRE":
             _last_interaction_feedback = "Campfire: warmth is ready."
