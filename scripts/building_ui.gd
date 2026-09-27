@@ -10,7 +10,8 @@ var _building: Node
 var _player: Node
 
 func _ready() -> void:
-	layer = 30
+	layer = 80
+	add_to_group("building_ui")
 	_build_base()
 	visible = false
 
@@ -58,11 +59,11 @@ func _on_action_pressed() -> void:
 func _build_base() -> void:
 	panel = Panel.new()
 	panel.name = "BuildingPanel"
-	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	panel.size = Vector2(440, 400)
-	panel.position -= panel.size * 0.5
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(panel)
+
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.025, 0.045, 0.06, 0.97)
+	panel_style.bg_color = Color(0.025, 0.045, 0.06, 0.98)
 	panel_style.border_width_left = 1
 	panel_style.border_width_top = 1
 	panel_style.border_width_right = 1
@@ -73,41 +74,67 @@ func _build_base() -> void:
 	panel_style.corner_radius_bottom_left = 16
 	panel_style.corner_radius_bottom_right = 16
 	panel.add_theme_stylebox_override("panel", panel_style)
-	add_child(panel)
 
 	title_label = Label.new()
-	title_label.position = Vector2(24, 18)
-	title_label.size = Vector2(392, 42)
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.add_theme_font_size_override("font_size", 24)
 	title_label.add_theme_color_override("font_color", Color(0.42, 0.82, 0.84, 1))
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	panel.add_child(title_label)
 
+	var scroll := ScrollContainer.new()
+	scroll.name = "BodyScroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	panel.add_child(scroll)
+
 	body_label = Label.new()
-	body_label.position = Vector2(32, 72)
-	body_label.size = Vector2(376, 230)
 	body_label.add_theme_font_size_override("font_size", 16)
 	body_label.add_theme_color_override("font_color", Color(0.78, 0.84, 0.85, 1))
 	body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	panel.add_child(body_label)
+	body_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body_label.custom_minimum_size = Vector2(0, 260)
+	scroll.add_child(body_label)
 
 	action_button = Button.new()
-	action_button.position = Vector2(28, 326)
-	action_button.size = Vector2(184, 50)
 	action_button.add_theme_font_size_override("font_size", 16)
 	action_button.pressed.connect(_on_action_pressed)
 	_style_button(action_button)
 	panel.add_child(action_button)
 
 	close_button = Button.new()
-	close_button.position = Vector2(228, 326)
-	close_button.size = Vector2(184, 50)
 	close_button.text = "CLOSE"
 	close_button.add_theme_font_size_override("font_size", 16)
 	close_button.pressed.connect(close_ui)
 	_style_button(close_button)
 	panel.add_child(close_button)
 
+	_layout_panel()
+
+func _layout_panel() -> void:
+	if not panel:
+		return
+	var viewport_size := get_viewport().get_visible_rect().size
+	var width := minf(440.0, maxf(280.0, viewport_size.x - 24.0))
+	var height := minf(400.0, maxf(260.0, viewport_size.y - 24.0))
+	panel.size = Vector2(width, height)
+	panel.position = (viewport_size - panel.size) * 0.5
+	title_label.position = Vector2(16, 12)
+	title_label.size = Vector2(width - 32.0, 38.0)
+	var button_y := height - 62.0
+	var gap := 12.0
+	var button_width := (width - 56.0) * 0.5
+	action_button.position = Vector2(20, button_y)
+	action_button.size = Vector2(button_width, 44)
+	close_button.position = Vector2(36.0 + button_width, button_y)
+	close_button.size = Vector2(button_width, 44)
+	var scroll := panel.get_node_or_null("BodyScroll") as ScrollContainer
+	if scroll:
+		scroll.position = Vector2(20, 58)
+		scroll.size = Vector2(width - 40.0, maxf(120.0, button_y - 70.0))
+		body_label.custom_minimum_size = Vector2(scroll.size.x - 8.0, 260.0)
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_SIZE_CHANGED:
+		_layout_panel()
 func _style_button(button: Button) -> void:
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = Color(0.07, 0.16, 0.18, 0.98)
