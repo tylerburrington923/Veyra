@@ -1,6 +1,9 @@
 class_name NPCManager
 extends Node3D
 
+func _settlement_manager() -> VeyraSettlementManager:
+	return get_node_or_null("/root/SettlementManager") as VeyraSettlementManager
+
 ## Runtime bridge between authoritative NPCState data and NPCController presentation.
 ## The manager owns runtime NPC states; controllers are disposable presentation nodes.
 ## SettlementManager remains the owner of settlement membership data.
@@ -14,8 +17,9 @@ var controllers: Dictionary = {}
 func _ready() -> void:
 	add_to_group("npc_manager")
 	_register_default_definitions()
-	if SettlementManager and SettlementManager.has_signal("settlement_changed"):
-		SettlementManager.settlement_changed.connect(_on_settlement_changed)
+	var settlement := _settlement_manager()
+	if settlement and settlement.has_signal("settlement_changed"):
+		settlement.settlement_changed.connect(_on_settlement_changed)
 	call_deferred("_ensure_beta_villager")
 	call_deferred("sync_settlement_villagers")
 
@@ -41,9 +45,10 @@ func _register_default_definitions() -> void:
 	definitions["human_villager"] = NPCDefinition.new("human_villager", "Villager", "human", 3.0, 1.0, 20, ["GATHER", "BUILD"], "villager_01")
 
 func _ensure_beta_villager() -> void:
-	if not SettlementManager or not SettlementManager.villagers.is_empty():
+	var settlement := _settlement_manager()
+	if not settlement or not settlement.villagers.is_empty():
 		return
-	SettlementManager.add_villager("villager_beta_01", "Aren")
+	settlement.add_villager("villager_beta_01", "Aren")
 
 func spawn_npc(npc_id: String, definition_id: String, position: Vector3) -> NPCController:
 	if npc_id.is_empty() or states.has(npc_id) or not definitions.has(definition_id):
