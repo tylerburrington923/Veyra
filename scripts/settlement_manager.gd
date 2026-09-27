@@ -52,14 +52,14 @@ func set_building_door_state(building_id: String, open: bool) -> bool:
 
 func get_building_storage(building_id: String) -> Dictionary:
     if not buildings.has(building_id):
-    	return {}
+        return {}
     var record: Dictionary = buildings[building_id]
     var storage = record.get("storage", {})
     return storage.duplicate(true) if storage is Dictionary else {}
 
 func set_building_storage(building_id: String, storage: Dictionary) -> bool:
     if not buildings.has(building_id):
-    	return false
+        return false
     var record: Dictionary = buildings[building_id]
     record["storage"] = storage.duplicate(true)
     buildings[building_id] = record
