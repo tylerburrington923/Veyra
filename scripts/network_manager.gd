@@ -354,9 +354,25 @@ func _set_status(message: String) -> void:
 
 func _get_lan_addresses() -> String:
 	var addresses: Array[String] = []
-	for address in IP.get_local_addresses():
-		if str(address).begins_with("192.168.") or str(address).begins_with("10.") or str(address).begins_with("172.16."):
-			addresses.append(str(address))
+	for address_value in IP.get_local_addresses():
+		var address := str(address_value).strip_edges()
+		if _is_private_ipv4(address):
+			addresses.append(address)
+	addresses.sort()
 	if addresses.is_empty():
-		return "LAN IP: unavailable"
-	return "LAN IP: " + ", ".join(addresses) + ":%d" % PORT
+		return "HOTSPOT/LAN IP: unavailable"
+	return "HOTSPOT/LAN IP: " + ", ".join(addresses) + ":%d" % PORT
+
+func _is_private_ipv4(address: String) -> bool:
+	var octets := address.split(".")
+	if octets.size() != 4:
+		return false
+	var values: Array[int] = []
+	for octet in octets:
+		if not octet.is_valid_int():
+			return false
+		var value := int(octet)
+		if value < 0 or value > 255:
+			return false
+		values.append(value)
+	return values[0] == 10 or values[0] == 192 and values[1] == 168 or values[0] == 172 and values[1] >= 16 and values[1] <= 31
