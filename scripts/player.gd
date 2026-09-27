@@ -78,6 +78,9 @@ signal resonance_tier_changed(tier: int, tier_name: String)
 func get_resonance() -> float:
 	return resonance_charge
 
+func get_resonance_discovered() -> bool:
+	return resonance_discovered
+
 func get_resonance_tier() -> int:
 	if resonance_charge >= 100.0:
 		return 5
