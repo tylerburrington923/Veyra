@@ -17,6 +17,7 @@ var collision_body: StaticBody3D
 var _tree_visual_active: Array[bool] = []
 var _tree_trunk_visual_transforms: Array[Transform3D] = []
 var _tree_leaf_visual_transforms: Array[Transform3D] = []
+var _visibility_distance: float = 82.0
 
 
 func _ready() -> void:
@@ -207,6 +208,13 @@ func _hidden_transform(original: Transform3D) -> Transform3D:
     return hidden
 
 
+func set_visibility_distance(distance: float) -> void:
+	_visibility_distance = maxf(20.0, distance)
+	for child in get_children():
+		if child is MultiMeshInstance3D:
+			child.visibility_range_end = _visibility_distance
+			child.visibility_range_end_margin = 8.0
+
 func _create_multimesh(
     node_name: String,
     mesh: Mesh,
@@ -229,6 +237,8 @@ func _create_multimesh(
 
     instance.multimesh = multimesh
     instance.material_override = material
+    instance.visibility_range_end = _visibility_distance
+    instance.visibility_range_end_margin = 8.0
     add_child(instance)
     return instance
 
