@@ -238,9 +238,10 @@ func _find_handler_from_name(handler_name: String) -> Node:
 	var player := get_tree().get_first_node_in_group("local_player")
 	if not player:
 		return null
-	for node in get_tree().get_nodes_in_group("resource_node"):
-		if node.name == handler_name:
-			return node
+	for group_name in ["resource_node", "interactable"]:
+		for node in get_tree().get_nodes_in_group(group_name):
+			if node.name == handler_name:
+				return node
 	return null
 
 func _get_action_label(target_type: String) -> String:
