@@ -134,7 +134,7 @@ func _center_control(control: Control) -> void:
 	control.position = (viewport_size - control.size) * 0.5
 
 func _toggle() -> void:
-	if visible:
+	if panel and panel.visible:
 		_resume()
 	else:
 		_open()
