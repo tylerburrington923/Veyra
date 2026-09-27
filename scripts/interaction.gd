@@ -16,7 +16,7 @@ const MAX_HANDLER_DEPTH := 8
 
 @export var interact_distance: float = MAX_TARGET_DISTANCE
 @export var resonance_strength: float = 1.8
-@export var target_update_interval: float = 0.12
+@export var target_update_interval: float = 0.18
 
 var target_label: Label
 var interact_button: Button
