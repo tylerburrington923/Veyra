@@ -470,7 +470,14 @@ func _build_townhall() -> void:
 
 func _add_window(position_value: Vector3, rotation_value: Vector3, glass: Material, frame: Material) -> void:
     var basis := Basis.from_euler(rotation_value)
-    _mesh_box(Vector3(0.95, 0.85, 0.08), position_value, glass, rotation_value)
+    var glass_panel := glass
+    if glass is StandardMaterial3D:
+        glass_panel = glass.duplicate()
+        glass_panel.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+        glass_panel.cull_mode = BaseMaterial3D.CULL_DISABLED
+        glass_panel.roughness = 0.32
+        glass_panel.metallic = 0.05
+    _mesh_box(Vector3(0.95, 0.85, 0.12), position_value, glass_panel, rotation_value)
     _mesh_box(Vector3(1.08, 0.10, 0.10), position_value + basis * Vector3(0, 0.48, 0), frame, rotation_value)
     _mesh_box(Vector3(1.08, 0.10, 0.10), position_value + basis * Vector3(0, -0.48, 0), frame, rotation_value)
     _mesh_box(Vector3(0.10, 1.08, 0.10), position_value + basis * Vector3(0.48, 0, 0), frame, rotation_value)
