@@ -121,6 +121,7 @@ func _style_button(button: Button) -> void:
 
 func _make_button(text_value: String, button_position: Vector2, button_size: Vector2) -> Button:
 	var button := Button.new()
+	button.name = text_value.replace(" ", "")
 	button.text = text_value
 	button.position = button_position
 	button.size = button_size
