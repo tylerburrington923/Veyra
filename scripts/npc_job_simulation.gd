@@ -75,3 +75,6 @@ static func _move_toward_target(state: NPCState, distance: float) -> void:
 		return
 	var next := current + offset.normalized() * minf(distance, offset.length())
 	state.position = NPCState.make_vector_dict(next.x, next.y, next.z)
+	if next.distance_squared_to(current) > 0.000001:
+		var direction := (next - current).normalized()
+		state.rotation = NPCState.make_vector_dict(0.0, atan2(-direction.x, -direction.z), 0.0)
