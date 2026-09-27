@@ -235,12 +235,15 @@ func _configure_existing_player(peer_id: int, local_control: bool) -> void:
 	players[peer_id] = player
 
 func _despawn_all_network_players() -> void:
+	var local_player: CharacterBody3D = players.get(local_peer_id) as CharacterBody3D
 	for peer_id in players.keys():
 		var player: Node = players[peer_id]
 		if player and player.name != "Player":
 			player.queue_free()
 	players.clear()
 	peer_inputs.clear()
+	if local_player and local_player.has_method("configure_offline_role"):
+		local_player.configure_offline_role()
 
 func _build_lobby_ui() -> void:
 	if lobby_layer:
