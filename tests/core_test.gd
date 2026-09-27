@@ -425,6 +425,16 @@ func _test_first_person_presentation_contract() -> void:
 	_check(chest != null and chest.layers == 2, "first-person chest must use viewmodel layer")
 	_check(hotbar != null and is_equal_approx(hotbar.anchor_left, 0.5) and is_equal_approx(hotbar.anchor_right, 0.5), "tool hotbar must be centered")
 	_check(player.has_method("play_tool_use"), "player must expose tool use presentation")
+	var fp_left_arm := player.get_node_or_null("Camera3D/ViewModel/LeftArmFP") as MeshInstance3D
+	var fp_right_arm := player.get_node_or_null("Camera3D/ViewModel/RightArmFP") as MeshInstance3D
+	var world_left_arm := player.get_node_or_null("LeftArm") as MeshInstance3D
+	_check(fp_left_arm != null and fp_left_arm.visible, "local first-person arm must be visible")
+	_check(fp_right_arm != null and fp_right_arm.visible, "local first-person arm must be visible")
+	_check(world_left_arm != null and not world_left_arm.visible, "local world arm must be hidden to prevent camera-body distortion")
+	_check(player.set_tool(VeyraItemCatalog.HANDS_ID), "hands must be selectable for punch presentation")
+	player.play_tool_use()
+	_check(bool(player.get("_punch_active")), "hands use must trigger punch animation")
+	player._update_tool_animation(0.10)
 	player.queue_free()
 
 func _test_resource_interaction_matrix() -> void:
