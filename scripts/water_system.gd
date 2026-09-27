@@ -23,7 +23,17 @@ func configure(world_seed: int) -> void:
 func generate() -> void:
     if generated:
         return
-    terrain_generator = get_parent().get_node_or_null("WorldGenerator")
+    if terrain_generator == null:
+        var parent_node: Node = get_parent()
+        if parent_node and parent_node.has_method("get_height_at_world"):
+            terrain_generator = parent_node
+        elif parent_node:
+            terrain_generator = parent_node.get_node_or_null("WorldGenerator")
+        if terrain_generator == null:
+            for candidate in get_tree().get_nodes_in_group("world_generator"):
+                if candidate and candidate.has_method("get_height_at_world"):
+                    terrain_generator = candidate
+                    break
     if terrain_generator == null or not terrain_generator.has_method("get_height_at_world"):
         return
     generated = true
