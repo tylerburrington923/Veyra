@@ -666,66 +666,66 @@ func _build_well() -> void:
 
 
 func _refine_metal(player: Node) -> bool:
-	var inventory: VeyraInventory = null
-	if player:
-		inventory = player.get_node_or_null("Inventory") as VeyraInventory
-	if not inventory:
-		return false
-	if not inventory.has_resource("Metal", 2) or not inventory.has_resource("Wood", 1):
-		_last_interaction_feedback = "Blacksmith: requires 2 Metal + 1 Wood."
-		return false
-	inventory.remove_resource("Metal", 2)
-	inventory.remove_resource("Wood", 1)
-	if inventory.add_resource("Refined Metal", 1) != 1:
-		inventory.add_resource("Metal", 2)
-		inventory.add_resource("Wood", 1)
-		_last_interaction_feedback = "Blacksmith: inventory is full."
-		return false
-	_last_interaction_feedback = "Blacksmith: refined 2 Metal into 1 Refined Metal."
-	return true
+    var inventory: VeyraInventory = null
+    if player:
+        inventory = player.get_node_or_null("Inventory") as VeyraInventory
+    if not inventory:
+        return false
+    if not inventory.has_resource("Metal", 2) or not inventory.has_resource("Wood", 1):
+        _last_interaction_feedback = "Blacksmith: requires 2 Metal + 1 Wood."
+        return false
+    inventory.remove_resource("Metal", 2)
+    inventory.remove_resource("Wood", 1)
+    if inventory.add_resource("Refined Metal", 1) != 1:
+        inventory.add_resource("Metal", 2)
+        inventory.add_resource("Wood", 1)
+        _last_interaction_feedback = "Blacksmith: inventory is full."
+        return false
+    _last_interaction_feedback = "Blacksmith: refined 2 Metal into 1 Refined Metal."
+    return true
 
 func _forge_tool(player: Node, tool_id: String) -> bool:
-	var inventory: VeyraInventory = player.get_node_or_null("Inventory") as VeyraInventory if player else null
-	if not inventory:
-		return false
-	var cost := {"Refined Metal": 1, "Wood": 2, "Stone": 1}
-	if tool_id == "I02_STONE_PICK":
-		cost["Stone"] = 2
-	for key in cost:
-		if not inventory.has_resource(key, int(cost[key])):
-			_last_interaction_feedback = "Blacksmith: missing %s." % key
-			return false
-	for key in cost:
-		inventory.remove_resource(key, int(cost[key]))
-	if inventory.add_item(tool_id, 1) != 1:
-		for key in cost:
-			inventory.add_resource(key, int(cost[key]))
-		_last_interaction_feedback = "Blacksmith: inventory is full."
-		return false
-	_last_interaction_feedback = "Blacksmith: tool forged."
-	return true
+    var inventory: VeyraInventory = player.get_node_or_null("Inventory") as VeyraInventory if player else null
+    if not inventory:
+        return false
+    var cost := {"Refined Metal": 1, "Wood": 2, "Stone": 1}
+    if tool_id == "I02_STONE_PICK":
+        cost["Stone"] = 2
+    for key in cost:
+        if not inventory.has_resource(key, int(cost[key])):
+            _last_interaction_feedback = "Blacksmith: missing %s." % key
+            return false
+    for key in cost:
+        inventory.remove_resource(key, int(cost[key]))
+    if inventory.add_item(tool_id, 1) != 1:
+        for key in cost:
+            inventory.add_resource(key, int(cost[key]))
+        _last_interaction_feedback = "Blacksmith: inventory is full."
+        return false
+    _last_interaction_feedback = "Blacksmith: tool forged."
+    return true
 
 func blacksmith_refine(player: Node) -> bool:
-	return _refine_metal(player)
+    return _refine_metal(player)
 
 func blacksmith_forge(player: Node, tool_id: String) -> bool:
-	return _forge_tool(player, tool_id)
+    return _forge_tool(player, tool_id)
 
 func _build_blacksmith() -> void:
-	var stone := _material(Color(0.25, 0.27, 0.28))
-	var brick := _material(Color(0.40, 0.25, 0.14))
-	var dark := _material(Color(0.10, 0.11, 0.12), 0.65, 0.55)
-	var metal := _material(Color(0.28, 0.31, 0.32), 0.38, 0.72)
-	var ember := _emissive_material(Color(0.85, 0.16, 0.035), 1.8)
-	_mesh_box(Vector3(4.5, 0.18, 4.0), Vector3(0, 0.09, 0), stone)
-	_mesh_box(Vector3(4.1, 2.2, 3.6), Vector3(0, 1.19, 0), brick)
-	_mesh_box(Vector3(4.35, 0.18, 3.85), Vector3(0, 2.38, 0), dark)
-	_mesh_box(Vector3(1.6, 1.25, 0.25), Vector3(0, 0.82, -1.92), dark)
-	_mesh_box(Vector3(0.95, 0.85, 0.22), Vector3(0, 0.70, -2.05), metal)
-	_mesh_sphere(0.22, Vector3(0, 1.15, -2.12), ember, Vector3(1.3, 0.65, 1.0))
-	_mesh_cylinder(0.18, 1.7, Vector3(1.35, 1.15, -1.85), metal, 8)
-	_mesh_box(Vector3(0.65, 1.2, 0.65), Vector3(-1.35, 0.72, -1.55), dark)
-	_add_box_collision(Vector3(4.1, 2.2, 3.6), Vector3(0, 1.19, 0))
+    var stone := _material(Color(0.25, 0.27, 0.28))
+    var brick := _material(Color(0.40, 0.25, 0.14))
+    var dark := _material(Color(0.10, 0.11, 0.12), 0.65, 0.55)
+    var metal := _material(Color(0.28, 0.31, 0.32), 0.38, 0.72)
+    var ember := _emissive_material(Color(0.85, 0.16, 0.035), 1.8)
+    _mesh_box(Vector3(4.5, 0.18, 4.0), Vector3(0, 0.09, 0), stone)
+    _mesh_box(Vector3(4.1, 2.2, 3.6), Vector3(0, 1.19, 0), brick)
+    _mesh_box(Vector3(4.35, 0.18, 3.85), Vector3(0, 2.38, 0), dark)
+    _mesh_box(Vector3(1.6, 1.25, 0.25), Vector3(0, 0.82, -1.92), dark)
+    _mesh_box(Vector3(0.95, 0.85, 0.22), Vector3(0, 0.70, -2.05), metal)
+    _mesh_sphere(0.22, Vector3(0, 1.15, -2.12), ember, Vector3(1.3, 0.65, 1.0))
+    _mesh_cylinder(0.18, 1.7, Vector3(1.35, 1.15, -1.85), metal, 8)
+    _mesh_box(Vector3(0.65, 1.2, 0.65), Vector3(-1.35, 0.72, -1.55), dark)
+    _add_box_collision(Vector3(4.1, 2.2, 3.6), Vector3(0, 1.19, 0))
 
 
 func _build_generic() -> void:
