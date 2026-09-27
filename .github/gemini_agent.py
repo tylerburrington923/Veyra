@@ -12,6 +12,7 @@ API_KEY = os.environ["GEMINI_API_KEY"]
 TASK = os.environ["VEYRA_TASK"].strip()
 SCOPE = [x.strip().strip("/") for x in os.environ.get("VEYRA_SCOPE", "scripts,scenes,tests").split(",") if x.strip()]
 MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
+FALLBACK_MODELS = [x.strip() for x in os.environ.get("GEMINI_FALLBACK_MODELS", "gemini-3.7-flash").split(",") if x.strip()]
 
 ALLOWED_ROOTS = ("scripts/", "scenes/", "tests/", ".github/", "docs/")
 BLOCKED = (".godot/", ".git/", "build/", ".env", "project.godot")
@@ -226,7 +227,21 @@ def post_gemini(url, payload, label, attempts=5):
             delay = min(30, 2 ** (attempt - 1))
             print(f"Gemini {label} transient request error; retry {attempt + 1}/{attempts} in {delay}s", flush=True)
             time.sleep(delay)
-    raise SystemExit(last_error or f"Gemini {label} request failed")
+    raise RuntimeError(last_error or f"Gemini {label} request failed")
+
+def call_with_fallback(model, payload, label):
+    models = [model] + [m for m in FALLBACK_MODELS if m != model]
+    last_error = None
+    for index, candidate in enumerate(models):
+        endpoint = "https://generativelanguage.googleapis.com/v1beta/models/" + candidate + ":generateContent?key=" + API_KEY
+        try:
+            print("Gemini " + label + ": trying " + candidate, flush=True)
+            return candidate, post_gemini(endpoint, payload, label)
+        except RuntimeError as e:
+            last_error = str(e)
+            if index + 1 < len(models):
+                print("Gemini " + label + ": " + candidate + " unavailable; falling back to " + models[index + 1], flush=True)
+    raise SystemExit(last_error or f"Gemini {label} failed")
 
 url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={API_KEY}"
 payload = {
@@ -238,7 +253,7 @@ payload = {
         "maxOutputTokens": 50000
     }
 }
-raw = post_gemini(url, payload, "implementation")
+implementation_model, raw = call_with_fallback(MODEL, payload, "implementation")
 
 try:
     text = raw["candidates"][0]["content"]["parts"][0]["text"]
@@ -255,7 +270,7 @@ if not isinstance(result.get("files"), list):
 
 report = {
     "task": TASK,
-    "model": MODEL,
+    "model": implementation_model,
     "context_files": file_count,
     "context_chars": context_chars,
     "summary": result.get("summary", ""),
@@ -352,7 +367,7 @@ Set approved=false for any error/critical finding or required architectural corr
         "contents": [{"role": "user", "parts": [{"text": review_prompt}]}],
         "generationConfig": {"temperature": 0.0, "responseMimeType": "application/json", "maxOutputTokens": 16000},
     }
-    raw = post_gemini(url, payload, "review")
+    review_model_used, raw = call_with_fallback(review_model, payload, "review")
     try:
         text = raw["candidates"][0]["content"]["parts"][0]["text"]
         review = json.loads(text)
@@ -360,7 +375,7 @@ Set approved=false for any error/critical finding or required architectural corr
         raise SystemExit(f"Gemini reviewer returned unusable JSON: {e}")
     if not isinstance(review.get("approved"), bool):
         raise SystemExit("Gemini reviewer did not return a boolean approved field.")
-    return review_model, review
+    return review_model_used, review
 
 diff_text = git_diff()
 review_model, review = review_generated_changes(diff_text)
