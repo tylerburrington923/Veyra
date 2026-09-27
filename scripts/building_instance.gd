@@ -112,6 +112,12 @@ func get_interaction_text() -> String:
             return "Use Well"
         "B05_TOWNHALL":
             return "Open Town Hall"
+        "B06_SHRINE":
+            return "Attune Resonance Shrine"
+        "B07_WATCHTOWER":
+            return "Survey from Watchtower"
+        "B08_GARDEN":
+            return "Tend Lunar Garden"
         _:
             return "Use"
 
@@ -611,5 +617,29 @@ func _build_well() -> void:
 
 func _build_generic() -> void:
     var material := _material(Color(0.35, 0.28, 0.18))
-    _mesh_box(Vector3(2.0, 1.5, 2.0), Vector3(0, 0.75, 0), material)
-    _add_box_collision(Vector3(2.0, 1.5, 2.0), Vector3(0, 0.75, 0))
+    match building_type:
+        "B06_SHRINE":
+            material = _emissive_material(Color(0.08, 0.38, 0.42), 0.55)
+            _mesh_cylinder(0.78, 0.20, Vector3(0, 0.10, 0), material, 8)
+            _mesh_cylinder(0.28, 1.35, Vector3(0, 0.86, 0), material, 6)
+            _mesh_sphere(0.30, Vector3(0, 1.62, 0), material)
+            _add_box_collision(Vector3(1.8, 0.45, 1.8), Vector3(0, 0.22, 0))
+        "B07_WATCHTOWER":
+            material = _material(Color(0.30, 0.17, 0.075))
+            for x in [-0.8, 0.8]:
+                for z in [-0.8, 0.8]:
+                    _mesh_box(Vector3(0.16, 3.2, 0.16), Vector3(x, 1.6, z), material)
+            _mesh_box(Vector3(2.0, 0.18, 2.0), Vector3(0, 3.15, 0), material)
+            _mesh_box(Vector3(2.2, 0.16, 2.2), Vector3(0, 3.45, 0), _material(Color(0.10, 0.13, 0.15)))
+            _add_box_collision(Vector3(1.9, 3.0, 1.9), Vector3(0, 1.5, 0))
+        "B08_GARDEN":
+            _mesh_box(Vector3(3.5, 0.14, 3.5), Vector3(0, 0.07, 0), _material(Color(0.20, 0.14, 0.08)))
+            for x in [-1.0, -0.33, 0.33, 1.0]:
+                _mesh_box(Vector3(0.12, 0.25, 3.0), Vector3(x, 0.22, 0), _material(Color(0.29, 0.16, 0.07)))
+            for z in [-1.0, -0.33, 0.33, 1.0]:
+                _mesh_sphere(0.12, Vector3(-0.72, 0.40, z), _emissive_material(Color(0.14, 0.46, 0.30), 0.35), Vector3(0.8, 1.5, 0.8))
+                _mesh_sphere(0.11, Vector3(0.72, 0.42, z), _emissive_material(Color(0.08, 0.44, 0.50), 0.65), Vector3(0.8, 1.7, 0.8))
+            _add_box_collision(Vector3(3.5, 0.20, 3.5), Vector3(0, 0.10, 0))
+        _:
+            _mesh_box(Vector3(2.0, 1.5, 2.0), Vector3(0, 0.75, 0), material)
+            _add_box_collision(Vector3(2.0, 1.5, 2.0), Vector3(0, 0.75, 0))
