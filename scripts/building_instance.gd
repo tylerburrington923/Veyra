@@ -525,56 +525,46 @@ func _build_house() -> void:
 
 
 func _build_townhall() -> void:
-    var foundation := _material(Color(0.24, 0.25, 0.26), 0.82)
-    var stone := _material(Color(0.36, 0.38, 0.39))
-    var stone_light := _material(Color(0.48, 0.49, 0.48))
-    var wood := _material(Color(0.30, 0.17, 0.075))
-    var trim := _material(Color(0.15, 0.10, 0.06))
-    var roof := _material(Color(0.10, 0.13, 0.15), 0.72)
-    var roof_light := _material(Color(0.16, 0.19, 0.21), 0.72)
-    var glass := _emissive_material(Color(0.20, 0.48, 0.52), 0.6)
-    var metal := _material(Color(0.22, 0.24, 0.25), 0.38, 0.7)
-    var banner := _emissive_material(Color(0.08, 0.46, 0.52), 0.8)
+    var foundation := _material(Color(0.22, 0.24, 0.25), 0.84)
+    var stone := _material(Color(0.34, 0.37, 0.38), 0.9)
+    var stone_light := _material(Color(0.46, 0.48, 0.47), 0.84)
+    var wood := _material(Color(0.28, 0.15, 0.065), 0.88)
+    var trim := _material(Color(0.12, 0.085, 0.055), 0.9)
+    var roof := _material(Color(0.075, 0.105, 0.12), 0.76)
+    var glass := _emissive_material(Color(0.16, 0.52, 0.56), 0.55)
+    var metal := _material(Color(0.20, 0.23, 0.24), 0.36, 0.72)
+    var banner := _emissive_material(Color(0.06, 0.42, 0.48), 0.65)
 
-    _mesh_box(Vector3(8.0, 0.24, 7.0), Vector3(0, 0.12, 0), foundation)
-    _mesh_box(Vector3(7.4, 2.6, 6.4), Vector3(0, 1.42, 0), stone)
+    _mesh_box(Vector3(7.6, 0.22, 6.4), Vector3(0, 0.11, 0), foundation)
+    _mesh_box(Vector3(7.1, 2.55, 5.9), Vector3(0, 1.39, 0), stone)
+    _mesh_box(Vector3(7.25, 0.16, 0.16), Vector3(0, 2.68, -2.98), trim)
+    _mesh_box(Vector3(7.25, 0.16, 0.16), Vector3(0, 2.68, 2.98), trim)
 
-    # Timber frame and central civic tower.
-    _mesh_box(Vector3(7.65, 0.22, 0.24), Vector3(0, 2.65, -3.25), wood)
-    _mesh_box(Vector3(7.65, 0.22, 0.24), Vector3(0, 2.65, 3.25), wood)
-    _mesh_box(Vector3(0.24, 0.22, 6.5), Vector3(-3.55, 2.65, 0), wood)
-    _mesh_box(Vector3(0.24, 0.22, 6.5), Vector3(3.55, 2.65, 0), wood)
-    _mesh_box(Vector3(3.0, 4.2, 3.0), Vector3(0, 3.55, 0), stone_light)
+    # Central civic tower with a stepped roof.
+    _mesh_box(Vector3(2.65, 3.55, 2.65), Vector3(0, 3.15, 0), stone_light)
+    _mesh_box(Vector3(2.95, 0.18, 2.95), Vector3(0, 4.93, 0), wood)
+    _mesh_box(Vector3(2.55, 0.22, 2.55), Vector3(0, 5.20, 0), roof)
+    _mesh_box(Vector3(2.15, 0.18, 2.15), Vector3(0, 5.39, 0), roof)
 
-    # Four roof planes form a compact hip roof. Each panel slopes toward the
-    # tower center; the overlap keeps the crown visually continuous from every side.
-    var roof_angle := deg_to_rad(35.0)
-    var roof_y := 5.95
-    _mesh_box(Vector3(2.35, 0.20, 3.55), Vector3(-0.82, roof_y, 0), roof, Vector3(0, 0, roof_angle))
-    _mesh_box(Vector3(2.35, 0.20, 3.55), Vector3(0.82, roof_y, 0), roof, Vector3(0, 0, -roof_angle))
-    _mesh_box(Vector3(3.55, 0.20, 2.35), Vector3(0, roof_y, -0.82), roof_light, Vector3(roof_angle, 0, 0))
-    _mesh_box(Vector3(3.55, 0.20, 2.35), Vector3(0, roof_y, 0.82), roof_light, Vector3(-roof_angle, 0, 0))
+    # Clean front portico and readable civic entrance.
+    var front_z := -3.10
+    _mesh_box(Vector3(2.45, 0.18, 1.20), Vector3(0, 0.20, front_z - 0.56), foundation)
+    _mesh_box(Vector3(2.25, 2.30, 0.18), Vector3(0, 1.30, front_z), wood)
+    _mesh_box(Vector3(1.62, 2.05, 0.12), Vector3(0, 1.05, front_z - 0.12), trim)
+    _mesh_box(Vector3(1.24, 1.72, 0.08), Vector3(0, 1.00, front_z - 0.19), glass)
 
-    # Front civic entrance and steps.
-    var front_z := -3.32
-    _mesh_box(Vector3(2.1, 0.22, 1.25), Vector3(0, 0.11, front_z - 0.58), foundation)
-    _mesh_box(Vector3(2.5, 2.25, 0.22), Vector3(0, 1.25, front_z), wood)
-    _mesh_box(Vector3(1.65, 2.0, 0.16), Vector3(0, 1.05, front_z - 0.13), trim)
-    _mesh_box(Vector3(1.25, 1.75, 0.10), Vector3(0, 1.0, front_z - 0.22), glass)
+    for x in [-2.50, 2.50]:
+        _add_window(Vector3(x, 1.45, front_z + 0.02), Vector3(0, deg_to_rad(90), 0), glass, trim)
+    for x in [-0.72, 0.72]:
+        _mesh_box(Vector3(0.50, 0.90, 0.08), Vector3(x, 3.55, front_z - 0.05), glass)
+        _mesh_box(Vector3(0.50, 0.08, 0.08), Vector3(x, 4.04, front_z - 0.06), trim)
 
-    for x in [-2.55, 2.55]:
-        for y in [1.35, 2.35]:
-            _add_window(Vector3(x, y, -3.36), Vector3.ZERO, glass, trim)
+    _mesh_box(Vector3(1.05, 1.25, 0.06), Vector3(0, 3.18, front_z - 0.10), banner)
+    _mesh_cylinder(0.13, 0.32, Vector3(0, 5.70, 0), metal, 8)
+    _mesh_sphere(0.16, Vector3(0, 5.92, 0), metal)
 
-    for x in [-0.86, 0.86]:
-        _mesh_box(Vector3(0.58, 0.82, 0.10), Vector3(x, 4.15, -1.54), glass)
-    _mesh_cylinder(0.18, 0.42, Vector3(0, 6.70, 0), metal, 8)
-    _mesh_sphere(0.20, Vector3(0, 6.98, 0), metal)
-    _mesh_box(Vector3(1.0, 1.45, 0.06), Vector3(0, 3.45, front_z - 0.15), banner)
-
-    _add_box_collision(Vector3(7.4, 2.6, 6.4), Vector3(0, 1.42, 0))
-    _add_box_collision(Vector3(3.0, 4.2, 3.0), Vector3(0, 3.55, 0))
-
+    _add_box_collision(Vector3(7.1, 2.55, 5.9), Vector3(0, 1.39, 0))
+    _add_box_collision(Vector3(2.65, 3.55, 2.65), Vector3(0, 3.15, 0))
 
 func _add_window(position_value: Vector3, rotation_value: Vector3, glass: Material, frame: Material) -> void:
     var basis := Basis.from_euler(rotation_value)
