@@ -53,6 +53,9 @@ func _process(delta: float) -> void:
 
 	var target_position := _state_position(authoritative_state.position)
 	var target_rotation := _state_rotation(authoritative_state.rotation)
+	var movement_speed := global_position.distance_to(target_position) / maxf(delta, 0.0001)
+	if visual:
+		visual.set_motion(movement_speed / maxf(0.1, definition.movement_speed if definition else 3.0), delta)
 	var position_weight := 1.0 - exp(-maxf(0.0, position_smoothing) * delta)
 	var rotation_weight := 1.0 - exp(-maxf(0.0, rotation_smoothing) * delta)
 
