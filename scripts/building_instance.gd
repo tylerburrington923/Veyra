@@ -62,6 +62,12 @@ func interact(player_override: Node = null) -> void:
                 _last_interaction_feedback = "Town Hall: population %d." % population
             else:
                 _last_interaction_feedback = "Town Hall: settlement system unavailable."
+        "B06_SHRINE":
+            _attune_shrine(player)
+        "B07_WATCHTOWER":
+            _survey_watchtower(player)
+        "B08_GARDEN":
+            _tend_garden(player)
         _:
             _last_interaction_feedback = "Nothing to use here."
 
@@ -125,6 +131,50 @@ func get_interaction_text() -> String:
 func get_interaction_feedback() -> String:
     return _last_interaction_feedback
 
+
+
+func _attune_shrine(player: Node) -> void:
+    if not player or not player.has_method("get_inventory"):
+        _last_interaction_feedback = "Shrine: player unavailable."
+        return
+    var inventory: VeyraInventory = player.get_inventory()
+    if not inventory:
+        _last_interaction_feedback = "Shrine: inventory unavailable."
+        return
+    if not inventory.has_resource("Vitreous Lux", 2):
+        _last_interaction_feedback = "Shrine: requires 2 Vitreous Lux."
+        return
+    if inventory.remove_resource("Vitreous Lux", 2) != 2:
+        _last_interaction_feedback = "Shrine: attunement failed."
+        return
+    if inventory.add_resource("Echo-Stone", 1) != 1:
+        inventory.add_resource("Vitreous Lux", 2)
+        _last_interaction_feedback = "Shrine: inventory is full."
+        return
+    _last_interaction_feedback = "Shrine: 2 Vitreous Lux attuned into 1 Echo-Stone."
+
+func _survey_watchtower(player: Node) -> void:
+    if not player:
+        _last_interaction_feedback = "Watchtower: player unavailable."
+        return
+    var generator := get_tree().get_first_node_in_group("world_generator")
+    if generator and generator.has_method("get_height_at_world"):
+        var position := global_position
+        var height := float(generator.get_height_at_world(position.x, position.z))
+        _last_interaction_feedback = "Watchtower: survey complete • elevation %.1fm." % height
+    else:
+        _last_interaction_feedback = "Watchtower: survey complete."
+
+func _tend_garden(player: Node) -> void:
+    var settlement := get_node_or_null("/root/SettlementManager")
+    if not settlement or not settlement.has_method("consume_stock"):
+        _last_interaction_feedback = "Garden: settlement water system unavailable."
+        return
+    if not bool(settlement.call("consume_stock", "Water", 1)):
+        _last_interaction_feedback = "Garden: requires 1 Water in settlement reserve."
+        return
+    settlement.call("add_stock", "Food", 2)
+    _last_interaction_feedback = "Garden: used 1 Water and produced 2 Food."
 
 func _toggle_storage(player: Node) -> void:
     if not player:
