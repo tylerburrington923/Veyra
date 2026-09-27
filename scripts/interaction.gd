@@ -173,7 +173,7 @@ func try_interact() -> void:
 
 	if handler.has_method("interact"):
 		var network_manager := get_tree().get_first_node_in_group("network_manager")
-		var network_active := network_manager and network_manager.has_method("submit_local_interaction") and network_manager.session_active and not network_manager.is_host
+		var network_active: bool = network_manager != null and network_manager.has_method("submit_local_interaction") and bool(network_manager.session_active) and not bool(network_manager.is_host)
 		if network_active:
 			network_manager.submit_local_interaction(handler)
 		else:
