@@ -76,9 +76,10 @@ func get_npc_state(npc_id: String) -> NPCState:
 	return states.get(npc_id) as NPCState
 
 func sync_settlement_villagers() -> void:
-	if not SettlementManager:
+	var settlement := _settlement_manager()
+	if not settlement:
 		return
-	var villagers: Dictionary = SettlementManager.villagers
+	var villagers: Dictionary = settlement.villagers
 	var live_ids: Dictionary = {}
 	var index: int = 0
 
@@ -113,9 +114,10 @@ func _get_villager_spawn_position(record: Dictionary, index: int) -> Vector3:
 	return _get_settlement_center() + Vector3(cos(angle), 0.0, sin(angle)) * spawn_radius
 
 func _get_settlement_center() -> Vector3:
-	if not SettlementManager:
+	var settlement := _settlement_manager()
+	if not settlement:
 		return Vector3.ZERO
-	for building in SettlementManager.buildings.values():
+	for building in settlement.buildings.values():
 		if building is Dictionary:
 			var raw_position = building.get("position", [])
 			if raw_position is Array and raw_position.size() >= 3:
