@@ -76,7 +76,7 @@ func get_display_name() -> String:
 func _load_profile() -> String:
 	var config := ConfigFile.new()
 	if config.load(CONFIG_PATH) != OK:
-		return PROFILE_BALANCED if OS.has_feature("mobile") else PROFILE_QUALITY
+		return PROFILE_PERFORMANCE
 	var saved := str(config.get_value("graphics", "profile", PROFILE_BALANCED))
 	return saved if saved in [PROFILE_PERFORMANCE, PROFILE_BALANCED, PROFILE_QUALITY] else PROFILE_BALANCED
 
