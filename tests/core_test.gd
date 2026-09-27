@@ -37,8 +37,9 @@ func _run_tests() -> void:
 	_test_mobile_backpack_contract()
 	_test_building_interaction_contract()
 	_test_building_storage_contract()
+	_test_multiplayer_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (30 suites)")
+		print("VEYRA CORE TESTS: PASS (31 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -781,3 +782,26 @@ func _test_wildlife_beta_contract() -> void:
 	manager.despawn_animal("deer_test_01")
 	_check(not manager.states.has("deer_test_01"), "wildlife despawn must remove authoritative state")
 	manager.queue_free()
+
+
+func _test_multiplayer_contract() -> void:
+	var network_script := load("res://scripts/network_manager.gd")
+	_check(network_script != null, "multiplayer manager script must load")
+	var manager = network_script.new()
+	root.add_child(manager)
+	_check(manager.PORT == 24567, "multiplayer LAN port must remain stable for alpha testing")
+	_check(manager.MAX_PLAYERS >= 2, "multiplayer must support at least two peers")
+	_check(manager.has_method("host_game"), "multiplayer manager must expose host_game")
+	_check(manager.has_method("join_game"), "multiplayer manager must expose join_game")
+	_check(manager.has_method("submit_local_input"), "multiplayer manager must expose client input submission")
+	_check(manager.has_method("receive_snapshot"), "multiplayer manager must expose authoritative snapshot handling")
+	manager.queue_free()
+
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	_check(player_scene != null, "player scene must remain loadable for network spawning")
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	_check(player.has_method("configure_network_role"), "player must expose network role configuration")
+	_check(player.has_method("set_network_input"), "player must accept authoritative network input")
+	_check(player.has_method("apply_network_state"), "player must accept authoritative network state")
+	player.queue_free()
