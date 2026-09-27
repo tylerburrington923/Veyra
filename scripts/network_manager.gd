@@ -15,6 +15,7 @@ var is_host: bool = false
 var local_peer_id: int = 1
 var peer_inputs: Dictionary = {}
 var players: Dictionary = {}
+var _server_interaction_locks: Dictionary = {}
 var _snapshot_accumulator: float = 0.0
 
 var lobby_layer: CanvasLayer
@@ -89,6 +90,11 @@ func submit_local_input(input_vector: Vector2, yaw: float, pitch: float, jump: b
 	if not session_active or is_host:
 		return
 	send_input.rpc_id(1, input_vector.limit_length(1.0), yaw, pitch, jump)
+
+func submit_local_interaction(target: Node) -> void:
+	if not session_active or is_host or not target:
+		return
+	request_interaction.rpc_id(1, target.get_path())
 
 @rpc("any_peer", "unreliable")
 func send_input(input_vector: Vector2, yaw: float, pitch: float, jump: bool) -> void:
@@ -210,7 +216,43 @@ func _on_peer_connected(peer_id: int) -> void:
 func _on_peer_disconnected(peer_id: int) -> void:
 	if not is_host:
 		return
+	peer_inputs.erase(peer_id)
+	_server_interaction_locks.erase(peer_id)
 	network_despawn_player.rpc(peer_id)
+
+@rpc("any_peer", "reliable")
+func request_interaction(resource_path: NodePath) -> void:
+	if not multiplayer.is_server():
+		return
+	var peer_id := multiplayer.get_remote_sender_id()
+	var player := players.get(peer_id) as Node
+	if not player or not is_instance_valid(player):
+		return
+	var target := get_tree().current_scene.get_node_or_null(resource_path) as Node
+	if not target or not target.is_inside_tree():
+		return
+	if not (target.is_in_group("resource_node") or target.is_in_group("interactable")):
+		return
+	var target_3d := target as Node3D
+	if not target_3d:
+		return
+	if player.global_position.distance_to(target_3d.global_position) > 5.5:
+		return
+	if _server_interaction_locks.get(peer_id, false):
+		return
+	_server_interaction_locks[peer_id] = true
+	if target.has_method("can_interact") and not target.can_interact(player):
+		_server_interaction_locks.erase(peer_id)
+		return
+	if target.has_method("interact"):
+		target.interact()
+		broadcast_interaction_feedback.rpc(peer_id, str(target.name))
+	_server_interaction_locks.erase(peer_id)
+
+@rpc("authority", "reliable")
+func broadcast_interaction_feedback(peer_id: int, target_name: String) -> void:
+	if status_label and peer_id == local_peer_id:
+		_set_status("USED %s" % target_name)
 
 func _on_connected_to_server() -> void:
 	local_peer_id = multiplayer.get_unique_id()
