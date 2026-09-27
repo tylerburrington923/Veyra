@@ -773,6 +773,7 @@ func _test_wildlife_beta_contract() -> void:
 	_check(manager.states.has("deer_test_01"), "wildlife manager must retain deer state")
 	var state: AnimalState = manager.states["deer_test_01"]
 	var hunger := state.hunger
+	_check(AnimalSimulation.process_tick(state, manager.definitions["deer"], 6.0), "wildlife simulation tick should succeed")
 	manager._update_behavior(state, manager.definitions["deer"], 6.0)
 	_check(state.hunger < hunger, "wildlife simulation must update needs")
 	_check(state.behavior_state == "WANDER", "deer beta should enter wander behavior")
