@@ -119,7 +119,7 @@ func get_resource_state() -> Dictionary:
     return state
 
 
-	func apply_resource_state(state: Dictionary) -> void:
+func apply_resource_state(state: Dictionary) -> void:
     if state.is_empty():
         return
     for child in get_children():
