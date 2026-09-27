@@ -40,6 +40,7 @@ func _build() -> void:
 	panel.custom_minimum_size = Vector2(320, 300)
 	_center_control(panel)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	panel.add_to_group("camera_blocking_ui")
 	add_child(panel)
 
 	var title := Label.new()
