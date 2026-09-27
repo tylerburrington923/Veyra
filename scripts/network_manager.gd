@@ -456,6 +456,10 @@ func _center_lobby_panel(panel: Control) -> void:
 	panel.size.y = minf(220.0, maxf(210.0, viewport_size.y - 24.0))
 	panel.position = (viewport_size - panel.size) * 0.5
 	var width := panel.size.x
+	if status_label:
+		status_label.size.x = width - 32.0
+	if copy_ip_button:
+		copy_ip_button.position.x = width - 106.0
 	if ip_field:
 		ip_field.size.x = maxf(150.0, width - 150.0)
 	if host_button:
