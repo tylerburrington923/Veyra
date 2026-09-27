@@ -27,6 +27,7 @@ func _ready() -> void:
 		lunar_cycle.configure(world_seed, world_time)
 
 	call_deferred("_restore_buildings")
+	call_deferred("_ensure_wildlife_manager")
 	print("Veyra world initialized. Seed: ", world_seed, " | Lunar phase: ", lunar_cycle.get_phase_name() if lunar_cycle else "Unavailable")
 
 
