@@ -223,6 +223,11 @@ func _add_recipe_option(item_name: String, cost_text: String, affordable: bool, 
 func _craft(recipe_id: String) -> void:
 	if not crafting or not inventory:
 		return
+	var network_manager = get_node_or_null("/root/NetworkManager")
+	if network_manager and bool(network_manager.get("session_active")) and not bool(network_manager.get("is_host")):
+		network_manager.submit_local_craft(recipe_id)
+		status.text = "Craft request sent."
+		return
 	if crafting.craft(recipe_id, inventory):
 		var recipe := VeyraCraftingCatalog.get_recipe(recipe_id)
 		status.text = "Crafted %s." % recipe.get("name", recipe_id)
@@ -240,6 +245,13 @@ func _select_building(building_id: String) -> void:
 		confirm_button.disabled = false
 
 func _confirm_build() -> void:
+	var network_manager = get_node_or_null("/root/NetworkManager")
+	if network_manager and bool(network_manager.get("session_active")) and not bool(network_manager.get("is_host")):
+		if building:
+			network_manager.submit_local_build(selected_id, building.placement_position)
+		status.text = "Build request sent."
+		_cancel_build()
+		return
 	if building and building.confirm_build(player, inventory):
 		status.text = "Building placed."
 		selected_id = ""
