@@ -19,8 +19,7 @@ func _build() -> void:
 	var menu_button := Button.new()
 	menu_button.name = "MenuButton"
 	menu_button.text = "PAUSE"
-	menu_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	menu_button.position = Vector2(-118, 16)
+	menu_button.position = Vector2(maxf(16.0, get_viewport().get_visible_rect().size.x - 116.0), 16.0)
 	menu_button.size = Vector2(100, 42)
 	menu_button.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_style_button(menu_button)
@@ -30,10 +29,9 @@ func _build() -> void:
 
 	panel = Panel.new()
 	panel.name = "PausePanel"
-	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	panel.size = Vector2(370, 360)
 	panel.custom_minimum_size = Vector2(320, 300)
-	panel.position = -panel.size * 0.5
+	_center_control(panel)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(panel)
 
@@ -127,6 +125,18 @@ func _make_button(text_value: String, button_position: Vector2, button_size: Vec
 	_style_button(button)
 	button.add_to_group("camera_blocking_ui")
 	return button
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		var menu_button := get_node_or_null("MenuButton") as Control
+		if menu_button:
+			menu_button.position = Vector2(maxf(16.0, get_viewport().get_visible_rect().size.x - menu_button.size.x - 16.0), 16.0)
+		if panel:
+			_center_control(panel)
+
+func _center_control(control: Control) -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	control.position = (viewport_size - control.size) * 0.5
 
 func _toggle() -> void:
 	if visible:
