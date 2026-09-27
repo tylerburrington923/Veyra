@@ -828,6 +828,7 @@ func _test_settlement_water_contract() -> void:
 	var player_scene := load("res://scenes/player.tscn") as PackedScene
 	var player := player_scene.instantiate()
 	root.add_child(player)
+	player.add_to_group("player")
 	settlement.water_stock = 0
 	settlement.villagers.clear()
 	settlement.add_villager("water_villager_01", "Water Test Villager")
