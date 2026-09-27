@@ -447,10 +447,10 @@ func _simulate_movement(delta: float, input_vector: Vector2, jump: bool) -> void
 
 func _is_modal_ui_open() -> bool:
 	for ui in get_tree().get_nodes_in_group("building_ui"):
-		if ui is CanvasLayer and ui.visible:
+		if ui and ui.has_method("is_modal_open") and bool(ui.is_modal_open()):
 			return true
 	for ui in get_tree().get_nodes_in_group("modal_ui"):
-		if ui is CanvasLayer and ui.visible:
+		if ui and ui.has_method("is_modal_open") and bool(ui.is_modal_open()):
 			return true
 	return false
 
