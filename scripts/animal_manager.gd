@@ -212,6 +212,22 @@ func _update_visuals(delta: float) -> void:
 
 func _update_behavior(state: AnimalState, definition: AnimalDefinition, delta: float) -> void:
 	state.behavior_timer += delta
+	if definition.behavior_type == "PREDATOR":
+		var player := get_tree().get_first_node_in_group("local_player") as Node3D
+		if player:
+			var current := _state_position(state.position)
+			var player_position := player.global_position
+			var flat_offset := player_position - current
+			flat_offset.y = 0.0
+			var player_distance := flat_offset.length()
+			if player_distance < 9.0:
+				state.behavior_state = "CHASE"
+				if player_distance > 2.0:
+					var step := minf(definition.movement_speed * delta, player_distance)
+					state.position = _vector_dict(_get_grounded_position(current + flat_offset.normalized() * step))
+					return
+				state.behavior_state = "IDLE"
+				return
 	if state.behavior_state == "IDLE":
 		if state.behavior_timer >= 4.0 + float(abs(state.animal_id.hash()) % 4):
 			state.behavior_timer = 0.0
