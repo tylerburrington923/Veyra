@@ -13,7 +13,8 @@ func save_world(world: Node, inventory: Dictionary, settlement: Dictionary = {},
         "world": world.get_world_state(),
         "inventory": _sanitize_inventory(inventory),
         "settlement": _sanitize_settlement(settlement),
-        "player": _sanitize_player_state(player_state)
+        "player": _sanitize_player_state(player_state),
+        "progression": _sanitize_progression(progression)
     }
     var json := JSON.stringify(payload)
 
@@ -49,6 +50,9 @@ func load_world() -> Dictionary:
     if not (data.get("settlement", {}) is Dictionary):
         data["settlement"] = {}
     data["settlement"] = _sanitize_settlement(data["settlement"])
+    if not (data.get("progression", {}) is Dictionary):
+        data["progression"] = {}
+    data["progression"] = _sanitize_progression(data["progression"])
     return data
 
 func _write_file(path: String, json: String) -> bool:
