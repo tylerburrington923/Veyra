@@ -15,6 +15,8 @@ var _simulation_accumulator := 0.0
 const SIMULATION_INTERVAL := 0.10
 var visuals: Dictionary = {}
 var death_timers: Dictionary = {}
+var _mesh_cache: Dictionary = {}
+var _material_cache: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("animal_manager")
