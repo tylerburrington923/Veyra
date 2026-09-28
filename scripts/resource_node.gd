@@ -104,6 +104,12 @@ func get_interaction_point() -> Vector3:
 func get_interaction_text() -> String:
 	if depleted or remaining <= 0:
 		return "%s depleted" % resource_type
+	if resource_type == "Stone":
+		return "Mine Stone  [%d]" % remaining
+	if resource_type == "Metal":
+		return "Mine Metal  [%d]" % remaining
+	if resource_type == "Vitreous Lux":
+		return "Mine Lux  [%d]" % remaining
 	return "Gather %s  [%d]" % [resource_type, remaining]
 
 func _process(delta: float) -> void:
