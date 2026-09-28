@@ -24,6 +24,10 @@ func open_campfire(building: Node, player: Node) -> void:
 	_add_text("Add wood to keep the fire burning.")
 	_add_action("ADD WOOD", _campfire_action)
 
+func open_storage(building: Node, player: Node) -> void:
+	_open(building, player, "STORAGE")
+	_refresh_storage()
+
 func open_townhall(building: Node, player: Node) -> void:
 	_open(building, player, "TOWN HALL")
 	_add_text("SETTLEMENT COMMAND")
@@ -64,6 +68,9 @@ func _process(_delta: float) -> void:
 		_refresh_campfire()
 	elif _mode == "townhall":
 		_refresh_townhall()
+	elif _mode == "storage":
+		# Storage is refreshed after explicit transactions, not every frame.
+		pass
 	elif _mode == "blacksmith":
 		_refresh_blacksmith()
 
@@ -78,7 +85,7 @@ func _open(building: Node, player: Node, title_text: String) -> void:
 	_building = building
 	_player = player
 	title_label.text = title_text
-	_mode = "campfire" if title_text == "CAMPFIRE" else ("townhall" if title_text == "TOWN HALL" else "blacksmith")
+	_mode = "campfire" if title_text == "CAMPFIRE" else ("storage" if title_text == "STORAGE" else ("townhall" if title_text == "TOWN HALL" else "blacksmith"))
 	_clear_body()
 	visible = true
 	_backdrop.visible = true
@@ -234,6 +241,40 @@ func _refresh_campfire() -> void:
 		return
 	var heat := float(_building.get_campfire_heat()) if _building.has_method("get_campfire_heat") else 0.0
 	_add_or_update_status("Heat remaining: %.0f sec" % heat)
+
+func _refresh_storage() -> void:
+	if _mode != "storage" or not _building or not _player:
+		return
+	_clear_body()
+	_add_text("PERSONAL TOOLS STAY WITH YOU.\nResources and non-tool items can be stored here.")
+	_add_action("DEPOSIT ALL", _deposit_storage)
+	_add_action("WITHDRAW ALL", _withdraw_storage)
+	var storage: Dictionary = _building.get_storage_snapshot() if _building.has_method("get_storage_snapshot") else {}
+	var resources: Dictionary = storage.get("resources", {})
+	var items: Dictionary = storage.get("items", {})
+	var lines: Array[String] = []
+	for key in resources.keys():
+		var amount := int(resources[key])
+		if amount > 0:
+			lines.append("%s  x%d" % [str(key), amount])
+	for key in items.keys():
+		var amount := int(items[key])
+		if amount > 0:
+			lines.append("%s  x%d" % [VeyraItemCatalog.display_name(str(key)), amount])
+	if lines.is_empty():
+		_add_text("Storage is empty.")
+	else:
+		_add_text("STORED\n" + "\n".join(lines))
+
+func _deposit_storage() -> void:
+	if _building and _building.has_method("deposit_all_storage"):
+		_building.deposit_all_storage(_player)
+	_refresh_storage()
+
+func _withdraw_storage() -> void:
+	if _building and _building.has_method("withdraw_all_storage"):
+		_building.withdraw_all_storage(_player)
+	_refresh_storage()
 
 func _refresh_townhall() -> void:
 	if _mode != "townhall" or not _player:
