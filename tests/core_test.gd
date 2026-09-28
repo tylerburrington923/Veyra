@@ -403,7 +403,7 @@ func _test_first_person_viewmodel_contract() -> void:
 	_check(holder != null and tool != null, "tool holder hierarchy missing")
 	_check(body_left_arm != null and body_right_arm != null, "coherent world-body arms missing")
 	_check(body_left_hand != null and body_right_hand != null, "coherent world-body hands missing")
-	_check(camera != null and (camera.cull_mask & 2) != 0, "camera must render viewmodel layer")
+	_check(camera != null and (camera.cull_mask & 1) != 0 and (camera.cull_mask & 2) != 0, "camera must render world and viewmodel layers")
 	_check(player.get_node_or_null("Camera3D/ViewModel/LeftArmFP") != null, "first-person left arm presentation must exist")
 	_check(player.get_node_or_null("Camera3D/ViewModel/RightArmFP") != null, "first-person right arm presentation must exist")
 	_check(player.get_node_or_null("Camera3D/ViewModel/LeftHandFP") != null, "first-person left hand presentation must exist")
@@ -431,6 +431,8 @@ func _test_first_person_presentation_contract() -> void:
 	_check(fp_left_arm != null and fp_left_arm.visible, "local first-person arm must be visible")
 	_check(fp_right_arm != null and fp_right_arm.visible, "local first-person arm must be visible")
 	_check(world_left_arm != null and not world_left_arm.visible, "local world arm must be hidden to prevent camera-body distortion")
+	var world_torso := player.get_node_or_null("Torso") as MeshInstance3D
+	_check(world_torso != null and not world_torso.visible, "local torso must be hidden from first-person camera")
 	_check(player.set_tool(VeyraItemCatalog.HANDS_ID), "hands must be selectable for punch presentation")
 	player.play_tool_use()
 	_check(bool(player.get("_punch_active")), "hands use must trigger punch animation")
