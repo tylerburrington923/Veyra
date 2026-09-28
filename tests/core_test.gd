@@ -1197,6 +1197,7 @@ func _test_settlement_production_loop() -> void:
 	settlement.villagers = old_villagers
 	settlement.job_states = old_jobs
 	settlement.production_manager.load_states(old_productions)
+	manager.queue_free()
 
 func _test_settlement_production_save_contract() -> void:
 	var save_manager := root.get_node_or_null("/root/SaveManager")
