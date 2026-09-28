@@ -585,46 +585,68 @@ func _build_house() -> void:
 
 
 func _build_townhall() -> void:
-    var foundation := _material(Color(0.22, 0.24, 0.25), 0.84)
-    var stone := _material(Color(0.34, 0.37, 0.38), 0.9)
-    var stone_light := _material(Color(0.46, 0.48, 0.47), 0.84)
-    var wood := _material(Color(0.28, 0.15, 0.065), 0.88)
-    var trim := _material(Color(0.12, 0.085, 0.055), 0.9)
+    # Civic landmark: recognizable silhouette, pitched roof, central clock/bell tower,
+    # readable entrance and windows, while staying entirely primitive/low-poly for mobile.
+    var foundation := _material(Color(0.20, 0.22, 0.23), 0.86)
+    var stone := _material(Color(0.34, 0.37, 0.38), 0.90)
+    var stone_light := _material(Color(0.47, 0.49, 0.48), 0.84)
+    var wood := _material(Color(0.30, 0.17, 0.075), 0.86)
+    var wood_light := _material(Color(0.43, 0.26, 0.11), 0.84)
+    var trim := _material(Color(0.11, 0.08, 0.055), 0.90)
     var roof := _material(Color(0.075, 0.105, 0.12), 0.76)
-    var glass := _emissive_material(Color(0.16, 0.52, 0.56), 0.55)
-    var metal := _material(Color(0.20, 0.23, 0.24), 0.36, 0.72)
-    var banner := _emissive_material(Color(0.06, 0.42, 0.48), 0.65)
+    var roof_edge := _material(Color(0.12, 0.15, 0.16), 0.70, 0.20)
+    var glass := _emissive_material(Color(0.12, 0.46, 0.50), 0.45)
+    var metal := _material(Color(0.22, 0.25, 0.25), 0.34, 0.72)
+    var banner := _emissive_material(Color(0.05, 0.40, 0.46), 0.65)
 
-    _mesh_box(Vector3(7.6, 0.22, 6.4), Vector3(0, 0.11, 0), foundation)
-    _mesh_box(Vector3(7.1, 2.55, 5.9), Vector3(0, 1.39, 0), stone)
-    _mesh_box(Vector3(7.25, 0.16, 0.16), Vector3(0, 2.68, -2.98), trim)
-    _mesh_box(Vector3(7.25, 0.16, 0.16), Vector3(0, 2.68, 2.98), trim)
+    _mesh_box(Vector3(7.8, 0.24, 6.5), Vector3(0, 0.12, 0), foundation)
+    _mesh_box(Vector3(7.15, 2.55, 5.95), Vector3(0, 1.40, 0), stone)
 
-    # Central civic tower with a stepped roof.
-    _mesh_box(Vector3(2.65, 3.55, 2.65), Vector3(0, 3.15, 0), stone_light)
-    _mesh_box(Vector3(2.95, 0.18, 2.95), Vector3(0, 4.93, 0), wood)
-    _mesh_box(Vector3(2.55, 0.22, 2.55), Vector3(0, 5.20, 0), roof)
-    _mesh_box(Vector3(2.15, 0.18, 2.15), Vector3(0, 5.39, 0), roof)
+    # Main pitched roof gives the civic building a clear silhouette instead of a stack of boxes.
+    var roof_angle := deg_to_rad(22.0)
+    _mesh_box(Vector3(3.85, 0.24, 6.35), Vector3(-1.55, 3.08, 0), roof, Vector3(0, 0, roof_angle))
+    _mesh_box(Vector3(3.85, 0.24, 6.35), Vector3(1.55, 3.08, 0), roof, Vector3(0, 0, -roof_angle))
+    _mesh_box(Vector3(7.25, 0.12, 0.16), Vector3(0, 2.73, -3.02), roof_edge)
+    _mesh_box(Vector3(7.25, 0.12, 0.16), Vector3(0, 2.73, 3.02), roof_edge)
 
-    # Clean front portico and readable civic entrance.
-    var front_z := -3.10
-    _mesh_box(Vector3(2.45, 0.18, 1.20), Vector3(0, 0.20, front_z - 0.56), foundation)
-    _mesh_box(Vector3(2.25, 2.30, 0.18), Vector3(0, 1.30, front_z), wood)
-    _mesh_box(Vector3(1.62, 2.05, 0.12), Vector3(0, 1.05, front_z - 0.12), trim)
-    _mesh_box(Vector3(1.24, 1.72, 0.08), Vector3(0, 1.00, front_z - 0.19), glass)
+    # Central civic tower.
+    _mesh_box(Vector3(2.55, 3.35, 2.55), Vector3(0, 3.15, 0), stone_light)
+    _mesh_box(Vector3(2.78, 0.18, 2.78), Vector3(0, 4.87, 0), wood_light)
+    _mesh_box(Vector3(2.50, 0.18, 2.50), Vector3(0, 5.02, 0), roof)
+    _mesh_box(Vector3(1.65, 0.18, 2.65), Vector3(-0.46, 5.18, 0), roof, Vector3(0, 0, deg_to_rad(28.0)))
+    _mesh_box(Vector3(1.65, 0.18, 2.65), Vector3(0.46, 5.18, 0), roof, Vector3(0, 0, deg_to_rad(-28.0)))
+    _mesh_cylinder(0.11, 0.34, Vector3(0, 5.58, 0), metal, 8)
+    _mesh_sphere(0.16, Vector3(0, 5.82, 0), metal, Vector3(1.0, 0.85, 1.0))
 
-    for x in [-2.50, 2.50]:
-        _add_window(Vector3(x, 1.45, front_z + 0.02), Vector3(0, deg_to_rad(90), 0), glass, trim)
+    # Portico, steps and a real-looking civic entrance.
+    var front_z := -3.13
+    _mesh_box(Vector3(2.75, 0.18, 1.45), Vector3(0, 0.20, front_z - 0.62), foundation)
+    _mesh_box(Vector3(2.35, 0.20, 0.55), Vector3(0, 0.34, front_z - 0.32), stone_light)
+    _mesh_box(Vector3(2.10, 0.18, 0.38), Vector3(0, 0.48, front_z - 0.18), stone)
+    for x in [-0.95, 0.95]:
+        _mesh_cylinder(0.14, 2.35, Vector3(x, 1.48, front_z - 0.46), stone_light, 8)
+    _mesh_box(Vector3(2.25, 0.16, 0.34), Vector3(0, 2.62, front_z - 0.46), stone_light)
+
+    _mesh_box(Vector3(1.35, 2.05, 0.14), Vector3(0, 1.18, front_z), wood)
+    _mesh_box(Vector3(1.14, 1.82, 0.07), Vector3(0, 1.08, front_z - 0.10), trim)
+    _mesh_box(Vector3(0.98, 1.55, 0.05), Vector3(0, 1.02, front_z - 0.15), glass)
+    _mesh_sphere(0.055, Vector3(0.36, 1.02, front_z - 0.21), metal, Vector3.ONE)
+
+    # Side windows and upper tower windows keep the structure readable from multiple angles.
+    for x in [-2.55, 2.55]:
+        _add_window(Vector3(x, 1.48, front_z + 0.02), Vector3(0, deg_to_rad(90), 0), glass, trim)
     for x in [-0.72, 0.72]:
-        _mesh_box(Vector3(0.50, 0.90, 0.08), Vector3(x, 3.55, front_z - 0.05), glass)
-        _mesh_box(Vector3(0.50, 0.08, 0.08), Vector3(x, 4.04, front_z - 0.06), trim)
+        _mesh_box(Vector3(0.48, 0.82, 0.08), Vector3(x, 3.58, front_z - 0.05), glass)
+        _mesh_box(Vector3(0.56, 0.07, 0.08), Vector3(x, 4.04, front_z - 0.06), trim)
 
-    _mesh_box(Vector3(1.05, 1.25, 0.06), Vector3(0, 3.18, front_z - 0.10), banner)
-    _mesh_cylinder(0.13, 0.32, Vector3(0, 5.70, 0), metal, 8)
-    _mesh_sphere(0.16, Vector3(0, 5.92, 0), metal)
+    # Civic banner and clock face establish the Town Hall as the settlement anchor.
+    _mesh_box(Vector3(1.02, 1.22, 0.06), Vector3(0, 3.18, front_z - 0.11), banner)
+    _mesh_cylinder(0.40, 0.08, Vector3(0, 3.62, front_z - 0.13), metal, 12, Vector3(deg_to_rad(90.0), 0, 0))
+    _mesh_cylinder(0.31, 0.035, Vector3(0, 3.62, front_z - 0.18), glass, 12, Vector3(deg_to_rad(90.0), 0, 0))
 
-    _add_box_collision(Vector3(7.1, 2.55, 5.9), Vector3(0, 1.39, 0))
-    _add_box_collision(Vector3(2.65, 3.55, 2.65), Vector3(0, 3.15, 0))
+    # Solid body collision keeps the civic structure physically coherent.
+    _add_box_collision(Vector3(7.15, 2.55, 5.95), Vector3(0, 1.40, 0))
+    _add_box_collision(Vector3(2.55, 3.35, 2.55), Vector3(0, 3.15, 0))
 
 func _add_window(position_value: Vector3, rotation_value: Vector3, glass: Material, frame: Material) -> void:
     var basis := Basis.from_euler(rotation_value)
