@@ -118,6 +118,11 @@ func submit_local_build(building_id: String, position: Vector3) -> void:
 		return
 	request_build.rpc_id(1, building_id, position)
 
+func submit_local_tool_selection(tool_id: String) -> void:
+	if not session_active or is_host:
+		return
+	request_tool_selection.rpc_id(1, tool_id)
+
 func submit_local_craft(recipe_id: String) -> void:
 	if not session_active or is_host:
 		return
@@ -327,6 +332,16 @@ func _server_has_line_of_sight(player: Node3D, target: Node3D) -> bool:
 		current = current.get_parent()
 		depth += 1
 	return false
+
+@rpc("any_peer", "reliable")
+func request_tool_selection(tool_id: String) -> void:
+	if not multiplayer.is_server():
+		return
+	var peer_id := multiplayer.get_remote_sender_id()
+	var player := players.get(peer_id) as Node
+	if not player or not player.has_method("set_tool"):
+		return
+	player.set_tool(tool_id)
 
 @rpc("any_peer", "reliable")
 func request_build(building_id: String, position: Vector3) -> void:
@@ -651,10 +666,14 @@ func _broadcast_game_state() -> void:
 	var resources: Dictionary = generator.get_resource_state() if generator and generator.has_method("get_resource_state") else {}
 	var settlement := get_node_or_null("/root/SettlementManager")
 	var settlement_state: Dictionary = settlement.get_settlement_state() if settlement and settlement.has_method("get_settlement_state") else {}
-	receive_game_state.rpc(inventories, resonance_states, resources, settlement_state)
+	var progression_state: Dictionary = {}
+	var progression := get_node_or_null("/root/ProgressionManager")
+	if progression and progression.has_method("get_save_state"):
+		progression_state = progression.get_save_state()
+	receive_game_state.rpc(inventories, resonance_states, resources, settlement_state, progression_state)
 
 @rpc("authority", "reliable")
-func receive_game_state(inventories: Dictionary, resonance_states: Dictionary, resources: Dictionary, settlement_state: Dictionary) -> void:
+func receive_game_state(inventories: Dictionary, resonance_states: Dictionary, resources: Dictionary, settlement_state: Dictionary, progression_state: Dictionary) -> void:
 	if is_host:
 		return
 	var local_player := get_tree().current_scene.get_node_or_null("Player")
@@ -675,6 +694,9 @@ func receive_game_state(inventories: Dictionary, resonance_states: Dictionary, r
 	var settlement := get_node_or_null("/root/SettlementManager")
 	if settlement and settlement.has_method("load_settlement_state"):
 		settlement.load_settlement_state(settlement_state)
+	var progression := get_node_or_null("/root/ProgressionManager")
+	if progression and progression.has_method("load_save_state") and progression_state is Dictionary:
+		progression.load_save_state(progression_state)
 	var building_manager := get_node_or_null("/root/BuildingManager")
 	if building_manager and building_manager.has_method("restore_from_settlement"):
 		building_manager.restore_from_settlement()
