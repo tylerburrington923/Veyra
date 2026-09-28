@@ -58,6 +58,7 @@ func _run_tests() -> void:
 	_test_tool_tier_progression_contract()
 	_test_progression_contract()
 	_test_building_progression_contract()
+	_test_discovery_progression_contract()
 	_test_building_catalog_contract()
 	_test_simulation_cadence_contract()
 	_test_job_simulation_contract()
@@ -66,7 +67,7 @@ func _run_tests() -> void:
 	_test_performance_cache_contract()
 	_test_alpha_presentation_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (56 suites)")
+		print("VEYRA CORE TESTS: PASS (57 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -1278,6 +1279,40 @@ func _test_building_progression_contract() -> void:
 	manager.queue_free()
 	settlement.buildings = saved_buildings
 	progression.load_save_state(saved_progression)
+
+
+func _test_discovery_progression_contract() -> void:
+	var progression := get_node_or_null("/root/ProgressionManager") as VeyraProgressionManager
+	_check(progression != null, "discovery progression test requires the ProgressionManager autoload")
+	if not progression:
+		return
+
+	var saved := progression.get_save_state()
+	var explore_before := progression.get_xp("EXPLORATION")
+	var science_before := progression.get_xp("SCIENCE")
+	var archaeology_before := progression.get_xp("ARCHAEOLOGY")
+
+	_check(progression.record_unique_action("EXPLORE", "ANCIENT_LANDMARK", "TEST_SITE"), "first exploration discovery should be accepted")
+	_check(not progression.record_unique_action("EXPLORE", "ANCIENT_LANDMARK", "TEST_SITE"), "same exploration discovery must be deduplicated")
+	_check(progression.get_xp("EXPLORATION") == explore_before + 8, "exploration discovery should award exactly 8 XP")
+
+	_check(progression.record_unique_action("RESONANCE", "ECHO_STONE_RELEASE", "TEST_ECHO"), "first resonance release should be accepted")
+	_check(not progression.record_unique_action("RESONANCE", "ECHO_STONE_RELEASE", "TEST_ECHO"), "same resonance discovery must be deduplicated")
+	_check(progression.get_xp("SCIENCE") == science_before + 18, "resonance discovery should award exactly 18 XP")
+
+	_check(progression.record_unique_action("ARCHAEOLOGY", "ANCIENT_LANDMARK", "TEST_SITE"), "first archaeology examination should be accepted")
+	_check(not progression.record_unique_action("ARCHAEOLOGY", "ANCIENT_LANDMARK", "TEST_SITE"), "same archaeology discovery must be deduplicated")
+	_check(progression.get_xp("ARCHAEOLOGY") == archaeology_before + 25, "archaeology discovery should award exactly 25 XP")
+
+	var snapshot := progression.get_save_state()
+	var restored := VeyraProgressionManager.new()
+	root.add_child(restored)
+	restored.load_save_state(snapshot)
+	_check(restored.has_discovered("TEST_SITE", "EXPLORE"), "exploration discovery must survive save/load")
+	_check(restored.has_discovered("TEST_SITE", "ARCHAEOLOGY"), "archaeology discovery must survive save/load")
+	_check(restored.has_discovered("TEST_ECHO", "RESONANCE"), "resonance discovery must survive save/load")
+	restored.queue_free()
+	progression.load_save_state(saved)
 
 
 func _test_building_catalog_contract() -> void:
