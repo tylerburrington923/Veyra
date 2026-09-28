@@ -58,6 +58,10 @@ var touch_start: Dictionary = {}
 @onready var right_eye: MeshInstance3D = get_node_or_null("RightEye") as MeshInstance3D
 @onready var left_hand: MeshInstance3D = get_node_or_null("LeftHand") as MeshInstance3D
 @onready var right_hand: MeshInstance3D = get_node_or_null("RightHand") as MeshInstance3D
+@onready var left_leg_mesh: MeshInstance3D = get_node_or_null("LeftLeg") as MeshInstance3D
+@onready var right_leg_mesh: MeshInstance3D = get_node_or_null("RightLeg") as MeshInstance3D
+@onready var left_foot_mesh: MeshInstance3D = get_node_or_null("LeftFoot") as MeshInstance3D
+@onready var right_foot_mesh: MeshInstance3D = get_node_or_null("RightFoot") as MeshInstance3D
 @onready var fp_left_arm: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftArmFP") as MeshInstance3D
 @onready var fp_right_arm: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightArmFP") as MeshInstance3D
 @onready var fp_left_hand: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftHandFP") as MeshInstance3D
@@ -321,14 +325,14 @@ func _configure_first_person_view() -> void:
 	# Preserve the real body for shadows, third-person presentation, and the future multiplayer/NPC
 	# character pipeline. Only the head/face is hidden from the near-camera view; the lower body
 	# remains coherent beneath the camera instead of being replaced by a disconnected FPS body.
-	for mesh in [head, hair, left_eye, right_eye, left_arm, right_arm, left_hand, right_hand]:
+	for mesh in [torso, head, hair, left_eye, right_eye, left_arm, right_arm, left_hand, right_hand, left_leg_mesh, right_leg_mesh, left_foot_mesh, right_foot_mesh]:
 		if mesh:
 			mesh.visible = false
 	for mesh in [fp_left_arm, fp_right_arm, fp_left_hand, fp_right_hand]:
 		if mesh:
 			mesh.visible = true
-	# The world body remains authoritative for shadows/multiplayer. A dedicated lightweight
-	# first-person arm/hand rig prevents the camera from intersecting the full body.
+	# The authoritative body remains present for remote-player instances; the local copy is hidden
+	# so the camera never intersects its torso or legs.
 
 func _stabilize_spawn() -> void:
 	var world_generator := get_parent().get_node_or_null("WorldGenerator")
