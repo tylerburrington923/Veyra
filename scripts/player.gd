@@ -284,6 +284,27 @@ func _update_equipped_tool_visual() -> void:
 		_:
 			tool_visual.visible = false
 
+func _apply_advanced_tool_materials() -> void:
+	var advanced := selected_tool_id in ["I04_METAL_AXE", "I05_METAL_PICK", "I06_ECHO_AXE", "I07_ECHO_PICK"]
+	if not advanced:
+		return
+	var metal := StandardMaterial3D.new()
+	metal.albedo_color = Color(0.32, 0.36, 0.38)
+	metal.metallic = 0.82
+	metal.roughness = 0.28
+	var echo := StandardMaterial3D.new()
+	echo.albedo_color = Color(0.20, 0.48, 0.52)
+	echo.metallic = 0.55
+	echo.roughness = 0.25
+	echo.emission_enabled = true
+	echo.emission = Color(0.08, 0.34, 0.38)
+	echo.emission_energy_multiplier = 0.8
+	var material: Material = echo if selected_tool_id in ["I06_ECHO_AXE", "I07_ECHO_PICK"] else metal
+	for node_name in ["AxeHead", "AxeBlade", "PickHead", "PickSpikeLeft", "PickSpikeRight"]:
+		var mesh := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/" + node_name) as MeshInstance3D
+		if mesh:
+			mesh.material_override = material
+
 func get_inventory() -> VeyraInventory:
 	return get_node_or_null("Inventory") as VeyraInventory
 
@@ -324,6 +345,7 @@ func _ready() -> void:
 	else:
 		_disable_local_presentation()
 	_update_equipped_tool_visual()
+	_apply_advanced_tool_materials()
 	_tool_base_rotation = Vector3(-14.0, -12.0, -8.0)
 	if tool_holder:
 		tool_holder.rotation_degrees = _tool_base_rotation
