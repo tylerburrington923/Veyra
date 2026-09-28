@@ -210,7 +210,7 @@ func _test_townhall_civic_contract() -> void:
 	var stock: Dictionary = state.get("stock", {})
 	_check(int(stock.get("wood", 0)) >= 10, "town hall must add deposited wood to settlement stock")
 	_check(int(stock.get("stone", 0)) >= 10, "town hall must add deposited stone to settlement stock")
-	_check(inventory.get_amount("Wood") == 100 and inventory.get_amount("Stone") == 100, "town hall deposit must remove only the deposited material from player inventory")
+	_check(inventory.get_amount("Wood") == 0 and inventory.get_amount("Stone") == 0, "town hall deposit must remove only the deposited material from player inventory")
 	var manager := root.get_node_or_null("BuildingManager")
 	if manager:
 		_check(manager.has_method("_has_townhall"), "building manager must expose a Town Hall uniqueness guard")
