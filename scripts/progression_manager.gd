@@ -10,7 +10,7 @@ signal level_up(discipline: String, level: int, skill_points_awarded: int)
 signal quest_changed(quest_id: String, completed: bool)
 signal skill_unlocked(skill_id: String)
 
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 const DISCIPLINES := ["EXTRACTION", "HUNTING", "CRAFTING", "SETTLEMENT", "EXPLORATION", "SCIENCE", "ARCHAEOLOGY"]
 const SKILLS := {
 	"FIELDCRAFT": {"name": "Fieldcraft", "cost": 1, "description": "Improves basic gathering output."},
@@ -40,6 +40,21 @@ const QUESTS := {
 		"description": "Begin working with materials that do not behave like ordinary matter.",
 		"objectives": {"GATHER:Echo-Stone": 1, "GATHER:Vitreous Lux": 1, "CRAFT:I06_ECHO_AXE": 1}
 	},
+	"EXPLORATION": {
+		"title": "First Horizons",
+		"description": "Find the places Veyra is trying to show you.",
+		"objectives": {"EXPLORE:ANCIENT_LANDMARK": 1}
+	},
+	"RESONANCE_STUDY": {
+		"title": "Listen to the Stone",
+		"description": "Learn that Echo-Stone remembers more than its shape.",
+		"objectives": {"RESONANCE:ECHO_STONE_RELEASE": 1}
+	},
+	"ANCIENT_TRACE": {
+		"title": "Ancient Trace",
+		"description": "Examine an old site closely enough to record what remains.",
+		"objectives": {"ARCHAEOLOGY:ANCIENT_LANDMARK": 1}
+	},
 	"SETTLEMENT": {
 		"title": "Make It Permanent",
 		"description": "Turn a temporary camp into a functioning settlement.",
@@ -52,6 +67,7 @@ var levels: Dictionary = {}
 var skill_points: int = 0
 var unlocked_skills: Array[String] = []
 var quest_progress: Dictionary = {}
+var discovered_events: Dictionary = {}
 
 func _ready() -> void:
 	for discipline in DISCIPLINES:
@@ -60,6 +76,21 @@ func _ready() -> void:
 	for quest_id in QUESTS:
 		quest_progress[quest_id] = {}
 	add_to_group("progression_manager")
+
+func record_unique_action(action: String, subject: String, unique_id: String) -> bool:
+	var clean_id := unique_id.strip_edges()
+	if clean_id.is_empty():
+		return false
+	var key := action.to_upper() + ":" + clean_id
+	if bool(discovered_events.get(key, false)):
+		return false
+	discovered_events[key] = true
+	record_action(action, 1, subject)
+	return true
+
+func has_discovered(unique_id: String, action: String = "") -> bool:
+	var key := action.to_upper() + ":" + unique_id if not action.is_empty() else unique_id
+	return bool(discovered_events.get(key, false))
 
 func record_action(action: String, amount: int = 1, subject: String = "") -> void:
 	if amount <= 0:
@@ -196,7 +227,8 @@ func get_save_state() -> Dictionary:
 		"levels": levels.duplicate(true),
 		"skill_points": skill_points,
 		"unlocked_skills": unlocked_skills.duplicate(),
-		"quest_progress": quest_progress.duplicate(true)
+		"quest_progress": quest_progress.duplicate(true),
+		"discovered_events": discovered_events.duplicate(true)
 	}
 
 func load_save_state(state: Dictionary) -> void:
@@ -210,6 +242,12 @@ func load_save_state(state: Dictionary) -> void:
 	for skill_id in state.get("unlocked_skills", []):
 		if SKILLS.has(str(skill_id)):
 			unlocked_skills.append(str(skill_id))
+	discovered_events = {}
+	var saved_discoveries = state.get("discovered_events", {})
+	if saved_discoveries is Dictionary:
+		for key in saved_discoveries:
+			if bool(saved_discoveries[key]):
+				discovered_events[str(key)] = true
 	quest_progress = {}
 	for quest_id in QUESTS:
 		var saved = state.get("quest_progress", {}).get(quest_id, {})
