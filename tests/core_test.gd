@@ -53,10 +53,13 @@ func _run_tests() -> void:
 	_test_blacksmith_contract()
 	_test_building_catalog_contract()
 	_test_simulation_cadence_contract()
+	_test_job_simulation_contract()
+	_test_settlement_production_loop()
+	_test_settlement_production_save_contract()
 	_test_performance_cache_contract()
 	_test_alpha_presentation_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (45 suites)")
+		print("VEYRA CORE TESTS: PASS (48 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -1140,6 +1143,77 @@ func _test_alpha_presentation_contract() -> void:
 	manager.despawn_npc("rotation_contract")
 	manager.queue_free()
 
+
+func _test_job_simulation_contract() -> void:
+	var definition := JobDefinition.new(
+		"JOB_TEST", "Test Job", "GENERAL", 1, ["human"], [], [], 2.0, "", 3.0, 2.0
+	)
+	_check(definition.is_valid(), "job definition with movement/work speeds must validate")
+	var restored := JobDefinition.from_dict(definition.to_dict())
+	_check(is_equal_approx(restored.base_movement_speed, 3.0), "job movement speed must round trip")
+	_check(is_equal_approx(restored.base_work_speed, 2.0), "job work speed must round trip")
+	var state := NPCState.new("job_npc", "human_villager")
+	var job := JobState.new("job_state", "JOB_TEST")
+	job.active = true
+	_check(NPCJobSimulation.assign_job(state, definition, NPCState.make_vector_dict(0.0, 0.0, -1.0)), "job assignment must succeed")
+	_check(NPCJobSimulation.process_tick(state, definition, job, 0.5), "job tick must succeed")
+	_check(job.progress > 0.0, "job tick must advance deterministic work progress")
+
+func _test_settlement_production_loop() -> void:
+	var settlement: VeyraSettlementManager = root.get_node_or_null("/root/SettlementManager") as VeyraSettlementManager
+	_check(settlement != null, "settlement manager required for production loop")
+	if not settlement:
+		return
+	var old_buildings := settlement.buildings.duplicate(true)
+	var old_villagers := settlement.villagers.duplicate(true)
+	var old_jobs := settlement.job_states.duplicate(true)
+	var old_productions := settlement.production_manager.serialize_states()
+	settlement.buildings.clear()
+	settlement.villagers.clear()
+	settlement.job_states.clear()
+	settlement.production_manager.load_states({})
+	settlement.add_building("PROD-STORAGE", "B02_STORAGE", Vector3.ZERO)
+	settlement.add_building("PROD-CAMPFIRE", "B01_CAMPFIRE", Vector3(2.0, 0.0, 0.0))
+	settlement.set_building_storage("PROD-STORAGE", {"resources": {"Meat": 2, "Wood": 1}, "items": {}})
+	settlement.add_villager("production_villager", "Production Test")
+	var job: JobState = settlement.prepare_villager_job("production_villager")
+	_check(job != null and job.definition_id == "COOK", "villager should select cooking when campfire inputs exist")
+	var state := NPCState.new("production_villager", "human_villager")
+	var definition: JobDefinition = settlement.get_job_definition("COOK")
+	var target := settlement.get_job_target_position("COOK", job.target_building_id)
+	_check(NPCJobSimulation.assign_job(state, definition, target), "production worker must receive job assignment")
+	for i in range(10):
+		NPCJobSimulation.process_tick(state, definition, job, 1.0)
+	_check(job.completed, "production worker should complete cooking job")
+	_check(settlement.complete_villager_job("production_villager", state), "completed job must commit production output")
+	var storage := settlement.get_building_storage("PROD-STORAGE")
+	_check(int(storage.get("resources", {}).get("Food", 0)) == 3, "completed cooking production must return food to storage")
+	_check(int(storage.get("resources", {}).get("Meat", 0)) == 0, "production inputs must be consumed from storage")
+	settlement.buildings = old_buildings
+	settlement.villagers = old_villagers
+	settlement.job_states = old_jobs
+	settlement.production_manager.load_states(old_productions)
+
+func _test_settlement_production_save_contract() -> void:
+	var save_manager := root.get_node_or_null("/root/SaveManager")
+	_check(save_manager != null, "save manager required for production persistence")
+	if not save_manager:
+		return
+	var settlement_state := {
+		"version": 3,
+		"name": "Production Save",
+		"population": 1,
+		"stock": {"food": 0, "water": 0, "wood": 0, "stone": 0},
+		"buildings": {"S": {"id": "S", "type": "B02_STORAGE", "position": [0,0,0], "condition": 1.0, "door_open": false, "storage": {"resources": {"Food": 3}, "items": {}}}},
+		"villagers": {"V": {"id": "V", "name": "Saver", "job": "COOK"}},
+		"jobs": {"V": {"job_id": "JOB-0001", "definition_id": "COOK", "assigned_worker_id": "V", "target_building_id": "C", "progress": 2.0, "active": true, "completed": false}},
+		"productions": {"PROD-0001": {"production_id": "PROD-0001", "definition_id": "cook_meat", "active": true, "progress": 2.0, "assigned_worker_id": "V", "source_building_id": "C"}},
+		"next_job_index": 2
+	}
+	var sanitized: Dictionary = save_manager._sanitize_settlement(settlement_state)
+	_check(int(sanitized.get("jobs", {}).size()) == 1, "settlement save must retain active job state")
+	_check(int(sanitized.get("productions", {}).size()) == 1, "settlement save must retain active production state")
+	_check(int(sanitized.get("buildings", {}).get("S", {}).get("storage", {}).get("resources", {}).get("Food", 0)) == 3, "settlement save must retain produced food")
 
 func _test_performance_cache_contract() -> void:
 	var world_script := load("res://scripts/world_generator.gd")
