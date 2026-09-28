@@ -249,20 +249,23 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 		target_label.visible = false
 		if target_panel:
 			target_panel.visible = true
+		var detail_text := "CENTER YOUR VIEW"
+		if handler != "":
+			var distance_text := "--"
+			if player:
+				distance_text = "%.1f m" % player.global_position.distance_to(collision_point)
+			detail_text = target_name if target_name != "" else "UNKNOWN"
+			if not eligible and last_requirement != "":
+				detail_text += "  •  REQUIRES " + last_requirement.to_upper()
+			detail_text += "  •  " + distance_text
+		# One vertically composed label is more reliable on narrow Android layouts than
+		# two independently-sized labels competing for the same PanelContainer space.
 		if target_action:
-			target_action.text = action_label.to_upper() if handler != "" else "LOOK TO INTERACT"
+			target_action.text = (action_label.to_upper() if handler != "" else "LOOK TO INTERACT") + "\n" + detail_text
+			target_action.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			target_action.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		if target_detail:
-			if handler == "":
-				target_detail.text = "CENTER YOUR VIEW"
-			else:
-				var distance_text := "--"
-				if player:
-					distance_text = "%.1f m" % player.global_position.distance_to(collision_point)
-				var detail := target_name if target_name != "" else "UNKNOWN"
-				if not eligible and last_requirement != "":
-					detail += "  •  REQUIRES " + last_requirement.to_upper()
-				detail += "  •  " + distance_text
-				target_detail.text = detail
+			target_detail.visible = false
 
 func _find_handler_from_name(handler_name: String) -> Node:
 	if handler_name == "":
@@ -362,7 +365,7 @@ func _interaction_hud_style() -> void:
 	target_panel.custom_minimum_size = Vector2(300.0, 68.0)
 	target_panel.add_theme_constant_override("separation", 2)
 	if target_action:
-		target_action.add_theme_font_size_override("font_size", 13)
+		target_action.add_theme_font_size_override("font_size", 12)
 		target_action.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		target_action.add_theme_color_override("font_color", Color(0.42, 0.88, 0.90, 1.0))
 		target_action.add_theme_constant_override("outline_size", 4)
