@@ -56,7 +56,7 @@ func _apply_loaded_state(save_data: Dictionary) -> void:
 			generator.set_saved_resource_state(resource_state)
 		var wildlife_manager := get_node_or_null("AnimalManager")
 		var wildlife_state = saved_world.get("wildlife", [])
-		if wildlife_manager and wildlife_state is Array and wildlife_manager.has_method("set_saved_state"):
+		if wildlife_manager and saved_world.has("wildlife") and wildlife_state is Array and wildlife_manager.has_method("set_saved_state"):
 			wildlife_manager.set_saved_state(wildlife_state)
 
 	var settlement_state: Dictionary = save_data.get("settlement", {})
