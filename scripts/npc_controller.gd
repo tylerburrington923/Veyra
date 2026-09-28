@@ -87,11 +87,23 @@ func can_interact(player: Node = null) -> bool:
 
 func get_interaction_text() -> String:
 	if authoritative_state:
-		if authoritative_state.current_job == "TRADER":
+		var job := str(authoritative_state.current_job).to_upper()
+		if job == "TRADER":
 			return "TRADE"
-		if authoritative_state.current_job == "BUILDER":
+		if job == "BUILDER":
 			return "SERVICE"
 	return "TALK"
+
+func get_interaction_name() -> String:
+	var settlement := get_node_or_null("/root/SettlementManager")
+	if authoritative_state and settlement and settlement.get("villagers") is Dictionary:
+		var villagers: Dictionary = settlement.get("villagers")
+		var record = villagers.get(authoritative_state.npc_id, {})
+		if record is Dictionary:
+			var display_name := str(record.get("name", ""))
+			if not display_name.is_empty():
+				return display_name
+	return "Villager"
 
 func get_interaction_point() -> Vector3:
 	return global_position + Vector3.UP * 1.0
