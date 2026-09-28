@@ -633,17 +633,15 @@ func _update_punch_animation(delta: float) -> void:
 	var thrust := sin(progress * PI * 0.5)
 	if fp_left_arm:
 		fp_left_arm.rotation = Vector3(deg_to_rad(-18.0 - 42.0 * arc), deg_to_rad(-8.0), deg_to_rad(-7.0 + 12.0 * arc))
-	if fp_left_sleeve:
-		fp_left_sleeve.rotation = fp_left_arm.rotation
 		fp_left_arm.position = Vector3(-0.24, -0.48 - 0.07 * thrust, -0.66 - 0.42 * thrust)
 	if fp_left_sleeve:
+		fp_left_sleeve.rotation = fp_left_arm.rotation if fp_left_arm else Vector3(deg_to_rad(-18.0), deg_to_rad(-8.0), deg_to_rad(-7.0))
 		fp_left_sleeve.position = Vector3(-0.24, -0.58 - 0.07 * thrust, -0.78 - 0.42 * thrust)
 	if fp_right_arm:
 		fp_right_arm.rotation = Vector3(deg_to_rad(-18.0 - 86.0 * arc), deg_to_rad(6.0), deg_to_rad(8.0 - 24.0 * arc))
-	if fp_right_sleeve:
-		fp_right_sleeve.rotation = fp_right_arm.rotation
 		fp_right_arm.position = Vector3(0.24, -0.48 - 0.10 * thrust, -0.66 - 0.58 * thrust)
 	if fp_right_sleeve:
+		fp_right_sleeve.rotation = fp_right_arm.rotation if fp_right_arm else Vector3(deg_to_rad(-18.0), deg_to_rad(6.0), deg_to_rad(8.0))
 		fp_right_sleeve.position = Vector3(0.24, -0.58 - 0.10 * thrust, -0.78 - 0.58 * thrust)
 	if fp_left_hand:
 		fp_left_hand.position = Vector3(-0.24, -0.93 - 0.05 * thrust, -0.94 - 0.45 * thrust)
