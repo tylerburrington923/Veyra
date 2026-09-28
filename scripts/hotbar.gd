@@ -62,6 +62,9 @@ func _polish_hud() -> void:
 		axe_slot.custom_minimum_size = Vector2(94, 64)
 	if pick_slot:
 		pick_slot.custom_minimum_size = Vector2(94, 64)
+	if inventory_panel:
+		inventory_panel.position = Vector2(20, 110)
+		inventory_panel.size = Vector2(330, 470)
 
 func _style_hud_button(button: Button) -> void:
 	var normal := StyleBoxFlat.new()
@@ -317,7 +320,8 @@ func _build_inventory_grid() -> void:
 		var amount := int(items.get(item_id, 0))
 		if amount > 0:
 			stacks.append({"id": item_id, "amount": amount, "kind": "item"})
-	for slot_index in range(inventory.max_slots):
+	var max_slots := int(inventory.get("max_slots"))
+	for slot_index in range(max_slots):
 		var slot := Button.new()
 		slot.custom_minimum_size = Vector2(72, 58)
 		slot.focus_mode = Control.FOCUS_NONE
