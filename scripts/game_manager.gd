@@ -41,7 +41,7 @@ func save_current_game(world: Node) -> bool:
     var progression := get_node_or_null("/root/ProgressionManager")
     if progression and progression.has_method("get_save_state"):
         progression_state = progression.get_save_state()
-    var saved := SaveManager.save_world(world, inventory.get_snapshot(), settlement_state, player_state, progression_state)
+    var saved: bool = SaveManager.save_world(world, inventory.get_snapshot(), settlement_state, player_state, progression_state)
     if saved:
         loaded_save = SaveManager.load_world()
     return saved
