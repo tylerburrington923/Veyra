@@ -26,7 +26,7 @@ var _height_cache_ready := false
 
 func _ready() -> void:
     add_to_group("world_generator")
-    resource_collision_shape.radius = 0.58
+    resource_collision_shape.radius = 0.78
     call_deferred("generate")
 
 func generate() -> void:
@@ -268,10 +268,10 @@ func _resource_mesh(resource_type: String) -> Mesh:
     match resource_type:
         "Stone":
             var stone := SphereMesh.new()
-            stone.radius = 0.62
-            stone.height = 0.9
-            stone.radial_segments = 8
-            stone.rings = 4
+            stone.radius = 0.82
+            stone.height = 1.18
+            stone.radial_segments = 9
+            stone.rings = 5
             mesh = stone
         "Metal":
             var metal := PrismMesh.new()
