@@ -602,10 +602,10 @@ func _update_tool_animation(delta: float) -> void:
 	var lift := -62.0 * arc
 	var side := 18.0 * arc
 	tool_holder.rotation_degrees = _tool_base_rotation + Vector3(lift, side, -10.0 * arc)
-	tool_holder.position = Vector3(0.25 + 0.035 * arc, -0.73 - 0.035 * arc, -1.02 + 0.07 * arc)
+	tool_holder.position = Vector3(0.30 + 0.025 * arc, -0.78 - 0.025 * arc, -1.10 + 0.08 * arc)
 	if progress >= 1.0:
 		_tool_swing_active = false
-		tool_holder.position = Vector3(0.25, -0.73, -1.02)
+		tool_holder.position = Vector3(0.30, -0.78, -1.10)
 		tool_holder.rotation_degrees = _tool_base_rotation
 
 func _update_punch_animation(delta: float) -> void:
@@ -758,10 +758,15 @@ func _clear_touch_state() -> void:
 	_hide_joystick()
 
 func _handle_screen_touch(event: InputEventScreenTouch) -> void:
-	if _is_camera_blocking_ui_touch(event.position):
+	# Always release touch ownership before checking UI regions. Android may report
+	# the finger-up outside the original joystick region.
+	if not event.pressed:
+		_release_touch(event.index)
 		return
-
-	if event.pressed and event.is_canceled():
+	if event.is_canceled():
+		_release_touch(event.index)
+		return
+	if _is_camera_blocking_ui_touch(event.position):
 		return
 
 	if event.pressed:
