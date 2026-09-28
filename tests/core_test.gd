@@ -1080,6 +1080,15 @@ func _test_alpha_presentation_contract() -> void:
 	_check(camera != null and camera.fov <= 68.0 and camera.fov >= 64.0, "first-person camera FOV must stay in the alpha comfort range")
 	_check(camera != null and camera.position.y >= 1.70, "first-person camera must sit above the legacy body intersection point")
 	_check(player.get_node_or_null("MobileControls/InteractionReticle") != null, "center interaction reticle must exist")
+	var chest_fp := player.get_node_or_null("Camera3D/ViewModel/ChestFP") as MeshInstance3D
+	var belt_fp := player.get_node_or_null("Camera3D/ViewModel/BeltFP") as MeshInstance3D
+	var left_sleeve_fp := player.get_node_or_null("Camera3D/ViewModel/LeftSleeveFP") as MeshInstance3D
+	var right_sleeve_fp := player.get_node_or_null("Camera3D/ViewModel/RightSleeveFP") as MeshInstance3D
+	_check(chest_fp != null and (chest_fp.layers & 2) != 0, "first-person chest must render on the camera view layer")
+	_check(belt_fp != null and (belt_fp.layers & 2) != 0, "first-person belt must render on the camera view layer")
+	_check(left_sleeve_fp != null and right_sleeve_fp != null, "first-person sleeves must exist for coherent arm presentation")
+	_check(left_sleeve_fp != null and (left_sleeve_fp.layers & 2) != 0, "left first-person sleeve must render on the camera view layer")
+	_check(right_sleeve_fp != null and (right_sleeve_fp.layers & 2) != 0, "right first-person sleeve must render on the camera view layer")
 	var interaction_hud := player.get_node_or_null("MobileControls/InteractionHUD") as Control
 	_check(interaction_hud != null and interaction_hud.visible, "center interaction HUD must be visible")
 	_check(player.get_node_or_null("MobileControls/LunarHUD") != null, "lunar phase HUD must exist")
