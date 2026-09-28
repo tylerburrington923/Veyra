@@ -1230,8 +1230,8 @@ func _test_performance_cache_contract() -> void:
 		for x in range(world.grid_size + 1):
 			world._height_cache[z * (world.grid_size + 1) + x] = world.get_height_at_world((x - world.grid_size * 0.5) * world.cell_size, (z - world.grid_size * 0.5) * world.cell_size)
 	world._height_cache_ready = true
-	var exact := world.get_height_at_world(3.25, -7.75)
-	var fast := world.get_height_at_world_fast(3.25, -7.75)
+	var exact: float = world.get_height_at_world(3.25, -7.75)
+	var fast: float = world.get_height_at_world_fast(3.25, -7.75)
 	_check(absf(exact - fast) < 0.35, "terrain fast height cache must remain close to authoritative terrain")
 	world.queue_free()
 
