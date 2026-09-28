@@ -99,6 +99,46 @@ func has_required_materials(inventory: VeyraInventory) -> bool:
             return false
     return true
 
+func server_build(player: Node3D, building_id: String, requested_position: Vector3, inventory: VeyraInventory) -> bool:
+	# Multiplayer requests must not mutate the shared client preview state. This
+	# performs a complete authoritative validation/build transaction from the
+	# request's own building id and position.
+	if not player or not inventory or not VeyraBuildingCatalog.exists(building_id):
+		return false
+	var definition := VeyraBuildingCatalog.get_building(building_id)
+	if definition.is_empty():
+		return false
+	var position := snap_position(requested_position)
+	var distance := player.global_position.distance_to(position)
+	if distance < MIN_BUILD_DISTANCE or distance > MAX_BUILD_DISTANCE:
+		return false
+	if not _is_space_clear(position, definition.get("size", Vector2.ONE), player):
+		return false
+	if building_id == "B05_TOWNHALL" and _has_townhall():
+		return false
+	for resource_type in definition.get("cost", {}).keys():
+		var amount := int(definition["cost"][resource_type])
+		if not inventory.has_resource(str(resource_type), amount):
+			return false
+	var settlement := _get_settlement_manager()
+	if not settlement:
+		return false
+	var building_id_value := _next_building_id()
+	var cost: Dictionary = definition.get("cost", {})
+	for resource_type in cost.keys():
+		var amount := int(cost[resource_type])
+		if inventory.remove_resource(str(resource_type), amount) < amount:
+			for rollback_type in cost.keys():
+				inventory.add_resource(str(rollback_type), int(cost[rollback_type]))
+			return false
+	if not bool(settlement.call("add_building", building_id_value, building_id, position)):
+		for rollback_type in cost.keys():
+			inventory.add_resource(str(rollback_type), int(cost[rollback_type]))
+		return false
+	_spawn_building_visual(building_id_value, building_id, position)
+	building_completed.emit(building_id, position)
+	return true
+
 func confirm_build(player: Node3D, inventory: VeyraInventory) -> bool:
     if not placement_valid or selected_building_id.is_empty():
         return false
