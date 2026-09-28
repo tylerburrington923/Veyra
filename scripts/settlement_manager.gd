@@ -349,9 +349,11 @@ func sync_villager_job(villager_id: String, state: NPCState) -> bool:
 func complete_villager_job(villager_id: String, state: NPCState) -> bool:
     var job: JobState = job_states.get(villager_id, null)
     if job == null or (not job.active and not job.completed):
+        print("COMPLETE_FAIL no_job_or_not_completed")
         return false
     var definition: JobDefinition = job_definitions.get(job.definition_id, null)
     if definition == null:
+        print("COMPLETE_FAIL no_definition")
         return false
     var production_id := ""
     var active := production_manager.get_active_productions()
@@ -361,15 +363,19 @@ func complete_villager_job(villager_id: String, state: NPCState) -> bool:
             production_id = str(key)
             break
     if production_id.is_empty():
+        print("COMPLETE_FAIL no_production")
         return false
     var production := active[production_id] as ProductionState
     if production == null:
+        print("COMPLETE_FAIL production_cast")
         return false
     production_manager.set_progress(production_id, definition.work_duration)
     var storage := _get_primary_storage_resources()
     if not production_manager.complete_production(production_id, storage):
+        print("COMPLETE_FAIL production_commit")
         return false
     if not _set_primary_storage_resources(storage):
+        print("COMPLETE_FAIL storage_write")
         return false
     job.completed = true
     job.active = false
