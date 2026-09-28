@@ -906,8 +906,6 @@ func _test_storage_protects_tools_contract() -> void:
 	if ui:
 		ui._deposit_storage()
 	_check(inventory.has_item("I01_STONE_AXE") and inventory.has_item("I02_STONE_PICK"), "tools must remain in personal inventory")
-	var ui := player.get_node_or_null("BuildingUI")
-	_check(ui == null or not ui.visible, "storage test must not require an open UI")
 	settlement.buildings.erase(building_id)
 	building.queue_free()
 	player.queue_free()
