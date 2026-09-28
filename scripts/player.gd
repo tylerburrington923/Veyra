@@ -344,9 +344,15 @@ func _configure_first_person_view() -> void:
 	for mesh in [torso, head, hair, left_eye, right_eye, left_arm, right_arm, left_hand, right_hand, left_leg_mesh, right_leg_mesh, left_foot_mesh, right_foot_mesh]:
 		if mesh:
 			mesh.visible = false
-	for mesh in [fp_left_arm, fp_right_arm, fp_left_hand, fp_right_hand]:
+	for mesh in [fp_left_arm, fp_right_arm, fp_left_hand, fp_right_hand, fp_left_sleeve, fp_right_sleeve, fp_left_cuff, fp_right_cuff]:
 		if mesh:
 			mesh.visible = true
+			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var viewmodel := get_node_or_null("Camera3D/ViewModel") as Node3D
+	if viewmodel:
+		for child in viewmodel.get_children():
+			if child is GeometryInstance3D:
+				(child as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	# The authoritative body remains present for remote-player instances; the local copy is hidden
 	# so the camera never intersects its torso or legs.
 
@@ -454,6 +460,9 @@ func configure_offline_role() -> void:
 	var viewmodel := get_node_or_null("Camera3D/ViewModel") as Node3D
 	if viewmodel:
 		viewmodel.visible = true
+		for child in viewmodel.get_children():
+			if child is GeometryInstance3D:
+				(child as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 func set_network_input(input_vector: Vector2, jump: bool, yaw: float) -> void:
 	_network_input = input_vector.limit_length(1.0)
