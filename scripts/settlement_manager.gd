@@ -305,7 +305,7 @@ func prepare_villager_job(villager_id: String) -> JobState:
     if production_state == null:
         return null
     if not _set_primary_storage_resources(storage):
-        production_manager.complete_production(production_id, storage)
+        production_manager.cancel_production(production_id, storage, true)
         return null
 
     var job_state := JobState.new(job_state_id, definition.id)
