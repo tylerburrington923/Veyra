@@ -185,7 +185,9 @@ func _spawn_resources() -> void:
         spawned += 1
 
 func get_required_tool_for_resource(resource_type: String) -> String:
-    if resource_type == "Wood":
+    # The first loop is intentionally hand-driven: loose sticks and usable
+    # field rocks are gatherable before the player owns any tool.
+    if resource_type == "Wood" or resource_type == "Stone":
         return VeyraItemCatalog.HANDS_ID
     return "I02_STONE_PICK"
 
