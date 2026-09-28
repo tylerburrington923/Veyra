@@ -233,7 +233,16 @@ func _update_equipped_tool_visual() -> void:
 	_tool_swing_active = false
 	_tool_swing_time = 0.0
 	if not tool_visual.visible:
+		if fp_left_hand:
+			fp_left_hand.position = Vector3(-0.22, -1.10, -1.04)
+		if fp_right_hand:
+			fp_right_hand.position = Vector3(0.22, -1.10, -1.04)
 		return
+	# Tools are held at the lower handle rather than floating in front of the camera.
+	if fp_left_hand:
+		fp_left_hand.position = Vector3(0.03, -0.78, -1.10)
+	if fp_right_hand:
+		fp_right_hand.position = Vector3(0.28, -0.62, -1.10)
 	var axe_head := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeHead") as MeshInstance3D
 	var axe_blade := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeBlade") as MeshInstance3D
 	var axe_collar := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeCollar") as MeshInstance3D
