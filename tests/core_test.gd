@@ -1183,7 +1183,7 @@ func _test_settlement_production_loop() -> void:
 	var state_controller := manager.spawn_npc("production_villager", "human_villager", Vector3.ZERO)
 	_check(state_controller != null, "production worker controller must spawn")
 	var state: NPCState = manager.get_npc_state("production_villager")
-	for i in range(10):
+	for i in range(9):
 		manager._update_villager_behavior(state, 1.0)
 	_check(not settlement.job_states.has("production_villager"), "integrated NPC manager must retire completed production job")
 	var storage := settlement.get_building_storage("PROD-STORAGE")
