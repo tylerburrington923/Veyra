@@ -4,7 +4,7 @@ const SAVE_PATH := "user://veyra_world.json"
 const BACKUP_PATH := "user://veyra_world.backup.json"
 const SAVE_VERSION := 7
 
-func save_world(world: Node, inventory: Dictionary, settlement: Dictionary = {}, player_state: Dictionary = {}) -> bool:
+func save_world(world: Node, inventory: Dictionary, settlement: Dictionary = {}, player_state: Dictionary = {}, progression: Dictionary = {}) -> bool:
     if not world or not world.has_method("get_world_state"):
         return false
 
