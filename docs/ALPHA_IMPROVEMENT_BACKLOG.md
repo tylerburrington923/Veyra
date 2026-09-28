@@ -83,12 +83,14 @@ This is the active engineering review list. Items are observations from source/c
 
 ## Performance research findings
 
-- Godot's Compatibility renderer remains the intended low-end/mobile path for Veyra. It has a low base rendering cost, while its scaling cost makes object count, draw calls, overdraw and expensive lighting especially important. citeturn0search0
-- Godot MultiMesh is the correct mechanism for repeated simple environmental geometry, but large spatially spread MultiMeshes should be split into chunks because individual instances cannot be frustum/occlusion culled. citeturn0search1turn0search8
-- Godot LOD/visibility ranges and occlusion culling are complementary. Occlusion is most valuable where level geometry actually creates occlusion opportunities; blindly enabling it in open terrain can add CPU/setup cost without benefit. citeturn0search3turn0search7
-- Android's game-performance guidance emphasizes reducing geometry, draw calls, unnecessary attachments, and using LOD/culling; ASTC texture compression can substantially reduce texture memory. Veyra already has ETC2/ASTC import enabled, so the next gains should come from runtime object/shadow/CPU budgets rather than adding larger textures. citeturn0search2
-- Mobile/tile-based GPUs are especially sensitive to expensive shader, viewport-texture and post-processing work, reinforcing Veyra's Compatibility + simple-material approach. citeturn0search4
-- A useful external benchmark for the direction is NetEase's *Life After*: its mobile occlusion solution reportedly reduced draw calls by about 65% on low-end phones, illustrating the scale available from visibility management when a world has enough occlusion structure. This is research context, not a claim about Veyra's current performance. citeturn0search6
+Sources: Godot 4.7 rendering, MultiMesh, LOD, and occlusion-culling documentation; Android Developers game optimization guidance; GDC 2023 session on mobile occlusion culling in Life After.
+
+- Godot's Compatibility renderer remains the intended low-end/mobile path for Veyra. It has a low base rendering cost, while its scaling cost makes object count, draw calls, overdraw and expensive lighting especially important.
+- Godot MultiMesh is the correct mechanism for repeated simple environmental geometry, but large spatially spread MultiMeshes should be split into chunks because individual instances cannot be frustum/occlusion culled.
+- Godot LOD/visibility ranges and occlusion culling are complementary. Occlusion is most valuable where level geometry actually creates occlusion opportunities; blindly enabling it in open terrain can add CPU/setup cost without benefit.
+- Android's game-performance guidance emphasizes reducing geometry, draw calls, unnecessary attachments, and using LOD/culling; ASTC texture compression can substantially reduce texture memory. Veyra already has ETC2/ASTC import enabled, so the next gains should come from runtime object/shadow/CPU budgets rather than adding larger textures.
+- Mobile/tile-based GPUs are especially sensitive to expensive shader, viewport-texture and post-processing work, reinforcing Veyra's Compatibility + simple-material approach.
+- A useful external benchmark for the direction is NetEase's *Life After*: its mobile occlusion solution reportedly reduced draw calls by about 65% on low-end phones, illustrating the scale available from visibility management when a world has enough occlusion structure. This is research context, not a claim about Veyra's current performance.
 
 ## Current review notes
 
