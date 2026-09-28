@@ -40,7 +40,10 @@ func can_interact(player: Node) -> bool:
 		return false
 	if not VeyraItemCatalog.is_valid_tool(tool_required):
 		return false
-	return equipped_tool == tool_required
+	if tool_required == VeyraItemCatalog.HANDS_ID:
+		return equipped_tool == VeyraItemCatalog.HANDS_ID
+	# Tool requirements define the minimum tier/type, not an exact item ID.
+	return VeyraItemCatalog.is_tool_for_resource(equipped_tool, resource_type) and VeyraItemCatalog.is_tool_for_resource(tool_required, resource_type)
 
 func get_interaction_requirement(player: Node) -> String:
 	if not can_interact(player):
@@ -69,7 +72,10 @@ func interact(player_override: Node = null) -> void:
 		return
 	if not VeyraItemCatalog.is_valid_tool(tool_required):
 		return
-	if equipped_tool != tool_required:
+	if tool_required == VeyraItemCatalog.HANDS_ID:
+		if equipped_tool != VeyraItemCatalog.HANDS_ID:
+			return
+	elif not VeyraItemCatalog.is_tool_for_resource(equipped_tool, resource_type) or not VeyraItemCatalog.is_tool_for_resource(tool_required, resource_type):
 		return
 
 	var actual_tool_cost: float = VeyraItemCatalog.durability_cost(equipped_tool, resource_type)
@@ -92,6 +98,9 @@ func interact(player_override: Node = null) -> void:
 		return
 
 	remaining -= accepted
+	var progression := get_node_or_null("/root/ProgressionManager")
+	if progression and progression.has_method("record_action"):
+		progression.record_action("GATHER", accepted, resource_type)
 	interaction_cooldown = 0.18
 	set_process(true)
 	if remaining <= 0:
