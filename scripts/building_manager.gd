@@ -291,8 +291,17 @@ func _spawn_building_visual(
 
 func _on_building_completed(building_id: String, _position: Vector3) -> void:
     var progression := get_node_or_null("/root/ProgressionManager")
-    if progression and progression.has_method("record_action"):
-        progression.call("record_action", "BUILD", 1, building_id)
+    if not progression or not progression.has_method("record_action"):
+        return
+    var settlement := _get_settlement_manager()
+    if not settlement:
+        return
+    var buildings: Dictionary = settlement.get("buildings")
+    var record = buildings.get(building_id, {})
+    if record is Dictionary:
+        var building_type := str(record.get("type", ""))
+        if not building_type.is_empty():
+            progression.call("record_action", "BUILD", 1, building_type)
 
 func _on_door_state_changed(building_id: String, open: bool) -> void:
     var settlement := _get_settlement_manager()
