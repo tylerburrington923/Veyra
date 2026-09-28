@@ -227,6 +227,9 @@ func _create_multimesh(
 
     instance.multimesh = multimesh
     instance.material_override = material
+    # Foliage is a silhouette/readability layer; disabling its dynamic shadows
+    # avoids a costly extra shadow pass on mobile while preserving scene lighting.
+    instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
     instance.visibility_range_end = _visibility_distance
     instance.visibility_range_end_margin = 8.0
     add_child(instance)
