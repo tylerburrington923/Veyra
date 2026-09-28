@@ -29,6 +29,8 @@ func _ready() -> void:
 	set_process(true)
 
 func _process(delta: float) -> void:
+	if multiplayer.has_multiplayer_peer() and not multiplayer.is_server():
+		return
 	_proximity_accumulator += delta
 	if _proximity_accumulator < PROXIMITY_CHECK_INTERVAL:
 		return
