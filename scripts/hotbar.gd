@@ -160,6 +160,8 @@ func _on_tool_changed(_tool_id: String, _durability: float) -> void:
 
 func _on_inventory_changed(_snapshot: Dictionary, changed_type: String, changed_amount: int) -> void:
 	_refresh()
+	if inventory_panel and inventory_panel.visible:
+		_build_inventory_grid()
 	if changed_amount > 0:
 		_show_toast("Picked up %s x%d" % [changed_type, changed_amount])
 
@@ -274,9 +276,116 @@ func _show_toast(message: String) -> void:
 func _toggle_inventory() -> void:
 	if inventory_panel:
 		inventory_panel.visible = not inventory_panel.visible
+		if inventory_panel.visible:
+			_build_inventory_grid()
 	if backpack_button:
 		backpack_button.text = "CLOSE" if inventory_panel and inventory_panel.visible else "PACK"
+
+func _build_inventory_grid() -> void:
+	if not inventory_panel or not inventory:
+		return
+	var old_grid := inventory_panel.get_node_or_null("InventoryGrid")
+	if old_grid:
+		old_grid.queue_free()
+	var old_capacity := inventory_panel.get_node_or_null("CapacityLabel")
+	if old_capacity:
+		old_capacity.queue_free()
+	if inventory_label:
+		inventory_label.visible = true
+		inventory_label.text = "BACKPACK"
+		inventory_label.position = Vector2(14, 10)
+		inventory_label.size = Vector2(300, 30)
+		inventory_label.add_theme_font_size_override("font_size", 20)
+	var grid := GridContainer.new()
+	grid.name = "InventoryGrid"
+	grid.columns = 4
+	grid.position = Vector2(14, 48)
+	grid.size = Vector2(308, 348)
+	grid.add_theme_constant_override("h_separation", 6)
+	grid.add_theme_constant_override("v_separation", 6)
+	grid.mouse_filter = Control.MOUSE_FILTER_STOP
+	inventory_panel.add_child(grid)
+	var snapshot: Dictionary = inventory.get_snapshot()
+	var resources: Dictionary = snapshot.get("resources", {})
+	var items: Dictionary = snapshot.get("items", {})
+	var stacks: Array[Dictionary] = []
+	for resource_type in RESOURCE_TYPES:
+		var amount := int(resources.get(resource_type, 0))
+		if amount > 0:
+			stacks.append({"id": resource_type, "amount": amount, "kind": "resource"})
+	for item_id in VeyraItemCatalog.ITEM_TYPES:
+		var amount := int(items.get(item_id, 0))
+		if amount > 0:
+			stacks.append({"id": item_id, "amount": amount, "kind": "item"})
+	for slot_index in range(inventory.max_slots):
+		var slot := Button.new()
+		slot.custom_minimum_size = Vector2(72, 58)
+		slot.focus_mode = Control.FOCUS_NONE
+		slot.add_to_group("camera_blocking_ui")
+		_style_inventory_slot(slot)
+		if slot_index < stacks.size():
+			var stack: Dictionary = stacks[slot_index]
+			var id := str(stack.get("id", ""))
+			var amount := int(stack.get("amount", 0))
+			var kind := str(stack.get("kind", "resource"))
+			slot.text = _inventory_slot_text(id, amount)
+			slot.tooltip_text = _inventory_slot_tooltip(id, amount)
+			if kind == "item" and VeyraItemCatalog.is_valid_tool(id):
+				slot.pressed.connect(_equip_inventory_item.bind(id))
+		else:
+			slot.text = ""
+		grid.add_child(slot)
+	var capacity := inventory.get_capacity_state()
+	var capacity_label := Label.new()
+	capacity_label.name = "CapacityLabel"
+	capacity_label.position = Vector2(14, 404)
+	capacity_label.size = Vector2(308, 36)
+	capacity_label.text = "SLOTS %d/%d   •   WEIGHT %.1f/%.1f" % [
+		int(capacity.get("slots_used", 0)), int(capacity.get("slots_max", 0)),
+		float(capacity.get("weight", 0.0)), float(capacity.get("weight_max", 0.0))
+	]
+	capacity_label.add_theme_font_size_override("font_size", 12)
+	inventory_panel.add_child(capacity_label)
+
+func _inventory_slot_text(id: String, amount: int) -> String:
+	if VeyraItemCatalog.is_valid(id):
+		var name := VeyraItemCatalog.display_name(id).replace("Stone ", "")
+		return "%s\nx%d" % [name.to_upper(), amount]
+	return "%s\nx%d" % [id.to_upper(), amount]
+
+func _inventory_slot_tooltip(id: String, amount: int) -> String:
+	if VeyraItemCatalog.is_valid(id):
+		return "%s x%d\nTap to equip" % [VeyraItemCatalog.display_name(id), amount]
+	return "%s x%d" % [id, amount]
+
+func _equip_inventory_item(item_id: String) -> void:
+	if player and player.has_method("set_tool") and player.set_tool(item_id):
+		_show_toast("Equipped %s" % VeyraItemCatalog.display_name(item_id))
+		_refresh()
+
+func _style_inventory_slot(button: Button) -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.035, 0.055, 0.065, 0.96)
+	normal.border_width_left = 1
+	normal.border_width_top = 1
+	normal.border_width_right = 1
+	normal.border_width_bottom = 1
+	normal.border_color = Color(0.24, 0.38, 0.40, 0.8)
+	normal.corner_radius_top_left = 7
+	normal.corner_radius_top_right = 7
+	normal.corner_radius_bottom_left = 7
+	normal.corner_radius_bottom_right = 7
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = Color(0.08, 0.22, 0.24, 1.0)
+	pressed.border_color = Color(0.42, 0.78, 0.78, 1.0)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_color_override("font_color", Color(0.88, 0.94, 0.94, 1.0))
+	button.add_theme_font_size_override("font_size", 11)
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_SIZE_CHANGED:
 		_polish_hud()
+		if inventory_panel and inventory_panel.visible:
+			_build_inventory_grid()
