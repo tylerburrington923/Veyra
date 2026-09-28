@@ -135,7 +135,7 @@ func get_interaction_point() -> Vector3:
 func _record_resonance_release() -> void:
 	var progression := get_node_or_null("/root/ProgressionManager")
 	if progression and progression.has_method("record_unique_action"):
-		progression.record_unique_action("RESONANCE", "ECHO_STONE_RELEASE", get_instance_id().__str__())
+		progression.record_unique_action("RESONANCE", "ECHO_STONE_RELEASE", name)
 
 func _release(player: Node) -> void:
 	activated = true
