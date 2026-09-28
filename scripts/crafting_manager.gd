@@ -36,5 +36,8 @@ func craft(recipe_id: String, inventory: VeyraInventory) -> bool:
 		crafting_failed.emit(recipe_id, "inventory_full")
 		return false
 
+	var progression := get_node_or_null("/root/ProgressionManager")
+	if progression and progression.has_method("record_action"):
+		progression.record_action("CRAFT", accepted, item_id)
 	crafting_completed.emit(recipe_id, item_id, accepted)
 	return true
