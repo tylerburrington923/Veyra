@@ -95,6 +95,9 @@ func _spawn_beta_wildlife() -> void:
 		var distance := spawn_radius + index * 3.0
 		var position := _get_grounded_position(Vector3(cos(angle), 0.0, sin(angle)) * distance)
 		spawn_animal("wild_%02d" % (index + 1), definition_id, position)
+		var seeded_state: AnimalState = states.get("wild_%02d" % (index + 1))
+		if seeded_state:
+			seeded_state.sex = "F" if index % 2 == 0 else "M"
 
 func spawn_animal(animal_id: String, definition_id: String, position: Vector3) -> Node3D:
 	if animal_id.is_empty() or states.has(animal_id) or not definitions.has(definition_id):
@@ -146,6 +149,11 @@ func get_save_state() -> Array:
 	return snapshot
 
 func _restore_saved_state() -> void:
+	for visual in visuals.values():
+		if visual and is_instance_valid(visual):
+			visual.queue_free()
+	visuals.clear()
+	death_timers.clear()
 	states.clear()
 	for value in _saved_state:
 		var data: Dictionary = value if value is Dictionary else {}
