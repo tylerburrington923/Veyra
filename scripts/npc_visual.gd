@@ -13,6 +13,12 @@ var left_leg: MeshInstance3D
 var right_leg: MeshInstance3D
 var left_sleeve: MeshInstance3D
 var right_sleeve: MeshInstance3D
+var left_arm_pivot: Node3D
+var right_arm_pivot: Node3D
+var left_leg_pivot: Node3D
+var right_leg_pivot: Node3D
+var left_sleeve_pivot: Node3D
+var right_sleeve_pivot: Node3D
 var gait_phase := 0.0
 var torso: MeshInstance3D
 var head: MeshInstance3D
@@ -65,23 +71,24 @@ func configure(definition: NPCDefinition) -> void:
 	_mesh_box("Belt", Vector3(0.62, 0.12, 0.46), Vector3(0.0, 0.89, 0.0), belt_material)
 	_mesh_box("Buckle", Vector3(0.10, 0.10, 0.055), Vector3(0.0, 0.89, -0.245), buckle)
 
-	left_sleeve = _capsule("LeftSleeve", Vector3(-0.39, 1.22, 0.0), 0.13, 0.48, shirt, 7)
-	right_sleeve = _capsule("RightSleeve", Vector3(0.39, 1.22, 0.0), 0.13, 0.48, shirt, 7)
-	left_sleeve.rotation_degrees = Vector3(0.0, 0.0, -8.0)
-	right_sleeve.rotation_degrees = Vector3(0.0, 0.0, 8.0)
+	left_sleeve_pivot = _limb_pivot("LeftSleevePivot", Vector3(-0.39, 1.22, 0.0), Vector3(0.0, 0.0, -8.0))
+	right_sleeve_pivot = _limb_pivot("RightSleevePivot", Vector3(0.39, 1.22, 0.0), Vector3(0.0, 0.0, 8.0))
+	left_sleeve = _capsule_child("LeftSleeve", Vector3(0.0, 0.0, 0.0), 0.13, 0.48, shirt, 7, left_sleeve_pivot)
+	right_sleeve = _capsule_child("RightSleeve", Vector3(0.0, 0.0, 0.0), 0.13, 0.48, shirt, 7, right_sleeve_pivot)
 
-	left_arm = _capsule("LeftArm", Vector3(-0.40, 0.91, 0.0), 0.095, 0.40, skin, 6)
-	right_arm = _capsule("RightArm", Vector3(0.40, 0.91, 0.0), 0.095, 0.40, skin, 6)
-	left_arm.rotation_degrees = Vector3(0.0, 0.0, -8.0)
-	right_arm.rotation_degrees = Vector3(0.0, 0.0, 8.0)
-
+	left_arm_pivot = _limb_pivot("LeftArmPivot", Vector3(-0.40, 1.22, 0.0), Vector3(0.0, 0.0, -8.0))
+	right_arm_pivot = _limb_pivot("RightArmPivot", Vector3(0.40, 1.22, 0.0), Vector3(0.0, 0.0, 8.0))
+	left_arm = _capsule_child("LeftArm", Vector3(0.0, -0.31, 0.0), 0.095, 0.40, skin, 6, left_arm_pivot)
+	right_arm = _capsule_child("RightArm", Vector3(0.0, -0.31, 0.0), 0.095, 0.40, skin, 6, right_arm_pivot)
 	left_forearm = left_arm
 	right_forearm = right_arm
 	_sphere("LeftHand", Vector3(-0.40, 0.66, 0.0), 0.105, skin_light, 7)
 	_sphere("RightHand", Vector3(0.40, 0.66, 0.0), 0.105, skin_light, 7)
 
-	left_leg = _capsule("LeftLeg", Vector3(-0.18, 0.45, 0.0), 0.115, 0.82, pants, 6)
-	right_leg = _capsule("RightLeg", Vector3(0.18, 0.45, 0.0), 0.115, 0.82, pants, 6)
+	left_leg_pivot = _limb_pivot("LeftLegPivot", Vector3(-0.18, 0.84, 0.0), Vector3.ZERO)
+	right_leg_pivot = _limb_pivot("RightLegPivot", Vector3(0.18, 0.84, 0.0), Vector3.ZERO)
+	left_leg = _capsule_child("LeftLeg", Vector3(0.0, -0.39, 0.0), 0.115, 0.82, pants, 6, left_leg_pivot)
+	right_leg = _capsule_child("RightLeg", Vector3(0.0, -0.39, 0.0), 0.115, 0.82, pants, 6, right_leg_pivot)
 	_add_foot("LeftFoot", Vector3(-0.18, 0.08, -0.10), boot)
 	_add_foot("RightFoot", Vector3(0.18, 0.08, -0.10), boot)
 	_mesh_box("LeftSole", Vector3(0.23, 0.07, 0.42), Vector3(-0.18, 0.035, -0.12), boot)
@@ -95,12 +102,33 @@ func set_motion(speed_ratio: float, delta: float) -> void:
 	else:
 		gait_phase = fmod(gait_phase + delta * (7.0 + 5.0 * intensity), TAU)
 	var swing := sin(gait_phase) * deg_to_rad(20.0) * intensity
-	if left_sleeve: left_sleeve.rotation.x = deg_to_rad(-8.0) + swing * 0.75
-	if right_sleeve: right_sleeve.rotation.x = deg_to_rad(8.0) - swing * 0.75
-	if left_arm: left_arm.rotation.x = swing
-	if right_arm: right_arm.rotation.x = -swing
-	if left_leg: left_leg.rotation.x = -swing * 0.9
-	if right_leg: right_leg.rotation.x = swing * 0.9
+	if left_sleeve_pivot: left_sleeve_pivot.rotation.x = swing * 0.75
+	if right_sleeve_pivot: right_sleeve_pivot.rotation.x = -swing * 0.75
+	if left_arm_pivot: left_arm_pivot.rotation.x = swing
+	if right_arm_pivot: right_arm_pivot.rotation.x = -swing
+	if left_leg_pivot: left_leg_pivot.rotation.x = -swing * 0.9
+	if right_leg_pivot: right_leg_pivot.rotation.x = swing * 0.9
+
+func _limb_pivot(node_name: String, node_position: Vector3, initial_rotation_degrees: Vector3) -> Node3D:
+	var pivot := Node3D.new()
+	pivot.name = node_name
+	pivot.position = node_position
+	pivot.rotation_degrees = initial_rotation_degrees
+	add_child(pivot)
+	return pivot
+
+func _capsule_child(node_name: String, node_position: Vector3, radius: float, height: float, material: StandardMaterial3D, segments: int, parent: Node3D) -> MeshInstance3D:
+	var limb := MeshInstance3D.new()
+	limb.name = node_name
+	var mesh := CapsuleMesh.new()
+	mesh.radius = radius
+	mesh.height = height
+	mesh.radial_segments = segments
+	limb.mesh = mesh
+	limb.material_override = material
+	limb.position = node_position
+	parent.add_child(limb)
+	return limb
 
 func _capsule(node_name: String, node_position: Vector3, radius: float, height: float, material: StandardMaterial3D, segments: int) -> MeshInstance3D:
 	var limb := MeshInstance3D.new()
@@ -218,6 +246,12 @@ func _clear_visual() -> void:
 	right_leg = null
 	left_sleeve = null
 	right_sleeve = null
+	left_arm_pivot = null
+	right_arm_pivot = null
+	left_leg_pivot = null
+	right_leg_pivot = null
+	left_sleeve_pivot = null
+	right_sleeve_pivot = null
 	gait_phase = 0.0
 	for child in get_children():
 		child.queue_free()
