@@ -408,6 +408,10 @@ func _test_first_person_viewmodel_contract() -> void:
 	_check(player.get_node_or_null("Camera3D/ViewModel/RightArmFP") != null, "first-person right arm presentation must exist")
 	_check(player.get_node_or_null("Camera3D/ViewModel/LeftHandFP") != null, "first-person left hand presentation must exist")
 	_check(player.get_node_or_null("Camera3D/ViewModel/RightHandFP") != null, "first-person right hand presentation must exist")
+	_check(player.get_node_or_null("Camera3D/ViewModel/LeftCuffFP") != null, "first-person left sleeve cuff must exist")
+	_check(player.get_node_or_null("Camera3D/ViewModel/RightCuffFP") != null, "first-person right sleeve cuff must exist")
+	_check(player.get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/ToolGrip") != null, "tool grip visual must exist")
+	_check(player.get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeCollar") != null, "axe collar visual must exist")
 	_check(holder != null and holder.position.z < -0.5, "tool holder must be in front of camera")
 	player.queue_free()
 
