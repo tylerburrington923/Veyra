@@ -44,6 +44,12 @@ const BUILDINGS := {
 		"size": Vector2(3.0, 3.0),
 		"cost": {"Wood": 28, "Stone": 12}
 	},
+	"B10_TANNERY": {
+		"id": "B10_TANNERY",
+		"name": "Tannery",
+		"size": Vector2(4.0, 3.5),
+		"cost": {"Wood": 24, "Stone": 12, "Hide": 6}
+	},
 	"B09_BLACKSMITH": {
 		"id": "B09_BLACKSMITH",
 		"name": "Blacksmith",
