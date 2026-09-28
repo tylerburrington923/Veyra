@@ -11,7 +11,7 @@ func _ready() -> void:
 	$Center/Panel/SettingsPanel/BackButton.pressed.connect(_hide_settings)
 	$Center/Panel/SettingsPanel.visible = false
 	_build_graphics_controls()
-	var save_exists := not SaveManager.load_world().is_empty() if SaveManager else false
+	var save_exists: bool = bool(SaveManager and not SaveManager.load_world().is_empty()) if SaveManager else false;
 	$Center/Panel/EnterButton.text = "CONTINUE" if save_exists else "ENTER VEYRA"
 
 func _build_graphics_controls() -> void:
