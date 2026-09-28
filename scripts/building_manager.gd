@@ -109,6 +109,7 @@ func server_build(player: Node3D, building_id: String, requested_position: Vecto
     if definition.is_empty():
         return false
     var position := snap_position(requested_position)
+    position.y = _ground_height(position, player)
     var distance := player.global_position.distance_to(position)
     if distance < MIN_BUILD_DISTANCE or distance > MAX_BUILD_DISTANCE:
         return false
