@@ -82,17 +82,17 @@ func configure(definition: NPCDefinition) -> void:
 	right_arm = _capsule_child("RightArm", Vector3(0.0, -0.31, 0.0), 0.095, 0.40, skin, 6, right_arm_pivot)
 	left_forearm = left_arm
 	right_forearm = right_arm
-	_sphere("LeftHand", Vector3(-0.40, 0.66, 0.0), 0.105, skin_light, 7)
-	_sphere("RightHand", Vector3(0.40, 0.66, 0.0), 0.105, skin_light, 7)
+	_sphere_child("LeftHand", Vector3(0.0, -0.56, 0.0), 0.105, skin_light, 7, left_arm_pivot)
+	_sphere_child("RightHand", Vector3(0.0, -0.56, 0.0), 0.105, skin_light, 7, right_arm_pivot)
 
 	left_leg_pivot = _limb_pivot("LeftLegPivot", Vector3(-0.18, 0.84, 0.0), Vector3.ZERO)
 	right_leg_pivot = _limb_pivot("RightLegPivot", Vector3(0.18, 0.84, 0.0), Vector3.ZERO)
 	left_leg = _capsule_child("LeftLeg", Vector3(0.0, -0.39, 0.0), 0.115, 0.82, pants, 6, left_leg_pivot)
 	right_leg = _capsule_child("RightLeg", Vector3(0.0, -0.39, 0.0), 0.115, 0.82, pants, 6, right_leg_pivot)
-	_add_foot("LeftFoot", Vector3(-0.18, 0.08, -0.10), boot)
-	_add_foot("RightFoot", Vector3(0.18, 0.08, -0.10), boot)
-	_mesh_box("LeftSole", Vector3(0.23, 0.07, 0.42), Vector3(-0.18, 0.035, -0.12), boot)
-	_mesh_box("RightSole", Vector3(0.23, 0.07, 0.42), Vector3(0.18, 0.035, -0.12), boot)
+	_add_foot_child("LeftFoot", Vector3(0.0, -0.76, -0.10), boot, left_leg_pivot)
+	_add_foot_child("RightFoot", Vector3(0.0, -0.76, -0.10), boot, right_leg_pivot)
+	_mesh_box_child("LeftSole", Vector3(0.23, 0.07, 0.42), Vector3(0.0, -0.805, -0.12), boot, left_leg_pivot)
+	_mesh_box_child("RightSole", Vector3(0.23, 0.07, 0.42), Vector3(0.0, -0.805, -0.12), boot, right_leg_pivot)
 
 func set_motion(speed_ratio: float, delta: float) -> void:
 	var intensity := clampf(speed_ratio, 0.0, 1.0)
@@ -108,6 +108,46 @@ func set_motion(speed_ratio: float, delta: float) -> void:
 	if right_arm_pivot: right_arm_pivot.rotation.x = -swing
 	if left_leg_pivot: left_leg_pivot.rotation.x = -swing * 0.9
 	if right_leg_pivot: right_leg_pivot.rotation.x = swing * 0.9
+
+func _sphere_child(node_name: String, node_position: Vector3, radius: float, material: StandardMaterial3D, segments: int, parent: Node3D) -> MeshInstance3D:
+	var instance := MeshInstance3D.new()
+	instance.name = node_name
+	var mesh := SphereMesh.new()
+	mesh.radius = radius
+	mesh.height = radius * 2.0
+	mesh.radial_segments = segments
+	mesh.rings = 4
+	instance.mesh = mesh
+	instance.material_override = material
+	instance.position = node_position
+	parent.add_child(instance)
+	return instance
+
+func _add_foot_child(node_name: String, node_position: Vector3, material: StandardMaterial3D, parent: Node3D) -> MeshInstance3D:
+	var foot := MeshInstance3D.new()
+	foot.name = node_name
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.14
+	mesh.height = 0.28
+	mesh.radial_segments = 6
+	mesh.rings = 3
+	foot.mesh = mesh
+	foot.material_override = material
+	foot.position = node_position
+	foot.scale = Vector3(0.95, 0.55, 1.30)
+	parent.add_child(foot)
+	return foot
+
+func _mesh_box_child(node_name: String, size: Vector3, node_position: Vector3, material: StandardMaterial3D, parent: Node3D) -> MeshInstance3D:
+	var instance := MeshInstance3D.new()
+	instance.name = node_name
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	instance.mesh = mesh
+	instance.material_override = material
+	instance.position = node_position
+	parent.add_child(instance)
+	return instance
 
 func _limb_pivot(node_name: String, node_position: Vector3, initial_rotation_degrees: Vector3) -> Node3D:
 	var pivot := Node3D.new()
