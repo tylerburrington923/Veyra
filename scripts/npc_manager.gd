@@ -35,7 +35,8 @@ func _process(delta: float) -> void:
 		_simulation_accumulator = 0.0
 		var network_manager = get_node_or_null("/root/NetworkManager")
 		var network_client := network_manager != null and bool(network_manager.get("session_active")) and not bool(network_manager.get("is_host"))
-		var typed_states: Array[NPCState] = []
+		var typed_states := _simulation_scratch
+		typed_states.clear()
 		for state in states.values():
 			if state is NPCState:
 				typed_states.append(state)
