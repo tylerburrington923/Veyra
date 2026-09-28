@@ -16,6 +16,13 @@ var stamina: float = 100.0
 var alive: bool = true
 var behavior_state: String = "IDLE"
 var behavior_timer: float = 0.0
+var age_seconds: float = 0.0
+var life_stage: String = "JUVENILE"
+var sex: String = "F"
+var generation: int = 1
+var parent_a_id: String = ""
+var parent_b_id: String = ""
+var reproduction_cooldown: float = 0.0
 
 func _init(p_animal_id: String = "", p_definition_id: String = "") -> void:
 	animal_id = p_animal_id
@@ -28,6 +35,8 @@ func is_valid() -> bool:
 		return false
 	if not alive and health > MIN_STAT:
 		return false
+	if age_seconds < 0.0 or generation < 1 or not (sex in ["F", "M"]):
+		return false
 	return true
 
 func sanitize() -> void:
@@ -35,11 +44,15 @@ func sanitize() -> void:
 	hunger = clampf(hunger, MIN_STAT, MAX_STAT)
 	thirst = clampf(thirst, MIN_STAT, MAX_STAT)
 	stamina = clampf(stamina, MIN_STAT, MAX_STAT)
+	age_seconds = maxf(0.0, age_seconds)
+	generation = maxi(1, generation)
+	sex = "M" if sex == "M" else "F"
+	reproduction_cooldown = maxf(0.0, reproduction_cooldown)
 	if health <= MIN_STAT:
 		alive = false
 
 func to_dict() -> Dictionary:
-	return {"animal_id": animal_id, "definition_id": definition_id, "position": position.duplicate(), "rotation": rotation.duplicate(), "target_position": target_position.duplicate(), "health": health, "hunger": hunger, "thirst": thirst, "stamina": stamina, "alive": alive, "behavior_state": behavior_state, "behavior_timer": behavior_timer}
+	return {"animal_id": animal_id, "definition_id": definition_id, "position": position.duplicate(), "rotation": rotation.duplicate(), "target_position": target_position.duplicate(), "health": health, "hunger": hunger, "thirst": thirst, "stamina": stamina, "alive": alive, "behavior_state": behavior_state, "behavior_timer": behavior_timer, "age_seconds": age_seconds, "life_stage": life_stage, "sex": sex, "generation": generation, "parent_a_id": parent_a_id, "parent_b_id": parent_b_id, "reproduction_cooldown": reproduction_cooldown}
 
 static func from_dict(data: Dictionary) -> AnimalState:
 	var state := AnimalState.new()
@@ -55,6 +68,13 @@ static func from_dict(data: Dictionary) -> AnimalState:
 	state.alive = bool(data.get("alive", true))
 	state.behavior_state = str(data.get("behavior_state", "IDLE"))
 	state.behavior_timer = float(data.get("behavior_timer", 0.0))
+	state.age_seconds = maxf(0.0, float(data.get("age_seconds", 0.0)))
+	state.life_stage = str(data.get("life_stage", "JUVENILE"))
+	state.sex = "M" if str(data.get("sex", "F")) == "M" else "F"
+	state.generation = maxi(1, int(data.get("generation", 1)))
+	state.parent_a_id = str(data.get("parent_a_id", ""))
+	state.parent_b_id = str(data.get("parent_b_id", ""))
+	state.reproduction_cooldown = maxf(0.0, float(data.get("reproduction_cooldown", 0.0)))
 	return state
 
 static func _vector_dict(value: Variant) -> Dictionary:
