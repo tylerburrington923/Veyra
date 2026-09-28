@@ -132,8 +132,14 @@ func get_material_state() -> Dictionary:
 func get_interaction_point() -> Vector3:
 	return global_position + Vector3.UP * 0.75
 
+func _record_resonance_release() -> void:
+	var progression := get_node_or_null("/root/ProgressionManager")
+	if progression and progression.has_method("record_unique_action"):
+		progression.record_unique_action("RESONANCE", "ECHO_STONE_RELEASE", get_instance_id().__str__())
+
 func _release(player: Node) -> void:
 	activated = true
+	_record_resonance_release()
 	stored_energy *= 0.22
 	structural_state = clampf(stored_energy / release_threshold, 0.0, 1.0)
 
