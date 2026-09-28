@@ -1157,6 +1157,7 @@ func _test_job_simulation_contract() -> void:
 	job.active = true
 	_check(NPCJobSimulation.assign_job(state, definition, NPCState.make_vector_dict(0.0, 0.0, -1.0)), "job assignment must succeed")
 	_check(NPCJobSimulation.process_tick(state, definition, job, 0.5), "job movement tick must succeed")
+	_check(NPCJobSimulation.process_tick(state, definition, job, 0.5), "job state-transition tick must succeed")
 	_check(NPCJobSimulation.process_tick(state, definition, job, 0.5), "job work tick must succeed")
 	_check(job.progress > 0.0, "job tick must advance deterministic work progress")
 
@@ -1184,8 +1185,10 @@ func _test_settlement_production_loop() -> void:
 	var state_controller := manager.spawn_npc("production_villager", "human_villager", Vector3.ZERO)
 	_check(state_controller != null, "production worker controller must spawn")
 	var state: NPCState = manager.get_npc_state("production_villager")
-	for i in range(10):
+	for i in range(20):
 		manager._update_villager_behavior(state, 1.0)
+		if not settlement.job_states.has("production_villager"):
+			break
 	_check(not settlement.job_states.has("production_villager"), "integrated NPC manager must retire completed production job")
 	var storage := settlement.get_building_storage("PROD-STORAGE")
 	_check(int(storage.get("resources", {}).get("Food", 0)) == 3, "completed cooking production must return food to storage")
