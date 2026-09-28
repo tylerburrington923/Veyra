@@ -20,6 +20,10 @@ height = 0.56
 radius = 0.11
 height = 0.75
 
+[sub_resource type="CapsuleMesh" id="FPSleeveMesh"]
+radius = 0.13
+height = 0.30
+
 [sub_resource type="SphereMesh" id="HandMesh"]
 radius = 0.105
 height = 0.21
@@ -236,42 +240,42 @@ near = 0.08
 [node name="ViewModel" type="Node3D" parent="Camera3D"]
 
 [node name="ChestFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
-layers = 0
+layers = 2
 position = Vector3(0, -1.08, -0.96)
 scale = Vector3(0.54, 0.48, 0.40)
 mesh = SubResource("TorsoMesh")
 material_override = SubResource("Shirt")
 
 [node name="BeltFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
-layers = 0
+layers = 2
 position = Vector3(0, -1.38, -0.88)
 scale = Vector3(0.72, 0.72, 0.72)
 mesh = SubResource("FPBeltMesh")
 material_override = SubResource("Pants")
 
 [node name="LeftLegFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
-layers = 0
+layers = 2
 position = Vector3(-0.16, -1.56, -0.60)
 scale = Vector3(0.60, 0.78, 0.60)
 mesh = SubResource("LimbMesh")
 material_override = SubResource("Pants")
 
 [node name="RightLegFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
-layers = 0
+layers = 2
 position = Vector3(0.16, -1.56, -0.60)
 scale = Vector3(0.60, 0.78, 0.60)
 mesh = SubResource("LimbMesh")
 material_override = SubResource("Pants")
 
 [node name="LeftBootFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
-layers = 0
+layers = 2
 position = Vector3(-0.16, -1.84, -0.54)
 scale = Vector3(0.72, 0.40, 0.90)
 mesh = SubResource("FootMesh")
 material_override = SubResource("Pants")
 
 [node name="RightBootFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
-layers = 0
+layers = 2
 position = Vector3(0.16, -1.84, -0.54)
 scale = Vector3(0.72, 0.40, 0.90)
 mesh = SubResource("FootMesh")
@@ -292,6 +296,22 @@ rotation_degrees = Vector3(-18, 6, 8)
 scale = Vector3(0.56, 0.64, 0.56)
 mesh = SubResource("LimbMesh")
 material_override = SubResource("Skin")
+
+[node name="LeftSleeveFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+layers = 2
+position = Vector3(-0.22, -0.58, -0.88)
+rotation_degrees = Vector3(-18, -8, -7)
+scale = Vector3(0.98, 0.98, 0.98)
+mesh = SubResource("FPSleeveMesh")
+material_override = SubResource("Shirt")
+
+[node name="RightSleeveFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+layers = 2
+position = Vector3(0.22, -0.58, -0.88)
+rotation_degrees = Vector3(-18, 6, 8)
+scale = Vector3(0.98, 0.98, 0.98)
+mesh = SubResource("FPSleeveMesh")
+material_override = SubResource("Shirt")
 
 [node name="LeftCuffFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
 layers = 2
