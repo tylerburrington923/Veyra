@@ -604,8 +604,10 @@ func _build_townhall() -> void:
 
     # Main pitched roof gives the civic building a clear silhouette instead of a stack of boxes.
     var roof_angle := deg_to_rad(22.0)
-    _mesh_box(Vector3(3.85, 0.24, 6.35), Vector3(-1.55, 3.08, 0), roof, Vector3(0, 0, roof_angle))
-    _mesh_box(Vector3(3.85, 0.24, 6.35), Vector3(1.55, 3.08, 0), roof, Vector3(0, 0, -roof_angle))
+    var roof_left := _mesh_box(Vector3(3.85, 0.24, 6.35), Vector3(-1.55, 3.08, 0), roof, Vector3(0, 0, roof_angle))
+    roof_left.name = "RoofLeft"
+    var roof_right := _mesh_box(Vector3(3.85, 0.24, 6.35), Vector3(1.55, 3.08, 0), roof, Vector3(0, 0, -roof_angle))
+    roof_right.name = "RoofRight"
     _mesh_box(Vector3(7.25, 0.12, 0.16), Vector3(0, 2.73, -3.02), roof_edge)
     _mesh_box(Vector3(7.25, 0.12, 0.16), Vector3(0, 2.73, 3.02), roof_edge)
 
@@ -641,8 +643,10 @@ func _build_townhall() -> void:
 
     # Civic banner and clock face establish the Town Hall as the settlement anchor.
     _mesh_box(Vector3(1.02, 1.22, 0.06), Vector3(0, 3.18, front_z - 0.11), banner)
-    _mesh_cylinder(0.40, 0.08, Vector3(0, 3.62, front_z - 0.13), metal, 12, Vector3(deg_to_rad(90.0), 0, 0))
-    _mesh_cylinder(0.31, 0.035, Vector3(0, 3.62, front_z - 0.18), glass, 12, Vector3(deg_to_rad(90.0), 0, 0))
+    var clock := _mesh_cylinder(0.40, 0.08, Vector3(0, 3.62, front_z - 0.13), metal, 12, Vector3(deg_to_rad(90.0), 0, 0))
+    clock.name = "Clock"
+    var clock_face := _mesh_cylinder(0.31, 0.035, Vector3(0, 3.62, front_z - 0.18), glass, 12, Vector3(deg_to_rad(90.0), 0, 0))
+    clock_face.name = "ClockFace"
 
     # Solid body collision keeps the civic structure physically coherent.
     _add_box_collision(Vector3(7.15, 2.55, 5.95), Vector3(0, 1.40, 0))
