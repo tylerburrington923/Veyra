@@ -494,6 +494,7 @@ func _test_resource_interaction_matrix() -> void:
 	var tree := resource_scene.instantiate()
 	root.add_child(tree)
 	tree.resource_type = "Wood"
+	tree.node_kind = "tree"
 	tree.tool_required = "I01_STONE_AXE"
 	tree.amount = 3
 	tree.remaining = 3
@@ -533,10 +534,11 @@ func _test_resource_interaction_matrix() -> void:
 func _test_world_resource_tool_contract() -> void:
 	var world_generator = load("res://scripts/world_generator.gd").new()
 
-	_check(world_generator.get_required_tool_for_resource("Wood") == VeyraItemCatalog.HANDS_ID, "world-generated ground wood must require hands")
-	_check(world_generator.get_required_tool_for_resource("Stone") == VeyraItemCatalog.HANDS_ID, "world-generated field stone must require hands")
-	_check(world_generator.get_required_tool_for_resource("Metal") == "I02_STONE_PICK", "world-generated metal must require the stone pick")
-	_check(world_generator.get_required_tool_for_resource("Vitreous Lux") == "I02_STONE_PICK", "world-generated lux must require the stone pick")
+	_check(world_generator.get_required_tool_for_resource("Wood", "stick") == VeyraItemCatalog.HANDS_ID, "world-generated sticks must require hands")
+	_check(world_generator.get_required_tool_for_resource("Stone", "small_stone") == VeyraItemCatalog.HANDS_ID, "world-generated small stones must require hands")
+	_check(world_generator.get_required_tool_for_resource("Stone", "large_stone") == "I02_STONE_PICK", "world-generated large stone must require the stone pick")
+	_check(world_generator.get_required_tool_for_resource("Metal", "metal") == "I02_STONE_PICK", "world-generated metal must require the stone pick")
+	_check(world_generator.get_required_tool_for_resource("Vitreous Lux", "lux") == "I02_STONE_PICK", "world-generated lux must require the stone pick")
 
 	world_generator.free()
 
@@ -552,13 +554,15 @@ func _test_hand_gathered_wood_contract() -> void:
 	var wood := resource_scene.instantiate()
 	root.add_child(wood)
 	wood.resource_type = "Wood"
+	wood.node_kind = "stick"
 	wood.tool_required = VeyraItemCatalog.HANDS_ID
 	wood.amount = 3
 	wood.remaining = 3
 
 	_check(player.set_tool(VeyraItemCatalog.HANDS_ID), "hands selection should succeed for wood test")
-	_check(wood.can_interact(player), "ground wood should be gatherable by hands")
-	_check(wood.get_interaction_point().y < wood.global_position.y + 0.2, "ground wood interaction point must stay near the sticks")
+	_check(wood.can_interact(player), "ground sticks should be gatherable by hands")
+	_check(wood.get_interaction_text().begins_with("Gather Sticks"), "hand resource should identify sticks")
+	_check(wood.get_interaction_point().y < wood.global_position.y + 0.2, "ground sticks interaction point must stay near the sticks")
 
 	_check(player.set_tool("I01_STONE_AXE"), "axe selection should succeed for wood restriction test")
 	_check(not wood.can_interact(player), "hand-gathered wood must reject the axe")
@@ -690,7 +694,8 @@ func _test_resource_collision_contract() -> void:
 	var test_player_scene := load("res://scenes/player.tscn") as PackedScene
 	var test_player := test_player_scene.instantiate()
 	root.add_child(test_player)
-	_check(resource.can_interact(test_player), "resource should be interactable with hands")
+	_check(not resource.can_interact(test_player), "large stone resource must require a pickaxe")
+	_check(resource.get_interaction_text().begins_with("Mine Large Stone"), "large stone interaction text must identify mining")
 	test_player.queue_free()
 	resource._deplete()
 	_check(resource.collision_layer == 0, "depleted resource must disable collision")
