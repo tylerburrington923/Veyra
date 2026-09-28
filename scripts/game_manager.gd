@@ -13,6 +13,9 @@ func _ready() -> void:
         var saved_world: Dictionary = loaded_save.get("world", {})
         if not saved_world.is_empty():
             world_seed = int(saved_world.get("seed", world_seed))
+    var progression := get_node_or_null("/root/ProgressionManager")
+    if progression and progression.has_method("load_save_state"):
+        progression.load_save_state(loaded_save.get("progression", {}))
 
 func get_loaded_save() -> Dictionary:
     return loaded_save.duplicate(true)
@@ -34,7 +37,11 @@ func save_current_game(world: Node) -> bool:
         settlement_state = SettlementManager.get_settlement_state()
 
     var player_state: Dictionary = player.get_save_state() if player.has_method("get_save_state") else {}
-    var saved := SaveManager.save_world(world, inventory.get_snapshot(), settlement_state, player_state)
+    var progression_state := {}
+    var progression := get_node_or_null("/root/ProgressionManager")
+    if progression and progression.has_method("get_save_state"):
+        progression_state = progression.get_save_state()
+    var saved := SaveManager.save_world(world, inventory.get_snapshot(), settlement_state, player_state, progression_state)
     if saved:
         loaded_save = SaveManager.load_world()
     return saved
