@@ -54,6 +54,10 @@ func _apply_loaded_state(save_data: Dictionary) -> void:
 		var resource_state = saved_world.get("resources", {})
 		if generator and resource_state is Dictionary and generator.has_method("set_saved_resource_state"):
 			generator.set_saved_resource_state(resource_state)
+		var wildlife_manager := get_node_or_null("AnimalManager")
+		var wildlife_state = saved_world.get("wildlife", [])
+		if wildlife_manager and wildlife_state is Array and wildlife_manager.has_method("set_saved_state"):
+			wildlife_manager.set_saved_state(wildlife_state)
 
 	var settlement_state: Dictionary = save_data.get("settlement", {})
 	if SettlementManager and not settlement_state.is_empty():
@@ -102,8 +106,15 @@ func get_world_state() -> Dictionary:
 		"world_time": world_time,
 		"lunar": get_lunar_state(),
 		"resources": _get_resource_state(),
-		"version": 5
+		"wildlife": _get_wildlife_state(),
+		"version": 6
 	}
+
+func _get_wildlife_state() -> Array:
+	var manager := get_node_or_null("AnimalManager")
+	if manager and manager.has_method("get_save_state"):
+		return manager.get_save_state()
+	return []
 
 func _get_resource_state() -> Dictionary:
 	var generator := get_node_or_null("WorldGenerator")
