@@ -234,6 +234,7 @@ func _update_equipped_tool_visual() -> void:
 		return
 	var axe_head := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeHead") as MeshInstance3D
 	var axe_blade := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeBlade") as MeshInstance3D
+	var axe_collar := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeCollar") as MeshInstance3D
 	var pick_head := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickHead") as MeshInstance3D
 	var pick_spike_left := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickSpikeLeft") as MeshInstance3D
 	var pick_spike_right := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickSpikeRight") as MeshInstance3D
@@ -243,6 +244,8 @@ func _update_equipped_tool_visual() -> void:
 		axe_head.visible = axe_equipped
 	if axe_blade:
 		axe_blade.visible = axe_equipped
+	if axe_collar:
+		axe_collar.visible = axe_equipped
 	if pick_head:
 		pick_head.visible = pick_equipped
 	if pick_spike_left:
