@@ -548,7 +548,11 @@ func _center_lobby_panel(panel: Control) -> void:
 func _copy_host_address() -> void:
 	var addresses := _get_lan_addresses()
 	var prefix := "HOTSPOT/LAN IP: "
-	var value := addresses.trim_prefix(prefix).split(":")[0]
+	var payload := addresses.trim_prefix(prefix)
+	if payload.is_empty() or payload == "unavailable":
+		_set_status("NO LAN IP FOUND")
+		return
+	var value := payload.split(",")[0].strip_edges().split(":")[0].strip_edges()
 	if value.is_empty() or value == "unavailable":
 		_set_status("NO LAN IP FOUND")
 		return
