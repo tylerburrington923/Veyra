@@ -288,6 +288,8 @@ func request_interaction(resource_path: NodePath) -> void:
 		return
 	if player.global_position.distance_to(target_3d.global_position) > 5.5:
 		return
+	if not _server_has_line_of_sight(player, target_3d):
+		return
 	if _server_interaction_locks.get(peer_id, false):
 		return
 	_server_interaction_locks[peer_id] = true
@@ -298,6 +300,33 @@ func request_interaction(resource_path: NodePath) -> void:
 		target.interact(player)
 		broadcast_interaction_feedback.rpc(peer_id, str(target.name))
 	_server_interaction_locks.erase(peer_id)
+
+func _server_has_line_of_sight(player: Node3D, target: Node3D) -> bool:
+	var camera := player.get_node_or_null("Camera3D") as Camera3D
+	var origin := player.global_position + Vector3.UP * 1.25
+	if camera:
+		origin = camera.global_position
+	var target_point := target.global_position + Vector3.UP * 0.6
+	if target.has_method("get_interaction_point"):
+		target_point = target.get_interaction_point()
+	var query := PhysicsRayQueryParameters3D.create(origin, target_point, 1 | 2 | 4)
+	query.collide_with_bodies = true
+	query.collide_with_areas = true
+	query.exclude = [player.get_rid()]
+	var hit := get_tree().current_scene.get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return true
+	var collider := hit.get("collider") as Node
+	if collider == target:
+		return true
+	var current := collider
+	var depth := 0
+	while current and depth < 8:
+		if current == target:
+			return true
+		current = current.get_parent()
+		depth += 1
+	return false
 
 @rpc("any_peer", "reliable")
 func request_build(building_id: String, position: Vector3) -> void:
