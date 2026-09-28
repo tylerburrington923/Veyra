@@ -1282,7 +1282,7 @@ func _test_building_progression_contract() -> void:
 
 
 func _test_discovery_progression_contract() -> void:
-	var progression := get_node_or_null("/root/ProgressionManager") as VeyraProgressionManager
+	var progression := root.get_node_or_null("/root/ProgressionManager") as VeyraProgressionManager
 	_check(progression != null, "discovery progression test requires the ProgressionManager autoload")
 	if not progression:
 		return
