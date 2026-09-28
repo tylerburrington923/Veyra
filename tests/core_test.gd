@@ -217,6 +217,7 @@ func _test_building_placement_contract() -> void:
 	root.add_child(manager)
 	_check(manager.MAX_BUILD_DISTANCE > manager.MIN_BUILD_DISTANCE, "building placement range must be coherent")
 	_check(manager.GRID_SIZE > 0.0, "building placement grid must be positive")
+	_check(manager.has_method("server_build"), "building manager must expose request-local authoritative build validation")
 	_check(manager.snap_position(Vector3(1.49, 3.2, -2.51)) == Vector3(1.0, 3.2, -3.0), "building placement must snap only X/Z while preserving terrain Y")
 	manager.queue_free()
 
@@ -317,6 +318,8 @@ func _test_active_npc_contract() -> void:
 			_check(visual.get_node_or_null("Neck") != null, "villager visual must have a readable neck")
 			_check(visual.get_node_or_null("Buckle") != null, "villager visual must have readable clothing detail")
 			_check(visual.get_node_or_null("LeftEye") != null and visual.get_node_or_null("RightEye") != null, "villager visual must have readable eyes")
+			_check(visual.get_node_or_null("LeftArmPivot") != null and visual.get_node_or_null("RightArmPivot") != null, "villager arms must animate from shoulder pivots")
+			_check(visual.get_node_or_null("LeftLegPivot") != null and visual.get_node_or_null("RightLegPivot") != null, "villager legs must animate from hip pivots")
 	manager.despawn_npc("test_active_npc")
 	manager.queue_free()
 
