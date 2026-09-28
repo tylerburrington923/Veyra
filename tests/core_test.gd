@@ -426,7 +426,12 @@ func _test_first_person_presentation_contract() -> void:
 	var hotbar := player.get_node_or_null("HUDInventory/ToolHotbar") as Control
 	_check(tool_holder != null, "tool holder must exist for first-person presentation")
 	_check(chest != null and left_leg != null and right_leg != null, "first-person body viewmodel must include torso and legs")
-	_check(chest != null and chest.layers == 0, "first-person body torso must stay out of the camera view layer")
+	var left_sleeve := player.get_node_or_null("Camera3D/ViewModel/LeftSleeveFP") as MeshInstance3D
+	var right_sleeve := player.get_node_or_null("Camera3D/ViewModel/RightSleeveFP") as MeshInstance3D
+	_check(left_sleeve != null and right_sleeve != null, "first-person body viewmodel must include sleeves")
+	_check(left_sleeve != null and (left_sleeve.layers & 2) != 0, "left first-person sleeve must render on the camera view layer")
+	_check(right_sleeve != null and (right_sleeve.layers & 2) != 0, "right first-person sleeve must render on the camera view layer")
+	_check(chest != null and (chest.layers & 2) != 0, "first-person body torso must render on the camera view layer")
 	_check(hotbar != null and is_equal_approx(hotbar.anchor_left, 0.5) and is_equal_approx(hotbar.anchor_right, 0.5), "tool hotbar must be centered")
 	_check(player.has_method("play_tool_use"), "player must expose tool use presentation")
 	var fp_left_arm := player.get_node_or_null("Camera3D/ViewModel/LeftArmFP") as MeshInstance3D
