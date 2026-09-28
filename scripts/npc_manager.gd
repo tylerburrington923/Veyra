@@ -14,6 +14,7 @@ var definitions: Dictionary = {}
 var states: Dictionary = {}
 var controllers: Dictionary = {}
 var _simulation_accumulator := 0.0
+var _simulation_scratch: Array[NPCState] = []
 const SIMULATION_INTERVAL := 0.10
 
 func _ready() -> void:
