@@ -311,8 +311,7 @@ func _ready() -> void:
 	if GameManager and GameManager.get_loaded_save().is_empty():
 		var starter_inventory := get_inventory()
 		if starter_inventory:
-			starter_inventory.add_resource("Wood", 100)
-			starter_inventory.add_resource("Stone", 100)
+			# New saves begin empty. Early-game materials must be gathered, not granted.
 	up_direction = Vector3.UP
 	floor_snap_length = ground_snap_distance
 	floor_max_angle = deg_to_rad(max_floor_angle_degrees)
