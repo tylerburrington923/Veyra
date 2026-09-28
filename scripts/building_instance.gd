@@ -304,6 +304,8 @@ func _open_building_ui(player: Node, mode: String) -> void:
         player.add_child(ui)
     if mode == "campfire" and ui.has_method("open_campfire"):
         ui.open_campfire(self, player)
+    elif mode == "storage" and ui.has_method("open_storage"):
+        ui.open_storage(self, player)
     elif mode == "townhall" and ui.has_method("open_townhall"):
         ui.open_townhall(self, player)
     elif mode == "blacksmith" and ui.has_method("open_blacksmith"):
