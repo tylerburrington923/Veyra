@@ -42,6 +42,9 @@ func _process(delta: float) -> void:
 				typed_states.append(state)
 		if not typed_states.is_empty() and not network_client:
 			NPCSimulation.process_batch(typed_states, definitions, sim_delta)
+			var settlement := _settlement_manager()
+			if settlement and settlement.has_method("process_villager_needs"):
+				settlement.process_villager_needs(typed_states)
 			for state in typed_states:
 				_update_villager_behavior(state, sim_delta)
 	for npc_id in controllers:
@@ -182,6 +185,24 @@ func _ground_position(position: Vector3) -> Vector3:
 func _update_villager_behavior(state: NPCState, delta: float) -> void:
 	if not state.alive:
 		return
+
+	var settlement := _settlement_manager()
+	if settlement and settlement.villagers.has(state.npc_id):
+		var job: JobState = settlement.prepare_villager_job(state.npc_id)
+		if job:
+			var definition: JobDefinition = settlement.get_job_definition(job.definition_id)
+			var target := settlement.get_job_target_position(job.definition_id, job.target_building_id)
+			if definition:
+				if state.current_job != definition.id or state.current_task == "IDLE":
+					NPCJobSimulation.assign_job(state, definition, target)
+				NPCJobSimulation.process_tick(state, definition, job, delta)
+				state.position = _vector_dict(_ground_position(_state_position(state.position)))
+				if job.completed:
+					settlement.complete_villager_job(state.npc_id, state)
+				else:
+					settlement.sync_villager_job(state.npc_id, state)
+				return
+
 	state.behavior_timer += delta
 	var current := _state_position(state.position)
 	var work_target := _get_npc_work_target(state)
@@ -211,7 +232,6 @@ func _update_villager_behavior(state: NPCState, delta: float) -> void:
 			return
 		if state.behavior_timer >= 3.0:
 			state.behavior_timer = 0.0
-			var settlement := _settlement_manager()
 			if settlement:
 				settlement.add_stock("Wood", 1)
 			state.current_task = "IDLE"
@@ -225,6 +245,12 @@ func _update_villager_behavior(state: NPCState, delta: float) -> void:
 			state.behavior_timer = 0.0
 			return
 		_move_state_toward(state, target, delta)
+
+func get_job_target_position(job_id: String, building_id: String) -> Dictionary:
+	var settlement := _settlement_manager()
+	if settlement and settlement.has_method("get_job_target_position"):
+		return settlement.get_job_target_position(job_id, building_id)
+	return NPCState.make_vector_dict()
 
 func _get_npc_work_target(state: NPCState) -> Vector3:
 	var settlement := _settlement_manager()
