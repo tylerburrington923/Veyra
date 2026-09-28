@@ -272,7 +272,19 @@ func prepare_villager_job(villager_id: String) -> JobState:
         return null
     var existing: JobState = job_states.get(villager_id, null)
     if existing != null and existing.active and not existing.completed:
-        return existing
+        var active_productions := production_manager.get_active_productions()
+        var valid_production := false
+        for production_value in active_productions.values():
+            var production: ProductionState = production_value
+            if production != null and production.active and production.assigned_worker_id == villager_id and production.definition_id == existing.definition_id:
+                valid_production = true
+                break
+        if valid_production:
+            return existing
+        job_states.erase(villager_id)
+        if villagers.has(villager_id):
+            villagers[villager_id]["job"] = "Unassigned"
+            villagers[villager_id]["active"] = false
 
     var choice := _choose_job_for_villager()
     if choice.is_empty():
@@ -457,4 +469,16 @@ func load_settlement_state(state: Dictionary) -> void:
                     job_states[str(villager_id)] = job
 
     production_manager.load_states(state.get("productions", {}) if state.get("productions", {}) is Dictionary else {})
+    var storage := _get_primary_storage_resources()
+    for production_id in production_manager.get_active_productions().keys():
+        var production: ProductionState = production_manager.get_active_productions()[production_id]
+        var has_job := false
+        for job_value in job_states.values():
+            var job: JobState = job_value
+            if job != null and job.active and job.assigned_worker_id == production.assigned_worker_id:
+                has_job = true
+                break
+        if production == null or production.assigned_worker_id.is_empty() or not villagers.has(production.assigned_worker_id) or not has_job:
+            production_manager.cancel_production(str(production_id), storage, true)
+    _set_primary_storage_resources(storage)
     settlement_changed.emit()
