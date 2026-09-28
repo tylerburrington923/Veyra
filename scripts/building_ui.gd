@@ -48,6 +48,10 @@ func open_blacksmith(building: Node, player: Node) -> void:
 	_add_action("REFINE 2 METAL → 1 REFINED", _refine_action)
 	_add_action("FORGE STONE AXE", _forge_axe)
 	_add_action("FORGE STONE PICK", _forge_pick)
+	_add_action("FORGE METAL AXE", _forge_metal_axe)
+	_add_action("FORGE METAL PICK", _forge_metal_pick)
+	_add_action("FORGE ECHO AXE", _forge_echo_axe)
+	_add_action("FORGE ECHO PICK", _forge_echo_pick)
 
 func close_ui() -> void:
 	visible = false
@@ -229,6 +233,26 @@ func _refine_action() -> void:
 func _forge_axe() -> void:
 	if _building and _building.has_method("blacksmith_forge"):
 		_building.blacksmith_forge(_player, "I01_STONE_AXE")
+		_refresh_blacksmith()
+
+func _forge_metal_axe() -> void:
+	if _building and _building.has_method("blacksmith_forge"):
+		_building.blacksmith_forge(_player, "I04_METAL_AXE")
+		_refresh_blacksmith()
+
+func _forge_metal_pick() -> void:
+	if _building and _building.has_method("blacksmith_forge"):
+		_building.blacksmith_forge(_player, "I05_METAL_PICK")
+		_refresh_blacksmith()
+
+func _forge_echo_axe() -> void:
+	if _building and _building.has_method("blacksmith_forge"):
+		_building.blacksmith_forge(_player, "I06_ECHO_AXE")
+		_refresh_blacksmith()
+
+func _forge_echo_pick() -> void:
+	if _building and _building.has_method("blacksmith_forge"):
+		_building.blacksmith_forge(_player, "I07_ECHO_PICK")
 		_refresh_blacksmith()
 
 func _forge_pick() -> void:
