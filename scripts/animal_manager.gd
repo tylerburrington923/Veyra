@@ -8,6 +8,8 @@ const ANIMAL_ACTOR_SCRIPT = preload("res://scripts/animal_actor.gd")
 
 @export var beta_animal_count: int = 6
 @export var spawn_radius: float = 14.0
+@export var population_cap: int = 18
+@export var reproduction_radius: float = 7.0
 
 var definitions: Dictionary = {}
 var states: Dictionary = {}
@@ -19,6 +21,9 @@ var _mesh_cache: Dictionary = {}
 var _material_cache: Dictionary = {}
 var _visual_clock: float = 0.0
 var _network_snapshot_initialized := false
+var _saved_state_loaded := false
+var _saved_state: Array = []
+var _next_generation_index: int = 1
 
 func _ready() -> void:
 	add_to_group("animal_manager")
@@ -44,10 +49,17 @@ func _process(delta: float) -> void:
 		var state: AnimalState = states[animal_id]
 		var definition: AnimalDefinition = definitions.get(state.definition_id)
 		if state and definition and state.alive:
+			state.age_seconds += sim_delta
+			state.reproduction_cooldown = maxf(0.0, state.reproduction_cooldown - sim_delta)
+			_update_life_stage(state, definition)
 			AnimalSimulation.process_tick(state, definition, sim_delta)
 			_update_behavior(state, definition, sim_delta)
+			if state.age_seconds >= definition.max_age_seconds:
+				state.health = 0.0
+				state.alive = false
 			if not state.alive:
 				_on_animal_death(state)
+	_process_reproduction()
 	_update_dead_animals(delta)
 	_update_visuals(delta)
 
@@ -72,6 +84,9 @@ func _register_definitions() -> void:
 	)
 
 func _spawn_beta_wildlife() -> void:
+	if _saved_state_loaded:
+		_restore_saved_state()
+		return
 	var ids: Array[String] = ["lumen_grazer", "mireback", "veilwolf", "lumen_grazer", "stonebear", "veilwolf"]
 	var count := mini(beta_animal_count, ids.size())
 	for index in range(count):
@@ -87,6 +102,10 @@ func spawn_animal(animal_id: String, definition_id: String, position: Vector3) -
 	var definition: AnimalDefinition = definitions[definition_id]
 	var state := AnimalState.new(animal_id, definition_id)
 	state.health = definition.max_health
+	state.sex = "M" if abs(animal_id.hash()) % 2 == 0 else "F"
+	state.generation = 1
+	state.age_seconds = 0.0
+	state.life_stage = "JUVENILE"
 	state.position = _vector_dict(position)
 	state.target_position = _vector_dict(position)
 	states[animal_id] = state
@@ -110,6 +129,96 @@ func spawn_animal(animal_id: String, definition_id: String, position: Vector3) -
 	visual.global_position = position
 	visuals[animal_id] = visual
 	return visual
+
+func set_saved_state(snapshot: Array) -> void:
+	_saved_state_loaded = true
+	_saved_state.clear()
+	for value in snapshot:
+		if value is Dictionary:
+			_saved_state.append(value.duplicate(true))
+
+func get_save_state() -> Array:
+	var snapshot: Array = []
+	for state_value in states.values():
+		var state: AnimalState = state_value as AnimalState
+		if state and state.alive and state.is_valid():
+			snapshot.append(state.to_dict())
+	return snapshot
+
+func _restore_saved_state() -> void:
+	states.clear()
+	for value in _saved_state:
+		var data: Dictionary = value if value is Dictionary else {}
+		var animal_id := str(data.get("animal_id", ""))
+		var definition_id := str(data.get("definition_id", ""))
+		if animal_id.is_empty() or not definitions.has(definition_id):
+			continue
+		var position := _get_grounded_position(_state_position(data.get("position", {})))
+		var visual := spawn_animal(animal_id, definition_id, position)
+		if visual == null:
+			continue
+		var restored := AnimalState.from_dict(data)
+		restored.position = _vector_dict(position)
+		restored.target_position = _vector_dict(_state_position(restored.target_position))
+		restored.sanitize()
+		if restored.is_valid() and restored.alive:
+			states[animal_id] = restored
+
+func _update_life_stage(state: AnimalState, definition: AnimalDefinition) -> void:
+	if state.age_seconds < definition.maturity_age_seconds:
+		state.life_stage = "JUVENILE"
+	elif state.age_seconds < definition.max_age_seconds * 0.75:
+		state.life_stage = "ADULT"
+	else:
+		state.life_stage = "ELDER"
+
+func _process_reproduction() -> void:
+	if states.size() >= maxi(1, population_cap):
+		return
+	var network := get_node_or_null("/root/NetworkManager")
+	if network and bool(network.get("session_active")) and not bool(network.get("is_host")):
+		return
+	var females: Array[AnimalState] = []
+	for value in states.values():
+		var state: AnimalState = value as AnimalState
+		var definition: AnimalDefinition = definitions.get(state.definition_id)
+		if state and definition and state.alive and state.sex == "F" and state.life_stage == "ADULT" and state.reproduction_cooldown <= 0.0:
+			females.append(state)
+	for female in females:
+		if states.size() >= maxi(1, population_cap):
+			break
+		var definition: AnimalDefinition = definitions.get(female.definition_id)
+		if not definition:
+			continue
+		var female_position := _state_position(female.position)
+		var mate: AnimalState = null
+		for value in states.values():
+			var candidate: AnimalState = value as AnimalState
+			if candidate == null or candidate == female or not candidate.alive or candidate.definition_id != female.definition_id:
+				continue
+			if candidate.sex != "M" or candidate.life_stage != "ADULT" or candidate.reproduction_cooldown > 0.0:
+				continue
+			if female_position.distance_to(_state_position(candidate.position)) <= reproduction_radius:
+				mate = candidate
+				break
+		if mate == null:
+			continue
+		var midpoint := (female_position + _state_position(mate.position)) * 0.5
+		var child_id := "wild_gen_%05d" % _next_generation_index
+		_next_generation_index += 1
+		var child_visual := spawn_animal(child_id, female.definition_id, _get_grounded_position(midpoint))
+		if child_visual == null:
+			continue
+		var child: AnimalState = states.get(child_id)
+		if child:
+			child.sex = "M" if abs(child_id.hash()) % 2 == 0 else "F"
+			child.generation = maxi(female.generation, mate.generation) + 1
+			child.parent_a_id = female.animal_id
+			child.parent_b_id = mate.animal_id
+			child.life_stage = "JUVENILE"
+			child.reproduction_cooldown = definition.reproduction_cooldown_seconds
+		female.reproduction_cooldown = definition.reproduction_cooldown_seconds
+		mate.reproduction_cooldown = definition.reproduction_cooldown_seconds
 
 func damage_animal(animal_id: String, amount: float, player: Node = null) -> String:
 	var state := states.get(animal_id) as AnimalState
