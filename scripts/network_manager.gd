@@ -18,6 +18,11 @@ var players: Dictionary = {}
 var _server_interaction_locks: Dictionary = {}
 var _snapshot_accumulator: float = 0.0
 var _state_sync_accumulator: float = 0.0
+var _last_client_inventory: Dictionary = {}
+var _last_client_resonance: Dictionary = {}
+var _last_client_resources: Dictionary = {}
+var _last_client_settlement: Dictionary = {}
+var _last_client_progression: Dictionary = {}
 
 var lobby_layer: CanvasLayer
 var status_label: Label
@@ -96,6 +101,11 @@ func leave_game() -> void:
 	session_active = false
 	is_host = false
 	peer_inputs.clear()
+	_last_client_inventory.clear()
+	_last_client_resonance.clear()
+	_last_client_resources.clear()
+	_last_client_settlement.clear()
+	_last_client_progression.clear()
 	_despawn_all_network_players()
 	if lobby_layer:
 		lobby_layer.visible = false
@@ -677,26 +687,32 @@ func receive_game_state(inventories: Dictionary, resonance_states: Dictionary, r
 	if is_host:
 		return
 	var local_player := get_tree().current_scene.get_node_or_null("Player")
-	if local_player and local_player.has_method("get_inventory"):
-		var snapshot = inventories.get(local_peer_id, {})
-		if snapshot is Dictionary:
-			local_player.get_inventory().load_snapshot(snapshot)
+	var snapshot = inventories.get(local_peer_id, {})
+	if local_player and local_player.has_method("get_inventory") and snapshot is Dictionary and snapshot != _last_client_inventory:
+		local_player.get_inventory().load_snapshot(snapshot)
+		_last_client_inventory = snapshot.duplicate(true)
 	var resonance_snapshot = resonance_states.get(local_peer_id, {})
-	if local_player and local_player.has_method("set_resonance_state") and resonance_snapshot is Dictionary:
+	if local_player and local_player.has_method("set_resonance_state") and resonance_snapshot is Dictionary and resonance_snapshot != _last_client_resonance:
 		local_player.set_resonance_state(
 			float(resonance_snapshot.get("charge", 0.0)),
 			bool(resonance_snapshot.get("discovered", false))
 		)
+		_last_client_resonance = resonance_snapshot.duplicate(true)
 	var world := get_tree().current_scene
 	var generator := world.get_node_or_null("WorldGenerator") if world else null
-	if generator and generator.has_method("apply_resource_state"):
+	if generator and generator.has_method("apply_resource_state") and resources != _last_client_resources:
 		generator.apply_resource_state(resources)
+		_last_client_resources = resources.duplicate(true)
 	var settlement := get_node_or_null("/root/SettlementManager")
-	if settlement and settlement.has_method("load_settlement_state"):
+	var settlement_changed := settlement_state != _last_client_settlement
+	if settlement and settlement.has_method("load_settlement_state") and settlement_changed:
 		settlement.load_settlement_state(settlement_state)
+		_last_client_settlement = settlement_state.duplicate(true)
 	var progression := get_node_or_null("/root/ProgressionManager")
-	if progression and progression.has_method("load_save_state") and progression_state is Dictionary:
+	if progression and progression.has_method("load_save_state") and progression_state is Dictionary and progression_state != _last_client_progression:
 		progression.load_save_state(progression_state)
-	var building_manager := get_node_or_null("/root/BuildingManager")
-	if building_manager and building_manager.has_method("restore_from_settlement"):
-		building_manager.restore_from_settlement()
+		_last_client_progression = progression_state.duplicate(true)
+	if settlement_changed:
+		var building_manager := get_node_or_null("/root/BuildingManager")
+		if building_manager and building_manager.has_method("restore_from_settlement"):
+			building_manager.restore_from_settlement()
