@@ -247,25 +247,23 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 
 	if target_label:
 		target_label.visible = false
+		var has_target := handler != ""
 		if target_panel:
-			target_panel.visible = true
-		var detail_text := "CENTER YOUR VIEW"
-		if handler != "":
-			var distance_text := "--"
-			if player:
-				distance_text = "%.1f m" % player.global_position.distance_to(collision_point)
-			detail_text = target_name if target_name != "" else "UNKNOWN"
-			if not eligible and last_requirement != "":
-				detail_text += "  •  REQUIRES " + last_requirement.to_upper()
-			detail_text += "  •  " + distance_text
-		# One vertically composed label is more reliable on narrow Android layouts than
-		# two independently-sized labels competing for the same PanelContainer space.
+			target_panel.visible = has_target
 		if target_action:
-			target_action.text = (action_label.to_upper() if handler != "" else "LOOK TO INTERACT") + "\n" + detail_text
+			target_action.text = action_label.to_upper() if eligible else "LOCKED"
 			target_action.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			target_action.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		if target_detail:
-			target_detail.visible = false
+			target_detail.visible = has_target
+			var detail_text := target_name if target_name != "" else "UNKNOWN"
+			if not eligible and last_requirement != "":
+				detail_text = "REQUIRES " + last_requirement.to_upper()
+			elif player:
+				detail_text += "  •  %.1f m" % player.global_position.distance_to(collision_point)
+			target_detail.text = detail_text
+			target_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			target_detail.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 func _find_handler_from_name(handler_name: String) -> Node:
 	if handler_name == "":
@@ -362,15 +360,17 @@ func _interaction_hud_style() -> void:
 	panel_style.content_margin_left = 12.0
 	panel_style.content_margin_right = 12.0
 	target_panel.add_theme_stylebox_override("panel", panel_style)
-	target_panel.custom_minimum_size = Vector2(300.0, 68.0)
-	target_panel.add_theme_constant_override("separation", 2)
+	target_panel.custom_minimum_size = Vector2(228.0, 46.0)
+	target_panel.add_theme_constant_override("separation", 0)
 	if target_action:
 		target_action.add_theme_font_size_override("font_size", 12)
+		target_action.custom_minimum_size.y = 18.0
 		target_action.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		target_action.add_theme_color_override("font_color", Color(0.42, 0.88, 0.90, 1.0))
-		target_action.add_theme_constant_override("outline_size", 4)
-		target_action.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.85))
+		target_action.add_theme_color_override("font_color", Color(0.48, 0.91, 0.92, 1.0))
+		target_action.add_theme_constant_override("outline_size", 2)
+		target_action.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.72))
 	if target_detail:
 		target_detail.add_theme_font_size_override("font_size", 10)
+		target_detail.custom_minimum_size.y = 16.0
 		target_detail.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		target_detail.add_theme_color_override("font_color", Color(0.78, 0.84, 0.86, 1.0))
+		target_detail.add_theme_color_override("font_color", Color(0.74, 0.82, 0.84, 1.0))
