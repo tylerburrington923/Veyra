@@ -53,6 +53,7 @@ func _run_tests() -> void:
 	_test_blacksmith_contract()
 	_test_building_catalog_contract()
 	_test_simulation_cadence_contract()
+	_test_performance_cache_contract()
 	_test_alpha_presentation_contract()
 	if failures.is_empty():
 		print("VEYRA CORE TESTS: PASS (45 suites)")
@@ -1139,6 +1140,35 @@ func _test_alpha_presentation_contract() -> void:
 	manager.despawn_npc("rotation_contract")
 	manager.queue_free()
 
+
+func _test_performance_cache_contract() -> void:
+	var world_script := load("res://scripts/world_generator.gd")
+	_check(world_script != null, "world generator must remain loadable for terrain cache")
+	var world = world_script.new()
+	root.add_child(world)
+	world.noise.seed = world.seed_value
+	world.noise.frequency = 0.018
+	world.detail_noise.seed = world.seed_value + 41
+	world.detail_noise.frequency = 0.055
+	world._height_cache.resize((world.grid_size + 1) * (world.grid_size + 1))
+	for z in range(world.grid_size + 1):
+		for x in range(world.grid_size + 1):
+			world._height_cache[z * (world.grid_size + 1) + x] = world.get_height_at_world((x - world.grid_size * 0.5) * world.cell_size, (z - world.grid_size * 0.5) * world.cell_size)
+	world._height_cache_ready = true
+	var exact := world.get_height_at_world(3.25, -7.75)
+	var fast := world.get_height_at_world_fast(3.25, -7.75)
+	_check(absf(exact - fast) < 0.35, "terrain fast height cache must remain close to authoritative terrain")
+	world.queue_free()
+
+	var npc_script := load("res://scripts/npc_manager.gd")
+	var npc_manager: NPCManager = npc_script.new()
+	root.add_child(npc_manager)
+	_check(npc_manager.get("_simulation_scratch") != null, "NPC manager must own reusable simulation scratch storage")
+	var scratch_before = npc_manager.get("_simulation_scratch")
+	npc_manager._simulation_scratch.append(NPCState.new("perf-test", "human_villager"))
+	npc_manager._simulation_scratch.clear()
+	_check(scratch_before == npc_manager.get("_simulation_scratch"), "NPC simulation scratch buffer must be reused")
+	npc_manager.queue_free()
 
 func _test_simulation_cadence_contract() -> void:
 	var npc_manager := load("res://scripts/npc_manager.gd")
