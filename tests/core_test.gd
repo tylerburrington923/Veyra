@@ -54,6 +54,7 @@ func _run_tests() -> void:
 	_test_active_npc_contract()
 	_test_npc_work_contract()
 	_test_blacksmith_contract()
+	_test_advanced_tool_and_hide_contract()
 	_test_building_catalog_contract()
 	_test_simulation_cadence_contract()
 	_test_job_simulation_contract()
@@ -62,7 +63,7 @@ func _run_tests() -> void:
 	_test_performance_cache_contract()
 	_test_alpha_presentation_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (52 suites)")
+		print("VEYRA CORE TESTS: PASS (53 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -1183,6 +1184,25 @@ func _test_blacksmith_contract() -> void:
 	_check(inventory.has_item("I01_STONE_AXE"), "forged axe must enter inventory")
 	player.queue_free()
 	instance.queue_free()
+
+func _test_advanced_tool_and_hide_contract() -> void:
+	_check(VeyraItemCatalog.is_valid("I04_METAL_AXE"), "Metal Axe must be a valid item")
+	_check(VeyraItemCatalog.is_valid("I07_ECHO_PICK"), "Echo Pick must be a valid item")
+	_check(VeyraItemCatalog.gathering_bonus("I04_METAL_AXE", "Wood") == 2, "Metal Axe must improve gathering over stone tools")
+	_check(VeyraItemCatalog.gathering_bonus("I07_ECHO_PICK", "Echo-Stone") == 3, "Echo Pick must provide the highest current gathering bonus")
+	_check(VeyraItemCatalog.durability_cost("I07_ECHO_PICK", "Echo-Stone") < 1.0, "Echo tools must be more durable")
+	_check(VeyraCraftingCatalog.exists("I06_ECHO_AXE"), "Echo Axe recipe must exist")
+	_check(VeyraBuildingCatalog.exists("B10_TANNERY"), "Tannery must be catalogued")
+	var tannery := VeyraBuildingCatalog.get_building("B10_TANNERY")
+	_check(int(tannery.get("cost", {}).get("Hide", 0)) == 6, "Tannery must require Hide")
+	var settlement := VeyraSettlementManager.new()
+	root.add_child(settlement)
+	settlement.add_building("TANNERY-TEST", "B10_TANNERY", Vector3.ZERO)
+	var storage := settlement.get_building_storage("TANNERY-TEST")
+	storage["resources"] = {"Hide": 4, "Wood": 2}
+	settlement.set_building_storage("TANNERY-TEST", storage)
+	_check(settlement.get_job_definition("TANNER") != null, "Tanner job must exist")
+	settlement.queue_free()
 
 func _test_building_catalog_contract() -> void:
 	_check(VeyraBuildingCatalog.exists("B05_TOWNHALL"), "Town Hall must remain buildable")
