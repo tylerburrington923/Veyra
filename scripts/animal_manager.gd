@@ -58,9 +58,17 @@ func _register_definitions() -> void:
 		"mireback", "Mireback", "burrowing_herbivore",
 		1.45, 70.0, 0.018, 0.025, "HERBIVORE"
 	)
+	definitions["veilwolf"] = AnimalDefinition.new(
+		"veilwolf", "Veilwolf", "resonant_canid",
+		2.6, 45.0, 0.030, 0.045, "PREDATOR"
+	)
+	definitions["stonebear"] = AnimalDefinition.new(
+		"stonebear", "Stonebear", "resonant_ursid",
+		1.7, 110.0, 0.014, 0.020, "PREDATOR"
+	)
 
 func _spawn_beta_wildlife() -> void:
-	var ids: Array[String] = ["lumen_grazer", "mireback", "lumen_grazer", "mireback", "lumen_grazer"]
+	var ids: Array[String] = ["lumen_grazer", "mireback", "veilwolf", "lumen_grazer", "stonebear"]
 	var count := mini(beta_animal_count, ids.size())
 	for index in range(count):
 		var definition_id := ids[index]
@@ -231,6 +239,10 @@ func _update_behavior(state: AnimalState, definition: AnimalDefinition, delta: f
 func _make_visual(definition_id: String) -> StaticBody3D:
 	if definition_id == "mireback":
 		return _make_mireback_visual()
+	if definition_id == "veilwolf":
+		return _make_veilwolf_visual()
+	if definition_id == "stonebear":
+		return _make_stonebear_visual()
 	return _make_lumen_grazer_visual()
 
 func _make_lumen_grazer_visual() -> StaticBody3D:
@@ -252,6 +264,41 @@ func _make_lumen_grazer_visual() -> StaticBody3D:
 	# Short resonance antlers are intentionally asymmetrical.
 	_add_cylinder(root, Vector3(0.42, 1.32, -0.12), 0.035, 0.34, glow, 5, Vector3(0.0, 0.0, deg_to_rad(-25.0)))
 	_add_cylinder(root, Vector3(0.42, 1.34, 0.12), 0.035, 0.28, glow, 5, Vector3(0.0, 0.0, deg_to_rad(18.0)))
+	return root
+
+func _make_veilwolf_visual() -> StaticBody3D:
+	var root := StaticBody3D.new()
+	root.add_to_group("animal")
+	root.set_meta("animal_manager", self)
+	var coat := _material(Color(0.12, 0.15, 0.17), 0.95)
+	var muzzle := _material(Color(0.20, 0.23, 0.24), 0.92)
+	var glow := _material(Color(0.32, 0.78, 0.76), 0.55, 0.0, true, 0.9)
+	_add_capsule(root, Vector3(0, 0.62, 0), Vector3(0.22, 0.22, 0.46), coat, 7, 0, 90)
+	_add_sphere(root, Vector3(0.50, 0.72, 0), 0.20, coat, 7)
+	_add_sphere(root, Vector3(0.67, 0.68, 0), 0.12, muzzle, 6, Vector3(1.15, 0.75, 0.8))
+	for side in [-1.0, 1.0]:
+		for x in [-0.25, 0.25]:
+			_add_capsule(root, Vector3(x, 0.30, side * 0.13), Vector3(0.055, 0.06, 0.28), coat, 5)
+	_add_sphere(root, Vector3(0.55, 0.80, -0.14), 0.045, glow, 5)
+	_add_sphere(root, Vector3(0.55, 0.80, 0.14), 0.045, glow, 5)
+	_add_sphere(root, Vector3(-0.48, 0.68, 0), 0.11, coat, 6, Vector3(1.4, 0.7, 0.7))
+	return root
+
+func _make_stonebear_visual() -> StaticBody3D:
+	var root := StaticBody3D.new()
+	root.add_to_group("animal")
+	root.set_meta("animal_manager", self)
+	var coat := _material(Color(0.26, 0.24, 0.21), 0.96)
+	var chest := _material(Color(0.34, 0.31, 0.27), 0.94)
+	var glow := _material(Color(0.20, 0.58, 0.55), 0.65, 0.0, true, 0.55)
+	_add_capsule(root, Vector3(0, 0.82, 0), Vector3(0.34, 0.34, 0.58), coat, 7, 0, 90)
+	_add_sphere(root, Vector3(0.52, 0.94, 0), 0.29, coat, 7)
+	_add_sphere(root, Vector3(0.66, 0.88, 0), 0.16, chest, 6, Vector3(1.15, 0.8, 0.9))
+	for side in [-1.0, 1.0]:
+		for x in [-0.30, 0.30]:
+			_add_capsule(root, Vector3(x, 0.40, side * 0.21), Vector3(0.09, 0.10, 0.38), coat, 5)
+	_add_sphere(root, Vector3(0.58, 1.10, -0.19), 0.045, glow, 5)
+	_add_sphere(root, Vector3(0.58, 1.10, 0.19), 0.045, glow, 5)
 	return root
 
 func _make_mireback_visual() -> StaticBody3D:
