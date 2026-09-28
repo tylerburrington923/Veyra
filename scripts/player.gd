@@ -306,12 +306,7 @@ func _ready() -> void:
 	if _network_mode and not _network_local:
 		_disable_local_presentation()
 
-	# Give a brand-new save a generous starter cache so the beta loop is testable
-	# immediately. Loaded saves are left untouched.
-	if GameManager and GameManager.get_loaded_save().is_empty():
-		var starter_inventory := get_inventory()
-		if starter_inventory:
-			# New saves begin empty. Early-game materials must be gathered, not granted.
+	# New saves begin empty; early-game materials must be gathered.
 	up_direction = Vector3.UP
 	floor_snap_length = ground_snap_distance
 	floor_max_angle = deg_to_rad(max_floor_angle_degrees)
