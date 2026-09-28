@@ -83,7 +83,7 @@ func generate() -> void:
     material.roughness = 1.0
     material.cull_mode = BaseMaterial3D.CULL_DISABLED
     material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-    material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+    material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
     mesh.surface_set_material(0, material)
 
     var terrain := MeshInstance3D.new()
