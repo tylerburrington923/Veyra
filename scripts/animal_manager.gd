@@ -228,6 +228,9 @@ func _update_behavior(state: AnimalState, definition: AnimalDefinition, delta: f
 					return
 				state.behavior_state = "IDLE"
 				return
+			if state.behavior_state == "CHASE":
+				state.behavior_state = "IDLE"
+				state.behavior_timer = 0.0
 	if state.behavior_state == "IDLE":
 		if state.behavior_timer >= 4.0 + float(abs(state.animal_id.hash()) % 4):
 			state.behavior_timer = 0.0
