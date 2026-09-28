@@ -309,9 +309,8 @@ func request_build(building_id: String, position: Vector3) -> void:
 	var inventory: VeyraInventory = player.get_inventory() if player and player.has_method("get_inventory") else null
 	if not player or not manager or not inventory:
 		return
-	if manager.select_building(building_id) and manager.evaluate_placement(player, position, inventory):
-		manager.confirm_build(player, inventory)
-	manager.cancel_placement()
+	if not manager.server_build(player, building_id, position, inventory):
+		broadcast_interaction_feedback.rpc(peer_id, "BUILD REJECTED")
 
 @rpc("any_peer", "reliable")
 func request_craft(recipe_id: String) -> void:
