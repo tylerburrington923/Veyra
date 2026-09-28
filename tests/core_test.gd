@@ -179,7 +179,8 @@ func _test_townhall_contract() -> void:
 		if child is CollisionShape3D:
 			collision_count += 1
 	_check(collision_count >= 2, "town hall must have solid collision")
-	_check(hall.get_child_count() >= 10, "town hall must have a substantial civic visual assembly")
+	_check(hall.get_child_count() >= 20, "town hall must have a substantial civic visual assembly")
+	_check(hall.get_node_or_null("RoofLeft") != null and hall.get_node_or_null("RoofRight") != null, "town hall must have a pitched main roof")
 	hall.queue_free()
 
 
@@ -245,6 +246,18 @@ func _test_mobile_action_layout_contract() -> void:
 		_check(not craft_button.get_global_rect().intersects(use_button.get_global_rect()), "crafting button must not overlap use button")
 	player.queue_free()
 
+func _test_interaction_hud_contract() -> void:
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var panel := player.get_node_or_null("MobileControls/InteractionHUD") as PanelContainer
+	var action := player.get_node_or_null("MobileControls/InteractionHUD/Action") as Label
+	var detail := player.get_node_or_null("MobileControls/InteractionHUD/Detail") as Label
+	_check(panel != null and action != null and detail != null, "interaction HUD hierarchy must exist")
+	if panel:
+		_check(panel.size.x <= 240.0 and panel.size.y <= 52.0, "interaction HUD must remain compact")
+	player.queue_free()
+
 func _test_multiplayer_ui_contract() -> void:
 	var network_script := load("res://scripts/network_manager.gd")
 	var manager = network_script.new()
@@ -298,6 +311,11 @@ func _test_active_npc_contract() -> void:
 	_check(manager.get_npc_state("test_active_npc") != null, "active NPC state must exist")
 	if npc:
 		_check(npc.get_node_or_null("Visual") != null, "active NPC must have a visual")
+		var visual := npc.get_node_or_null("Visual") as NPCVisual
+		if visual:
+			_check(visual.get_node_or_null("Neck") != null, "villager visual must have a readable neck")
+			_check(visual.get_node_or_null("Buckle") != null, "villager visual must have readable clothing detail")
+			_check(visual.get_node_or_null("LeftEye") != null and visual.get_node_or_null("RightEye") != null, "villager visual must have readable eyes")
 	manager.despawn_npc("test_active_npc")
 	manager.queue_free()
 
@@ -412,6 +430,9 @@ func _test_first_person_viewmodel_contract() -> void:
 	_check(player.get_node_or_null("Camera3D/ViewModel/RightCuffFP") != null, "first-person right sleeve cuff must exist")
 	_check(player.get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/ToolGrip") != null, "tool grip visual must exist")
 	_check(player.get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeCollar") != null, "axe collar visual must exist")
+	_check(player.get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeLashUpper") != null, "axe upper binding visual must exist")
+	_check(player.get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeLashLower") != null, "axe lower binding visual must exist")
+	_check(player.get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickCollar") != null, "pick collar visual must exist")
 	_check(holder != null and holder.position.z < -0.5, "tool holder must be in front of camera")
 	player.queue_free()
 
