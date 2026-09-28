@@ -1,8 +1,10 @@
 extends StaticBody3D
 
 @export_enum("Stone", "Wood", "Metal", "Echo-Stone", "Vitreous Lux") var resource_type := "Stone"
+## Presentation/collection variant. Inventory compatibility remains Wood/Stone.
+@export_enum("stick", "small_stone", "large_stone", "metal", "lux") var node_kind := "large_stone"
 @export var amount := 3
-@export var tool_required := "T00_HANDS"
+@export var tool_required := "I02_STONE_PICK"
 @export var tool_efficiency := 1.0
 @export var durability_cost := 1.0
 @export var respawn_seconds := 45.0
@@ -110,19 +112,30 @@ func interact(player_override: Node = null) -> void:
 		_deplete()
 
 func get_interaction_point() -> Vector3:
-	var interaction_height := 0.12 if resource_type == "Wood" else 0.75
-	return global_position + Vector3.UP * interaction_height
+	match node_kind:
+		"stick":
+			return global_position + Vector3.UP * 0.12
+		"small_stone":
+			return global_position + Vector3.UP * 0.18
+		_:
+			return global_position + Vector3.UP * 0.75
 
 func get_interaction_text() -> String:
 	if depleted or remaining <= 0:
 		return "%s depleted" % resource_type
-	if resource_type == "Stone":
-		return "Mine Stone  [%d]" % remaining
-	if resource_type == "Metal":
-		return "Mine Metal  [%d]" % remaining
-	if resource_type == "Vitreous Lux":
-		return "Mine Lux  [%d]" % remaining
-	return "Gather %s  [%d]" % [resource_type, remaining]
+	match node_kind:
+		"stick":
+			return "Gather Sticks  [%d]" % remaining
+		"small_stone":
+			return "Gather Small Stones  [%d]" % remaining
+		"large_stone":
+			return "Mine Large Stone  [%d]" % remaining
+		"metal":
+			return "Mine Metal  [%d]" % remaining
+		"lux":
+			return "Mine Lux  [%d]" % remaining
+		_:
+			return "Gather %s  [%d]" % [resource_type, remaining]
 
 func _process(delta: float) -> void:
 	if interaction_cooldown > 0.0:
