@@ -622,7 +622,6 @@ func play_tool_use() -> void:
 		return
 	_tool_swing_time = 0.0
 	_tool_swing_active = true
-	_update_equipped_tool_visual()
 
 func _update_tool_animation(delta: float) -> void:
 	_update_punch_animation(delta)
