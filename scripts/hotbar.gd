@@ -339,7 +339,7 @@ func _build_inventory_grid() -> void:
 		else:
 			slot.text = ""
 		grid.add_child(slot)
-	var capacity := inventory.get_capacity_state()
+	var capacity: Dictionary = inventory.get_capacity_state()
 	var capacity_label := Label.new()
 	capacity_label.name = "CapacityLabel"
 	capacity_label.position = Vector2(14, 404)
