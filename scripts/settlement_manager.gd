@@ -195,6 +195,9 @@ func _register_economy_definitions() -> void:
     production_manager.register_definition(ProductionDefinition.new(
         "refine_metal", {"Metal": 2, "Wood": 1}, {"Refined Metal": 1}, 12.0, "B09_BLACKSMITH", "BLACKSMITH"
     ))
+    production_manager.register_definition(ProductionDefinition.new(
+        "tan_hide", {"Hide": 2, "Wood": 1}, {"Leather": 1}, 10.0, "B10_TANNERY", "TANNER"
+    ))
 
     job_definitions["LUMBERJACK"] = JobDefinition.new(
         "LUMBERJACK", "Lumberjack", "RESOURCE", 1, ["human", "human_villager", "human_worker"],
@@ -203,6 +206,10 @@ func _register_economy_definitions() -> void:
     job_definitions["COOK"] = JobDefinition.new(
         "COOK", "Cook", "FOOD", 2, ["human", "human_villager", "human_worker"],
         ["B01_CAMPFIRE"], [], 8.0, "cook_meat", 3.0, 1.0
+    )
+    job_definitions["TANNER"] = JobDefinition.new(
+        "TANNER", "Tanner", "CRAFT", 2, ["human", "human_villager", "human_worker"],
+        ["B10_TANNERY"], [], 10.0, "tan_hide", 3.0, 1.0
     )
     job_definitions["BLACKSMITH"] = JobDefinition.new(
         "BLACKSMITH", "Blacksmith", "CRAFT", 3, ["human", "human_villager", "human_worker"],
@@ -257,6 +264,10 @@ func _choose_job_for_villager() -> Dictionary:
         return {}
 
     var resources := _get_primary_storage_resources()
+    var tannery_id := _find_building_of_type("B10_TANNERY")
+    if not tannery_id.is_empty() and int(resources.get("Hide", 0)) >= 2 and int(resources.get("Wood", 0)) >= 1:
+        return {"job_id": "TANNER", "building_id": tannery_id}
+
     var blacksmith_id := _find_building_of_type("B09_BLACKSMITH")
     if not blacksmith_id.is_empty() and int(resources.get("Metal", 0)) >= 2 and int(resources.get("Wood", 0)) >= 1:
         return {"job_id": "BLACKSMITH", "building_id": blacksmith_id}
