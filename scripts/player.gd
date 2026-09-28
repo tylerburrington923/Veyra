@@ -77,7 +77,7 @@ var touch_start: Dictionary = {}
 @onready var equipped_tool_visual: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool") as Node3D
 var walk_time: float = 0.0
 var _tool_swing_time: float = 0.0
-var _tool_swing_duration: float = 0.22
+var _tool_swing_duration: float = 0.28
 var _tool_swing_active: bool = false
 var _tool_base_rotation: Vector3 = Vector3.ZERO
 var _punch_time: float = 0.0
@@ -329,7 +329,9 @@ func _ready() -> void:
 	else:
 		_disable_local_presentation()
 	_update_equipped_tool_visual()
-	_tool_base_rotation = tool_holder.rotation_degrees if tool_holder else Vector3.ZERO
+	_tool_base_rotation = Vector3(-14.0, -12.0, -8.0)
+	if tool_holder:
+		tool_holder.rotation_degrees = _tool_base_rotation
 
 
 func _configure_camera() -> void:
@@ -620,6 +622,7 @@ func play_tool_use() -> void:
 		return
 	_tool_swing_time = 0.0
 	_tool_swing_active = true
+	_update_equipped_tool_visual()
 
 func _update_tool_animation(delta: float) -> void:
 	_update_punch_animation(delta)
@@ -632,14 +635,19 @@ func _update_tool_animation(delta: float) -> void:
 	_tool_swing_time += delta
 	var progress := clampf(_tool_swing_time / _tool_swing_duration, 0.0, 1.0)
 	var arc := sin(progress * PI)
-	var lift := -62.0 * arc
-	var side := 18.0 * arc
-	tool_holder.rotation_degrees = _tool_base_rotation + Vector3(lift, side, -10.0 * arc)
-	tool_holder.position = Vector3(0.30 + 0.025 * arc, -0.78 - 0.025 * arc, -1.10 + 0.08 * arc)
+	var lift := -48.0 * arc
+	var side := 12.0 * arc
+	tool_holder.rotation_degrees = _tool_base_rotation + Vector3(lift, side, -7.0 * arc)
+	tool_holder.position = Vector3(0.30 + 0.035 * arc, -0.78 - 0.04 * arc, -1.10 + 0.12 * arc)
+	if fp_right_hand:
+		fp_right_hand.position = Vector3(0.30, -0.73 - 0.05 * arc, -1.06 + 0.10 * arc)
+	if fp_left_hand:
+		fp_left_hand.position = Vector3(0.08, -0.86 - 0.03 * arc, -1.02 + 0.06 * arc)
 	if progress >= 1.0:
 		_tool_swing_active = false
 		tool_holder.position = Vector3(0.30, -0.78, -1.10)
 		tool_holder.rotation_degrees = _tool_base_rotation
+		_update_equipped_tool_visual()
 
 func _update_punch_animation(delta: float) -> void:
 	if not _punch_active:
