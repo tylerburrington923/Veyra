@@ -37,7 +37,7 @@ func _run_tests() -> void:
 	_test_townhall_contract()
 	_test_townhall_civic_contract()
 	_test_building_placement_contract()
-	_test_starter_inventory_contract()
+	_test_empty_new_inventory_contract()
 	_test_mobile_action_layout_contract()
 	_test_water_system_contract()
 	_test_mobile_backpack_contract()
@@ -225,16 +225,13 @@ func _test_building_placement_contract() -> void:
 	_check(manager.snap_position(Vector3(1.49, 3.2, -2.51)) == Vector3(1.0, 3.2, -3.0), "building placement must snap only X/Z while preserving terrain Y")
 	manager.queue_free()
 
-func _test_starter_inventory_contract() -> void:
-	var game_manager: Node = root.get_node_or_null("GameManager")
-	if game_manager and not game_manager.get_loaded_save().is_empty():
-		return
+func _test_empty_new_inventory_contract() -> void:
 	var player_scene := load("res://scenes/player.tscn") as PackedScene
 	var player := player_scene.instantiate()
 	root.add_child(player)
 	var inventory: VeyraInventory = player.get_inventory()
-	_check(inventory.get_amount("Wood") == 100, "new player must start with 100 wood")
-	_check(inventory.get_amount("Stone") == 100, "new player must start with 100 stone")
+	_check(inventory.get_amount("Wood") == 0, "new player must not receive starter wood")
+	_check(inventory.get_amount("Stone") == 0, "new player must not receive starter stone")
 	player.queue_free()
 
 
