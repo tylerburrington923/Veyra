@@ -12,6 +12,7 @@ var world_seed: int = 47291
 
 @onready var lunar_cycle: VeyraLunarCycle = get_node_or_null("LunarCycle") as VeyraLunarCycle
 const ANIMAL_MANAGER_SCRIPT = preload("res://scripts/animal_manager.gd")
+const DISCOVERY_MANAGER_SCRIPT = preload("res://scripts/discovery_manager.gd")
 
 func _ready() -> void:
 	world_seed = default_world_seed
@@ -30,6 +31,7 @@ func _ready() -> void:
 	call_deferred("_restore_buildings")
 	call_deferred("_align_anomalies_to_terrain")
 	call_deferred("_ensure_wildlife_manager")
+	call_deferred("_ensure_discovery_manager")
 	print("Veyra world initialized. Seed: ", world_seed, " | Lunar phase: ", lunar_cycle.get_phase_name() if lunar_cycle else "Unavailable")
 
 
@@ -145,6 +147,13 @@ func _align_anomalies_to_terrain() -> void:
 func _restore_buildings() -> void:
 	if BuildingManager and BuildingManager.has_method("restore_from_settlement"):
 		BuildingManager.restore_from_settlement()
+
+func _ensure_discovery_manager() -> void:
+	if get_node_or_null("DiscoveryManager"):
+		return
+	var manager := DISCOVERY_MANAGER_SCRIPT.new()
+	manager.name = "DiscoveryManager"
+	add_child(manager)
 
 func _ensure_wildlife_manager() -> void:
 	if get_node_or_null("AnimalManager"):
