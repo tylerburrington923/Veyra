@@ -6,7 +6,7 @@ This is the active engineering review list. Items are observations from source/c
 
 ## P0 — Fix before next serious phone test
 
-- [ ] NPC animation pivots — Villager arms/legs currently animate by rotating MeshInstance3D nodes around their own centers. Introduce lightweight shoulder/hip pivot Node3D parents so gait reads naturally without adding a skeletal rig.
+- [x] NPC animation pivots — Villager arms/legs currently animate by rotating MeshInstance3D nodes around their own centers. Introduce lightweight shoulder/hip pivot Node3D parents so gait reads naturally without adding a skeletal rig.
 - [ ] First-person hand/tool grip pass — Recheck actual hand-to-handle contact, tool angle, scale, and camera placement for axe/pick. Current geometry is improved but still primitive/interim.
 - [ ] NPC visual polish — Refine silhouette, proportions, face readability, clothing shapes, and color/material separation while keeping the low-poly/mobile budget.
 - [ ] Interaction HUD final pass — Verify the compact HUD against the smallest supported Android viewport, including target/no-target transitions, long names, requirements, and multiplayer targets.
@@ -14,9 +14,9 @@ This is the active engineering review list. Items are observations from source/c
 
 ## P1 — Alpha quality / systems
 
-- [ ] Building placement concurrency — NetworkManager.request_build() uses shared BuildingManager placement state (select_building → evaluate_placement → confirm_build). Audit for two remote build requests arriving close together; server placement state should be request-local or explicitly serialized.
+- [x] Building placement concurrency — NetworkManager.request_build() uses shared BuildingManager placement state (select_building → evaluate_placement → confirm_build). Audit for two remote build requests arriving close together; server placement state should be request-local or explicitly serialized.
 - [ ] Building placement validation — Add explicit server-side validation for building footprint, distance, duplicate civic structures, and final position rather than relying on transient shared preview state.
-- [ ] Multiplayer interaction line-of-sight — Server currently validates target existence/group and distance, but not line-of-sight. Decide whether walls/closed doors should block remote interaction.
+- [x] Multiplayer interaction line-of-sight — Server currently validates target existence/group and distance, but not line-of-sight. Decide whether walls/closed doors should block remote interaction.
 - [ ] Multiplayer craft/build feedback — Audit client feedback when a remote craft/build request fails due to resources, placement, or stale state.
 - [ ] NPC network presentation — Verify remote NPC interpolation and local/host ownership under Hotspot latency, especially while NPCs change jobs/behavior.
 - [ ] Wildlife combat loop — Animals can simulate health/death and drop Meat/Hide, but the complete player attack/targeting loop should be audited end-to-end.
