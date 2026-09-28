@@ -183,96 +183,81 @@ func _tend_garden(player: Node) -> void:
     _last_interaction_feedback = "Garden: used 1 Water and produced 2 Food."
 
 func _toggle_storage(player: Node) -> void:
-	if not player:
-		_last_interaction_feedback = "Storage: player unavailable."
-		return
-	_open_building_ui(player, "storage")
+    if not player:
+        _last_interaction_feedback = "Storage: player unavailable."
+        return
+    _open_building_ui(player, "storage")
+    return
+    var inventory: VeyraInventory = player.get_node_or_null("Inventory") as VeyraInventory
+    var settlement := get_node_or_null("/root/SettlementManager")
+    if not inventory or not settlement:
+        _last_interaction_feedback = "Storage: inventory unavailable."
+        return
+    var storage: Dictionary = settlement.get_building_storage(building_id) if settlement.has_method("get_building_storage") else {}
+    if storage.is_empty():
+        storage = {"resources": {}, "items": {}}
+    if not (storage.get("resources", {}) is Dictionary):
+        storage["resources"] = {}
+    if not (storage.get("items", {}) is Dictionary):
+        storage["items"] = {}
 
-func get_storage_snapshot() -> Dictionary:
-	var settlement := get_node_or_null("/root/SettlementManager")
-	if not settlement or not settlement.has_method("get_building_storage"):
-		return {"resources": {}, "items": {}}
-	var storage: Dictionary = settlement.get_building_storage(building_id)
-	if not (storage.get("resources", {}) is Dictionary):
-		storage["resources"] = {}
-	if not (storage.get("items", {}) is Dictionary):
-		storage["items"] = {}
-	return storage
+    var carried_resources: Dictionary = inventory.get_snapshot().get("resources", {})
+    var carried_items: Dictionary = inventory.get_snapshot().get("items", {})
+    var stored_any := false
 
-func deposit_all_storage(player: Node) -> int:
-	if building_type != "B02_STORAGE" or not player:
-		return 0
-	var inventory := player.get_node_or_null("Inventory") as VeyraInventory
-	var settlement := get_node_or_null("/root/SettlementManager")
-	if not inventory or not settlement or not settlement.has_method("set_building_storage"):
-		return 0
-	var storage := get_storage_snapshot()
-	var stored_resources: Dictionary = storage.get("resources", {})
-	var stored_items: Dictionary = storage.get("items", {})
-	var deposited := 0
-	for resource_type in inventory.get_resource_types():
-		var amount := inventory.get_amount(resource_type)
-		if amount <= 0:
-			continue
-		var removed := inventory.remove_resource(resource_type, amount)
-		if removed > 0:
-			stored_resources[resource_type] = int(stored_resources.get(resource_type, 0)) + removed
-			deposited += removed
-	# Tools are personal equipment and are never auto-deposited.
-	for item_id in inventory.get_item_types():
-		if VeyraItemCatalog.is_valid_tool(item_id):
-			continue
-		var amount := inventory.get_item_amount(item_id)
-		if amount <= 0:
-			continue
-		var removed := inventory.remove_item(item_id, amount)
-		if removed > 0:
-			stored_items[item_id] = int(stored_items.get(item_id, 0)) + removed
-			deposited += removed
-	storage["resources"] = stored_resources
-	storage["items"] = stored_items
-	settlement.set_building_storage(building_id, storage)
-	_last_interaction_feedback = "Storage: deposited %d items." % deposited
-	return deposited
+    for resource_type in carried_resources.keys():
+        var amount := int(carried_resources[resource_type])
+        if amount <= 0:
+            continue
+        var removed := inventory.remove_resource(str(resource_type), amount)
+        if removed > 0:
+            storage["resources"][str(resource_type)] = int(storage["resources"].get(str(resource_type), 0)) + removed
+            stored_any = true
 
-func withdraw_all_storage(player: Node) -> int:
-	if building_type != "B02_STORAGE" or not player:
-		return 0
-	var inventory := player.get_node_or_null("Inventory") as VeyraInventory
-	var settlement := get_node_or_null("/root/SettlementManager")
-	if not inventory or not settlement or not settlement.has_method("set_building_storage"):
-		return 0
-	var storage := get_storage_snapshot()
-	var stored_resources: Dictionary = storage.get("resources", {})
-	var stored_items: Dictionary = storage.get("items", {})
-	var withdrawn := 0
-	for resource_type in stored_resources.keys().duplicate():
-		var amount := int(stored_resources[resource_type])
-		if amount <= 0:
-			stored_resources.erase(resource_type)
-			continue
-		var accepted := inventory.add_resource(str(resource_type), amount)
-		if accepted > 0:
-			stored_resources[resource_type] = amount - accepted
-			withdrawn += accepted
-			if stored_resources[resource_type] <= 0:
-				stored_resources.erase(resource_type)
-	for item_id in stored_items.keys().duplicate():
-		var amount := int(stored_items[item_id])
-		if amount <= 0:
-			stored_items.erase(item_id)
-			continue
-		var accepted := inventory.add_item(str(item_id), amount)
-		if accepted > 0:
-			stored_items[item_id] = amount - accepted
-			withdrawn += accepted
-			if stored_items[item_id] <= 0:
-				stored_items.erase(item_id)
-	storage["resources"] = stored_resources
-	storage["items"] = stored_items
-	settlement.set_building_storage(building_id, storage)
-	_last_interaction_feedback = "Storage: withdrew %d items." % withdrawn
-	return withdrawn
+    for item_id in carried_items.keys():
+        var amount := int(carried_items[item_id])
+        if amount <= 0:
+            continue
+        var removed := inventory.remove_item(str(item_id), amount)
+        if removed > 0:
+            storage["items"][str(item_id)] = int(storage["items"].get(str(item_id), 0)) + removed
+            stored_any = true
+
+    if stored_any:
+        settlement.set_building_storage(building_id, storage)
+        _last_interaction_feedback = "Storage: all carried goods deposited."
+        return
+
+    var withdrawn := 0
+    var stored_resources: Dictionary = storage.get("resources", {})
+    for resource_type in stored_resources.keys():
+        var amount := int(stored_resources[resource_type])
+        if amount <= 0:
+            continue
+        var accepted := inventory.add_resource(str(resource_type), amount)
+        if accepted > 0:
+            stored_resources[resource_type] = amount - accepted
+            withdrawn += accepted
+            if stored_resources[resource_type] <= 0:
+                stored_resources.erase(resource_type)
+
+    var stored_items: Dictionary = storage.get("items", {})
+    for item_id in stored_items.keys():
+        var amount := int(stored_items[item_id])
+        if amount <= 0:
+            continue
+        var accepted := inventory.add_item(str(item_id), amount)
+        if accepted > 0:
+            stored_items[item_id] = amount - accepted
+            withdrawn += accepted
+            if stored_items[item_id] <= 0:
+                stored_items.erase(item_id)
+
+    storage["resources"] = stored_resources
+    storage["items"] = stored_items
+    settlement.set_building_storage(building_id, storage)
+    _last_interaction_feedback = "Storage: withdrew %d items." % withdrawn if withdrawn > 0 else "Storage is empty."
+
 
 
 func deposit_civic_materials(player: Node, amount_per_resource: int = 10) -> bool:
