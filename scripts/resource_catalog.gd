@@ -1,7 +1,7 @@
 extends RefCounted
 class_name VeyraResourceCatalog
 
-const RESOURCE_TYPES: Array[String] = ["Stone", "Wood", "Metal", "Refined Metal", "Vitreous Lux", "Echo-Stone", "Meat", "Hide", "Food"]
+const RESOURCE_TYPES: Array[String] = ["Stone", "Wood", "Metal", "Refined Metal", "Vitreous Lux", "Echo-Stone", "Meat", "Hide", "Leather", "Food"]
 
 static func is_valid(resource_type: String) -> bool:
     return resource_type in RESOURCE_TYPES
