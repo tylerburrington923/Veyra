@@ -132,28 +132,28 @@ func _sanitize_player_state(player_state: Dictionary) -> Dictionary:
     }
 
 func _sanitize_progression(progression: Dictionary) -> Dictionary:
-	if progression.is_empty():
-		return {}
-	var clean := {
-		"version": maxi(1, int(progression.get("version", 1))),
-		"xp": {},
-		"levels": {},
-		"skill_points": maxi(0, int(progression.get("skill_points", 0))),
-		"unlocked_skills": [],
-		"quest_progress": {}
-	}
-	for discipline in VeyraProgressionManager.DISCIPLINES:
-		clean["xp"][discipline] = maxi(0, int(progression.get("xp", {}).get(discipline, 0)))
-		clean["levels"][discipline] = maxi(1, int(progression.get("levels", {}).get(discipline, 1)))
-	for skill_id in progression.get("unlocked_skills", []):
-		if VeyraProgressionManager.SKILLS.has(str(skill_id)):
-			clean["unlocked_skills"].append(str(skill_id))
-	var quests = progression.get("quest_progress", {})
-	if quests is Dictionary:
-		for quest_id in VeyraProgressionManager.QUESTS:
-			var state = quests.get(quest_id, {})
-			clean["quest_progress"][quest_id] = state.duplicate(true) if state is Dictionary else {}
-	return clean
+    if progression.is_empty():
+        return {}
+    var clean := {
+        "version": maxi(1, int(progression.get("version", 1))),
+        "xp": {},
+        "levels": {},
+        "skill_points": maxi(0, int(progression.get("skill_points", 0))),
+        "unlocked_skills": [],
+        "quest_progress": {}
+    }
+    for discipline in VeyraProgressionManager.DISCIPLINES:
+        clean["xp"][discipline] = maxi(0, int(progression.get("xp", {}).get(discipline, 0)))
+        clean["levels"][discipline] = maxi(1, int(progression.get("levels", {}).get(discipline, 1)))
+    for skill_id in progression.get("unlocked_skills", []):
+        if VeyraProgressionManager.SKILLS.has(str(skill_id)):
+            clean["unlocked_skills"].append(str(skill_id))
+    var quests = progression.get("quest_progress", {})
+    if quests is Dictionary:
+        for quest_id in VeyraProgressionManager.QUESTS:
+            var state = quests.get(quest_id, {})
+            clean["quest_progress"][quest_id] = state.duplicate(true) if state is Dictionary else {}
+    return clean
 
 func _sanitize_settlement(settlement: Dictionary) -> Dictionary:
     if settlement.is_empty():
