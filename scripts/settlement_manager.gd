@@ -223,7 +223,7 @@ func _find_building_of_type(building_type: String) -> String:
     return ""
 
 func get_job_target_position(_job_id: String, building_id: String) -> Dictionary:
-	return _get_building_position(building_id)
+    return _get_building_position(building_id)
 
 func _get_building_position(building_id: String) -> Dictionary:
     var record := get_building_record(building_id)
