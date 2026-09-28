@@ -14,6 +14,30 @@ const RECIPES := {
 		"cost": {"Stone": 3, "Wood": 2},
 		"output": 1
 	},
+	"I04_METAL_AXE": {
+		"id": "I04_METAL_AXE",
+		"name": "Metal Axe",
+		"cost": {"Refined Metal": 2, "Wood": 2},
+		"output": 1
+	},
+	"I05_METAL_PICK": {
+		"id": "I05_METAL_PICK",
+		"name": "Metal Pick",
+		"cost": {"Refined Metal": 2, "Wood": 2},
+		"output": 1
+	},
+	"I06_ECHO_AXE": {
+		"id": "I06_ECHO_AXE",
+		"name": "Echo Axe",
+		"cost": {"Refined Metal": 2, "Echo-Stone": 1, "Vitreous Lux": 1, "Wood": 2},
+		"output": 1
+	},
+	"I07_ECHO_PICK": {
+		"id": "I07_ECHO_PICK",
+		"name": "Echo Pick",
+		"cost": {"Refined Metal": 2, "Echo-Stone": 1, "Vitreous Lux": 1, "Wood": 2},
+		"output": 1
+	},
 	"I03_CAMPFIRE_KIT": {
 		"id": "I03_CAMPFIRE_KIT",
 		"name": "Campfire Kit",
