@@ -1156,7 +1156,8 @@ func _test_job_simulation_contract() -> void:
 	var job := JobState.new("job_state", "JOB_TEST")
 	job.active = true
 	_check(NPCJobSimulation.assign_job(state, definition, NPCState.make_vector_dict(0.0, 0.0, -1.0)), "job assignment must succeed")
-	_check(NPCJobSimulation.process_tick(state, definition, job, 0.5), "job tick must succeed")
+	_check(NPCJobSimulation.process_tick(state, definition, job, 0.5), "job movement tick must succeed")
+	_check(NPCJobSimulation.process_tick(state, definition, job, 0.5), "job work tick must succeed")
 	_check(job.progress > 0.0, "job tick must advance deterministic work progress")
 
 func _test_settlement_production_loop() -> void:
