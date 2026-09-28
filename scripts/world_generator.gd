@@ -420,7 +420,7 @@ func _spawn_landmark() -> void:
 
     var landmark_body := StaticBody3D.new()
     landmark_body.name = "LandmarkCollision"
-    landmark_body.collision_layer = 2
+    landmark_body.collision_layer = 8
     landmark_body.collision_mask = 1
     var landmark_shape := CollisionShape3D.new()
     var landmark_collision := CylinderShape3D.new()
