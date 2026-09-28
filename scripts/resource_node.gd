@@ -2,7 +2,7 @@ extends StaticBody3D
 
 @export_enum("Stone", "Wood", "Metal", "Echo-Stone", "Vitreous Lux") var resource_type := "Stone"
 ## Presentation/collection variant. Inventory compatibility remains Wood/Stone.
-@export_enum("stick", "small_stone", "large_stone", "metal", "lux") var node_kind := "large_stone"
+@export_enum("stick", "small_stone", "large_stone", "tree", "metal", "lux") var node_kind := "large_stone"
 @export var amount := 3
 @export var tool_required := "I02_STONE_PICK"
 @export var tool_efficiency := 1.0
@@ -130,6 +130,8 @@ func get_interaction_text() -> String:
 			return "Gather Small Stones  [%d]" % remaining
 		"large_stone":
 			return "Mine Large Stone  [%d]" % remaining
+		"tree":
+			return "Harvest Tree  [%d]" % remaining
 		"metal":
 			return "Mine Metal  [%d]" % remaining
 		"lux":
