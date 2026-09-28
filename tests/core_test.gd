@@ -1187,9 +1187,10 @@ func _test_settlement_production_loop() -> void:
 	var state: NPCState = manager.get_npc_state("production_villager")
 	for i in range(20):
 		manager._update_villager_behavior(state, 1.0)
-		if not settlement.job_states.has("production_villager"):
+		if job.completed:
 			break
-		_check(not settlement.job_states.has("production_villager"), "integrated NPC manager must retire completed production job")
+	_check(job.completed, "integrated NPC manager must complete the production job")
+	_check(state.current_task == "IDLE", "completed production job must return the NPC to idle")
 	var storage := settlement.get_building_storage("PROD-STORAGE")
 	_check(int(storage.get("resources", {}).get("Food", 0)) == 3, "completed cooking production must return food to storage")
 	_check(int(storage.get("resources", {}).get("Meat", 0)) == 0, "production inputs must be consumed from storage")
