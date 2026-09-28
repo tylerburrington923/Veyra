@@ -1,6 +1,6 @@
 # Veyra Alpha Improvement Backlog
 
-Updated: 2026-09-27
+Updated: 2026-09-28
 
 This is the active engineering review list. Items are observations from source/code review unless explicitly marked as device-verified. Preserve existing save compatibility, Hotspot/LAN multiplayer, legacy IDs, and mobile performance while addressing these.
 
@@ -11,6 +11,17 @@ This is the active engineering review list. Items are observations from source/c
 - [ ] NPC visual polish — Refine silhouette, proportions, face readability, clothing shapes, and color/material separation while keeping the low-poly/mobile budget.
 - [ ] Interaction HUD final pass — Verify the compact HUD against the smallest supported Android viewport, including target/no-target transitions, long names, requirements, and multiplayer targets.
 - [ ] Town Hall doorway/collision decision — Current Town Hall has solid body collision and outside interaction. Decide whether alpha Town Hall should remain exterior-only or receive a true doorway/interior collision layout.
+
+## P1 — Settlement economy integration
+
+- [x] Data-driven production definitions — Existing ProductionDefinition/ProductionState/ProductionManager now own transactional inputs, outputs, progress, worker assignment, cancellation/refund, and active-state persistence.
+- [x] Villager job execution contract — Existing JobDefinition/NPCJobSimulation now have explicit movement/work speeds and serialize those parameters without replacing the NPC state architecture.
+- [x] NPC → job → production integration — NPCManager now delegates settlement villagers into the existing job simulation and settlement production flow; host-side NPC simulation remains authoritative.
+- [x] Storage → production → storage loop — Campfire cooking consumes Meat + Wood from settlement storage and produces Food; Blacksmith refining consumes Metal + Wood and produces Refined Metal; Lumberjacks replenish Wood through the same production pipeline.
+- [x] Villager needs consume production — Villagers consume settlement Food/Water; produced Food can be consumed directly from settlement storage when reserve Food is empty.
+- [x] Settlement production persistence — Active jobs and production states are serialized, sanitized, restored, and orphaned/corrupt active production is cancelled with input refund when possible.
+- [x] Regression coverage — Targeted tests cover job definition serialization, NPC job execution, integrated NPC production, Food storage output, and settlement save sanitization.
+- [ ] Physical-device verification — The integrated economy loop has not yet been verified on two physical Android devices or under real Hotspot latency.
 
 ## P1 — Alpha quality / systems
 
@@ -94,4 +105,4 @@ Sources: Godot 4.7 rendering, MultiMesh, LOD, and occlusion-culling documentatio
 
 ## Current review notes
 
-The current main branch is structurally healthy enough that this backlog should be handled as targeted alpha hardening, not a rewrite. The highest-value remaining visual issue is NPC animation/presentation. The highest-value systems issue found in review is shared server-side building placement state during multiplayer requests.
+The current main branch is structurally healthy enough that this backlog should be handled as targeted alpha hardening, not a rewrite. The highest-value remaining visual issue is NPC animation/presentation. The first settlement-economy integration cycle is now CI-verified and remains device-unverified. The next systems priority is server-side building placement validation plus NPC/network presentation under Hotspot conditions.
