@@ -174,6 +174,10 @@ func set_tool(tool_id: String) -> bool:
 			return false
 	if next_tool == selected_tool_id:
 		return true
+	if _network_mode and _network_local and not multiplayer.is_server():
+		var network_manager := get_tree().get_first_node_in_group("network_manager")
+		if network_manager and network_manager.has_method("submit_local_tool_selection") and network_manager.session_active:
+			network_manager.submit_local_tool_selection(next_tool)
 	selected_tool_id = next_tool
 	tool_durability = 100.0
 	tool_changed.emit(selected_tool_id, tool_durability)
