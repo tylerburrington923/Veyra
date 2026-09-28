@@ -70,6 +70,9 @@ var touch_start: Dictionary = {}
 @onready var fp_right_hand: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightHandFP") as MeshInstance3D
 @onready var fp_left_cuff: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftCuffFP") as MeshInstance3D
 @onready var fp_right_cuff: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightCuffFP") as MeshInstance3D
+@onready var fp_axe_lash_upper: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeLashUpper") as MeshInstance3D
+@onready var fp_axe_lash_lower: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/AxeLashLower") as MeshInstance3D
+@onready var fp_pick_collar: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickCollar") as MeshInstance3D
 @onready var tool_holder: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder") as Node3D
 @onready var equipped_tool_visual: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool") as Node3D
 var walk_time: float = 0.0
@@ -259,6 +262,12 @@ func _update_equipped_tool_visual() -> void:
 		axe_blade.visible = axe_equipped
 	if axe_collar:
 		axe_collar.visible = axe_equipped
+	if fp_axe_lash_upper:
+		fp_axe_lash_upper.visible = axe_equipped
+	if fp_axe_lash_lower:
+		fp_axe_lash_lower.visible = axe_equipped
+	if fp_pick_collar:
+		fp_pick_collar.visible = pick_equipped
 	if pick_head:
 		pick_head.visible = pick_equipped
 	if pick_spike_left:
@@ -268,10 +277,10 @@ func _update_equipped_tool_visual() -> void:
 	match selected_tool_id:
 		"I01_STONE_AXE":
 			tool_visual.rotation_degrees = Vector3(0, 0, -12)
-			tool_visual.scale = Vector3(0.72, 0.72, 0.72)
+			tool_visual.scale = Vector3(0.68, 0.68, 0.68)
 		"I02_STONE_PICK":
 			tool_visual.rotation_degrees = Vector3(0, 0, 12)
-			tool_visual.scale = Vector3(0.82, 0.82, 0.82)
+			tool_visual.scale = Vector3(0.76, 0.76, 0.76)
 		_:
 			tool_visual.visible = false
 
