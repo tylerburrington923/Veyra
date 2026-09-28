@@ -359,12 +359,15 @@ func _interaction_hud_style() -> void:
 	panel_style.content_margin_left = 12.0
 	panel_style.content_margin_right = 12.0
 	target_panel.add_theme_stylebox_override("panel", panel_style)
-	target_panel.custom_minimum_size = Vector2(260.0, 48.0)
+	target_panel.custom_minimum_size = Vector2(300.0, 68.0)
+	target_panel.add_theme_constant_override("separation", 2)
 	if target_action:
-		target_action.add_theme_font_size_override("font_size", 14)
+		target_action.add_theme_font_size_override("font_size", 13)
+		target_action.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		target_action.add_theme_color_override("font_color", Color(0.42, 0.88, 0.90, 1.0))
 		target_action.add_theme_constant_override("outline_size", 4)
 		target_action.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.85))
 	if target_detail:
-		target_detail.add_theme_font_size_override("font_size", 11)
+		target_detail.add_theme_font_size_override("font_size", 10)
+		target_detail.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		target_detail.add_theme_color_override("font_color", Color(0.78, 0.84, 0.86, 1.0))
