@@ -64,6 +64,8 @@ var touch_start: Dictionary = {}
 @onready var right_foot_mesh: MeshInstance3D = get_node_or_null("RightFoot") as MeshInstance3D
 @onready var fp_left_arm: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftArmFP") as MeshInstance3D
 @onready var fp_right_arm: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightArmFP") as MeshInstance3D
+@onready var fp_left_sleeve: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftSleeveFP") as MeshInstance3D
+@onready var fp_right_sleeve: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightSleeveFP") as MeshInstance3D
 @onready var fp_left_hand: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftHandFP") as MeshInstance3D
 @onready var fp_right_hand: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightHandFP") as MeshInstance3D
 @onready var fp_left_cuff: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftCuffFP") as MeshInstance3D
@@ -631,10 +633,18 @@ func _update_punch_animation(delta: float) -> void:
 	var thrust := sin(progress * PI * 0.5)
 	if fp_left_arm:
 		fp_left_arm.rotation = Vector3(deg_to_rad(-18.0 - 42.0 * arc), deg_to_rad(-8.0), deg_to_rad(-7.0 + 12.0 * arc))
+	if fp_left_sleeve:
+		fp_left_sleeve.rotation = fp_left_arm.rotation
 		fp_left_arm.position = Vector3(-0.24, -0.48 - 0.07 * thrust, -0.66 - 0.42 * thrust)
+	if fp_left_sleeve:
+		fp_left_sleeve.position = Vector3(-0.24, -0.58 - 0.07 * thrust, -0.78 - 0.42 * thrust)
 	if fp_right_arm:
 		fp_right_arm.rotation = Vector3(deg_to_rad(-18.0 - 86.0 * arc), deg_to_rad(6.0), deg_to_rad(8.0 - 24.0 * arc))
+	if fp_right_sleeve:
+		fp_right_sleeve.rotation = fp_right_arm.rotation
 		fp_right_arm.position = Vector3(0.24, -0.48 - 0.10 * thrust, -0.66 - 0.58 * thrust)
+	if fp_right_sleeve:
+		fp_right_sleeve.position = Vector3(0.24, -0.58 - 0.10 * thrust, -0.78 - 0.58 * thrust)
 	if fp_left_hand:
 		fp_left_hand.position = Vector3(-0.24, -0.93 - 0.05 * thrust, -0.94 - 0.45 * thrust)
 	if fp_left_cuff:
@@ -647,9 +657,15 @@ func _update_punch_animation(delta: float) -> void:
 		_punch_active = false
 		if fp_left_arm:
 			fp_left_arm.position = Vector3(-0.24, -0.48, -0.66)
+		if fp_left_sleeve:
+			fp_left_sleeve.position = Vector3(-0.24, -0.58, -0.78)
+			fp_left_sleeve.rotation = Vector3(deg_to_rad(-18.0), deg_to_rad(-8.0), deg_to_rad(-7.0))
 			fp_left_arm.rotation = Vector3(deg_to_rad(-18.0), deg_to_rad(-8.0), deg_to_rad(-7.0))
 		if fp_right_arm:
 			fp_right_arm.position = Vector3(0.24, -0.48, -0.66)
+		if fp_right_sleeve:
+			fp_right_sleeve.position = Vector3(0.24, -0.58, -0.78)
+			fp_right_sleeve.rotation = Vector3(deg_to_rad(-18.0), deg_to_rad(6.0), deg_to_rad(8.0))
 			fp_right_arm.rotation = Vector3(deg_to_rad(-18.0), deg_to_rad(6.0), deg_to_rad(8.0))
 		if fp_left_hand:
 			fp_left_hand.position = Vector3(-0.24, -0.93, -0.94)
@@ -684,6 +700,13 @@ func _update_player_visuals(delta: float, direction: Vector3) -> void:
 	# The body already follows target_yaw, so pitch is the only extra axis needed.
 	var hand_pitch := deg_to_rad(-62.0) + look_pitch * 0.42
 	var hand_reach := 0.46
+	if fp_left_sleeve:
+		fp_left_sleeve.rotation = fp_left_arm.rotation
+		fp_left_sleeve.position = Vector3(-0.24, -0.58, -0.78)
+	if fp_right_sleeve:
+		fp_right_sleeve.rotation = fp_right_arm.rotation
+		fp_right_sleeve.position = Vector3(0.24, -0.58, -0.78)
+
 	if left_arm:
 		left_arm.rotation.x = hand_pitch - arm_swing * 0.35
 		left_arm.rotation.z = deg_to_rad(-10.0) + absf(stride) * 0.035
