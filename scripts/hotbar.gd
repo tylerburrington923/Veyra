@@ -1,7 +1,7 @@
 extends CanvasLayer
 
 const RESOURCE_TYPES: Array[String] = ["Stone", "Wood", "Metal", "Vitreous Lux", "Echo-Stone", "Meat", "Hide"]
-const TOOL_ORDER: Array[String] = ["T00_HANDS", "I01_STONE_AXE", "I02_STONE_PICK"]
+const TOOL_ORDER: Array[String] = ["T00_HANDS", "I01_STONE_AXE", "I02_STONE_PICK", "I04_METAL_AXE", "I05_METAL_PICK", "I06_ECHO_AXE", "I07_ECHO_PICK"]
 
 @onready var player: Node = get_parent()
 @onready var inventory: Node = player.get_node_or_null("Inventory") if player else null
@@ -227,6 +227,14 @@ func _tool_name(tool_id: String) -> String:
 			return "STONE AXE"
 		"I02_STONE_PICK":
 			return "STONE PICK"
+		"I04_METAL_AXE":
+			return "METAL AXE"
+		"I05_METAL_PICK":
+			return "METAL PICK"
+		"I06_ECHO_AXE":
+			return "ECHO AXE"
+		"I07_ECHO_PICK":
+			return "ECHO PICK"
 		_:
 			return "HANDS"
 
