@@ -55,6 +55,8 @@ func _run_tests() -> void:
 	_test_npc_work_contract()
 	_test_blacksmith_contract()
 	_test_advanced_tool_and_hide_contract()
+	_test_tool_tier_progression_contract()
+	_test_progression_contract()
 	_test_building_catalog_contract()
 	_test_simulation_cadence_contract()
 	_test_job_simulation_contract()
@@ -63,7 +65,7 @@ func _run_tests() -> void:
 	_test_performance_cache_contract()
 	_test_alpha_presentation_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (53 suites)")
+		print("VEYRA CORE TESTS: PASS (55 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -1203,6 +1205,50 @@ func _test_advanced_tool_and_hide_contract() -> void:
 	settlement.set_building_storage("TANNERY-TEST", storage)
 	_check(settlement.get_job_definition("TANNER") != null, "Tanner job must exist")
 	settlement.queue_free()
+
+func _test_tool_tier_progression_contract() -> void:
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var inventory: VeyraInventory = player.get_inventory()
+	inventory.add_item("I02_STONE_PICK", 1)
+	inventory.add_item("I05_METAL_PICK", 1)
+	var resource_scene := load("res://scenes/resource_node.tscn") as PackedScene
+	var metal := resource_scene.instantiate()
+	root.add_child(metal)
+	metal.resource_type = "Metal"
+	metal.tool_required = "I02_STONE_PICK"
+	metal.amount = 3
+	metal.remaining = 3
+	_check(player.set_tool("I02_STONE_PICK"), "stone pick must equip for tier progression test")
+	_check(metal.can_interact(player), "stone pick must mine metal")
+	_check(player.set_tool("I05_METAL_PICK"), "metal pick must equip for tier progression test")
+	_check(metal.can_interact(player), "higher-tier metal pick must satisfy stone-pick requirement")
+	metal.queue_free()
+	player.queue_free()
+
+func _test_progression_contract() -> void:
+	var progression := VeyraProgressionManager.new()
+	root.add_child(progression)
+	progression.record_action("GATHER", 3, "Wood")
+	_check(progression.get_xp("EXTRACTION") == 15, "gathering must award extraction XP")
+	var first_steps := progression.get_quest_state("FIRST_STEPS")
+	_check(int(first_steps.get("objectives", {}).get("GATHER:Wood", {}).get("current", 0)) == 3, "gathering must advance quest objectives")
+	progression.record_action("CRAFT", 1, "I01_STONE_AXE")
+	first_steps = progression.get_quest_state("FIRST_STEPS")
+	_check(int(first_steps.get("objectives", {}).get("CRAFT:I01_STONE_AXE", {}).get("current", 0)) == 1, "crafting must advance quest objectives")
+	_check(bool(first_steps.get("completed", false)), "first steps quest must complete from its required actions")
+	_check(progression.skill_points >= 1, "completed quest must award a research point")
+	_check(progression.unlock_skill("FIELDCRAFT"), "fieldcraft must be unlockable with a research point")
+	_check(progression.has_skill("FIELDCRAFT"), "unlocked skill must persist in runtime state")
+	var saved := progression.get_save_state()
+	var restored := VeyraProgressionManager.new()
+	root.add_child(restored)
+	restored.load_save_state(saved)
+	_check(restored.has_skill("FIELDCRAFT"), "progression save/load must retain unlocked skills")
+	_check(restored.get_xp("EXTRACTION") == progression.get_xp("EXTRACTION"), "progression save/load must retain XP")
+	progression.queue_free()
+	restored.queue_free()
 
 func _test_building_catalog_contract() -> void:
 	_check(VeyraBuildingCatalog.exists("B05_TOWNHALL"), "Town Hall must remain buildable")
