@@ -348,7 +348,7 @@ func sync_villager_job(villager_id: String, state: NPCState) -> bool:
 
 func complete_villager_job(villager_id: String, state: NPCState) -> bool:
     var job: JobState = job_states.get(villager_id, null)
-    if job == null or not job.active:
+    if job == null or (not job.active and not job.completed):
         return false
     var definition: JobDefinition = job_definitions.get(job.definition_id, null)
     if definition == null:
