@@ -43,23 +43,40 @@ roughness = 1.0
 [sub_resource type="StandardMaterial3D" id="Eyes"]
 albedo_color = Color(0.02, 0.02, 0.02, 1)
 roughness = 0.5
-[sub_resource type="BoxMesh" id="ToolHandleMesh"]
-size = Vector3(0.07, 0.62, 0.07)
+[sub_resource type="CylinderMesh" id="ToolHandleMesh"]
+top_radius = 0.032
+bottom_radius = 0.045
+height = 0.88
+radial_segments = 8
+rings = 2
+
+[sub_resource type="CylinderMesh" id="ToolGripMesh"]
+top_radius = 0.046
+bottom_radius = 0.046
+height = 0.24
+radial_segments = 8
 
 [sub_resource type="BoxMesh" id="AxeHeadMesh"]
-size = Vector3(0.16, 0.20, 0.12)
+size = Vector3(0.17, 0.18, 0.12)
 
-[sub_resource type="BoxMesh" id="AxeBladeMesh"]
-size = Vector3(0.30, 0.28, 0.12)
+[sub_resource type="PrismMesh" id="AxeBladeMesh"]
+size = Vector3(0.24, 0.34, 0.11)
+left_to_right = 0.18
 
-[sub_resource type="BoxMesh" id="PickHeadMesh"]
-size = Vector3(0.34, 0.10, 0.12)
+[sub_resource type="BoxMesh" id="AxeCollarMesh"]
+size = Vector3(0.12, 0.10, 0.13)
+
+[sub_resource type="CylinderMesh" id="PickHeadMesh"]
+top_radius = 0.055
+bottom_radius = 0.055
+height = 0.56
+radial_segments = 8
 
 [sub_resource type="CylinderMesh" id="PickSpikeMesh"]
-top_radius = 0.025
-bottom_radius = 0.10
+top_radius = 0.0
+bottom_radius = 0.065
 height = 0.24
-radial_segments = 6
+radial_segments = 8
 
 [sub_resource type="BoxMesh" id="FPBeltMesh"]
 size = Vector3(0.58, 0.12, 0.38)
@@ -285,8 +302,8 @@ mesh = SubResource("HandMesh")
 material_override = SubResource("Skin")
 
 [node name="ToolHolder" type="Node3D" parent="Camera3D/ViewModel"]
-position = Vector3(0.23, -0.70, -1.00)
-rotation_degrees = Vector3(2, -4, -6)
+position = Vector3(0.30, -0.78, -1.10)
+rotation_degrees = Vector3(-4, -10, -8)
 scale = Vector3(1.0, 1.0, 1.0)
 
 [node name="EquippedTool" type="Node3D" parent="Camera3D/ViewModel/ToolHolder"]
@@ -294,35 +311,49 @@ visible = false
 
 [node name="Handle" type="MeshInstance3D" parent="Camera3D/ViewModel/ToolHolder/EquippedTool"]
 layers = 2
-position = Vector3(0.0, 0.27, 0.0)
+position = Vector3(0.0, 0.34, 0.0)
 mesh = SubResource("ToolHandleMesh")
+material_override = SubResource("FPToolWoodMaterial")
+
+[node name="ToolGrip" type="MeshInstance3D" parent="Camera3D/ViewModel/ToolHolder/EquippedTool"]
+layers = 2
+position = Vector3(0.0, 0.05, 0.0)
+mesh = SubResource("ToolGripMesh")
 material_override = SubResource("FPToolWoodMaterial")
 
 [node name="AxeHead" type="MeshInstance3D" parent="Camera3D/ViewModel/ToolHolder/EquippedTool"]
 layers = 2
-position = Vector3(0.04, 0.55, 0.0)
+position = Vector3(0.0, 0.80, 0.0)
 mesh = SubResource("AxeHeadMesh")
 material_override = SubResource("FPToolStoneMaterial")
 visible = false
 
 [node name="AxeBlade" type="MeshInstance3D" parent="Camera3D/ViewModel/ToolHolder/EquippedTool"]
 layers = 2
-position = Vector3(0.20, 0.55, 0.0)
-rotation_degrees = Vector3(0, 0, -8)
+position = Vector3(0.13, 0.80, 0.0)
+rotation_degrees = Vector3(0, 0, -12)
 mesh = SubResource("AxeBladeMesh")
 material_override = SubResource("FPToolStoneMaterial")
 visible = false
 
+[node name="AxeCollar" type="MeshInstance3D" parent="Camera3D/ViewModel/ToolHolder/EquippedTool"]
+layers = 2
+position = Vector3(0.0, 0.69, 0.0)
+mesh = SubResource("AxeCollarMesh")
+material_override = SubResource("FPToolMetalMaterial")
+visible = false
+
 [node name="PickHead" type="MeshInstance3D" parent="Camera3D/ViewModel/ToolHolder/EquippedTool"]
 layers = 2
-position = Vector3(0.0, 0.53, 0.0)
+position = Vector3(0.0, 0.77, 0.0)
+rotation_degrees = Vector3(0, 0, 90)
 mesh = SubResource("PickHeadMesh")
 material_override = SubResource("FPToolStoneMaterial")
 visible = false
 
 [node name="PickSpikeLeft" type="MeshInstance3D" parent="Camera3D/ViewModel/ToolHolder/EquippedTool"]
 layers = 2
-position = Vector3(-0.23, 0.53, 0.0)
+position = Vector3(-0.39, 0.77, 0.0)
 rotation_degrees = Vector3(0, 0, 90)
 mesh = SubResource("PickSpikeMesh")
 material_override = SubResource("FPToolStoneMaterial")
@@ -330,7 +361,7 @@ visible = false
 
 [node name="PickSpikeRight" type="MeshInstance3D" parent="Camera3D/ViewModel/ToolHolder/EquippedTool"]
 layers = 2
-position = Vector3(0.23, 0.53, 0.0)
+position = Vector3(0.39, 0.77, 0.0)
 rotation_degrees = Vector3(0, 0, -90)
 mesh = SubResource("PickSpikeMesh")
 material_override = SubResource("FPToolStoneMaterial")
