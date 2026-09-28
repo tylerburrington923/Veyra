@@ -1,7 +1,7 @@
 extends RefCounted
 class_name VeyraResourceCatalog
 
-const RESOURCE_TYPES: Array[String] = ["Stone", "Wood", "Metal", "Refined Metal", "Vitreous Lux", "Echo-Stone", "Meat", "Hide"]
+const RESOURCE_TYPES: Array[String] = ["Stone", "Wood", "Metal", "Refined Metal", "Vitreous Lux", "Echo-Stone", "Meat", "Hide", "Food"]
 
 static func is_valid(resource_type: String) -> bool:
     return resource_type in RESOURCE_TYPES
@@ -17,7 +17,7 @@ static func max_stack(resource_type: String) -> int:
             return 25
         "Meat":
             return 50
-        "Hide":
+        "Hide", "Food":
             return 50
         _:
             return 99
@@ -38,6 +38,8 @@ static func weight(resource_type: String) -> float:
             return 1.0
         "Hide":
             return 1.5
+        "Food":
+            return 0.5
         _:
             return 1.0
 
