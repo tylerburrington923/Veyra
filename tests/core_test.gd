@@ -181,6 +181,7 @@ func _test_townhall_contract() -> void:
 	_check(collision_count >= 2, "town hall must have solid collision")
 	_check(hall.get_child_count() >= 20, "town hall must have a substantial civic visual assembly")
 	_check(hall.get_node_or_null("RoofLeft") != null and hall.get_node_or_null("RoofRight") != null, "town hall must have a pitched main roof")
+	_check(hall.get_node_or_null("Clock") != null and hall.get_node_or_null("ClockFace") != null, "town hall must have a readable civic clock")
 	hall.queue_free()
 
 
