@@ -370,15 +370,30 @@ func complete_villager_job(villager_id: String, state: NPCState) -> bool:
     settlement_changed.emit()
     return true
 
+func _consume_storage_resource(resource_type: String, amount: int) -> bool:
+    if amount <= 0:
+        return false
+    var resources := _get_primary_storage_resources()
+    if int(resources.get(resource_type, 0)) < amount:
+        return false
+    resources[resource_type] = int(resources.get(resource_type, 0)) - amount
+    if resources[resource_type] <= 0:
+        resources.erase(resource_type)
+    return _set_primary_storage_resources(resources)
+
 func process_villager_needs(states: Array[NPCState]) -> void:
     for state in states:
         if state == null or not state.alive or not villagers.has(state.npc_id):
             continue
         var record: Dictionary = villagers[state.npc_id]
-        if state.hunger <= 65.0 and food_stock > 0:
-            food_stock -= 1
-            state.hunger = 100.0
-            record["food"] = 1.0
+        if state.hunger <= 65.0:
+            if food_stock > 0:
+                food_stock -= 1
+                state.hunger = 100.0
+                record["food"] = 1.0
+            elif _consume_storage_resource("Food", 1):
+                state.hunger = 100.0
+                record["food"] = 1.0
         if state.thirst <= 65.0 and water_stock > 0:
             water_stock -= 1
             state.thirst = 100.0
