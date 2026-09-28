@@ -30,6 +30,7 @@ func _run_tests() -> void:
 	_test_wildlife_beta_contract()
 	_test_wildlife_combat_contract()
 	_test_wildlife_meat_hide_contract()
+	_test_wildlife_empty_snapshot_contract()
 	_test_full_game_skeleton_contracts()
 	_test_tree_harvest_visual_contract()
 	_test_house_door_contract()
@@ -43,6 +44,7 @@ func _run_tests() -> void:
 	_test_mobile_backpack_contract()
 	_test_building_interaction_contract()
 	_test_building_storage_contract()
+	_test_storage_protects_tools_contract()
 	_test_campfire_and_townhall_contract()
 	_test_settlement_water_contract()
 	_test_multiplayer_contract()
@@ -860,11 +862,11 @@ func _test_building_storage_contract() -> void:
 	var building := VeyraBuildingInstance.new()
 	root.add_child(building)
 	building.setup(building_id, "B02_STORAGE", Vector3.ZERO)
-	building.interact(player)
+	_check(building.deposit_all_storage(player) == 7, "storage deposit must move carried wood")
 	_check(inventory.get_amount("Wood") == 0, "storage deposit must remove carried wood")
 	var stored: Dictionary = settlement.get_building_storage(building_id)
 	_check(int(stored.get("resources", {}).get("Wood", 0)) == 7, "storage must persist deposited wood")
-	building.interact(player)
+	_check(building.withdraw_all_storage(player) == 7, "storage withdrawal must restore deposited wood")
 	_check(inventory.get_amount("Wood") == 7, "storage withdrawal must restore deposited wood")
 	var emptied_storage: Dictionary = settlement.get_building_storage(building_id)
 	_check(
@@ -876,6 +878,42 @@ func _test_building_storage_contract() -> void:
 	building.queue_free()
 	player.queue_free()
 
+
+func _test_storage_protects_tools_contract() -> void:
+	var settlement: Node = root.get_node_or_null("/root/SettlementManager")
+	if not settlement:
+		return
+	var building_id := "STORAGE-TOOLS-001"
+	settlement.add_building(building_id, "B02_STORAGE", Vector3.ZERO)
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var inventory: VeyraInventory = player.get_inventory()
+	inventory.clear()
+	_check(inventory.add_item("I01_STONE_AXE", 1) == 1, "storage tool test must seed axe")
+	_check(inventory.add_item("I02_STONE_PICK", 1) == 1, "storage tool test must seed pick")
+	var building := VeyraBuildingInstance.new()
+	root.add_child(building)
+	building.setup(building_id, "B02_STORAGE", Vector3.ZERO)
+	_check(building.deposit_all_storage(player) == 0, "storage must not deposit tools")
+	_check(inventory.has_item("I01_STONE_AXE") and inventory.has_item("I02_STONE_PICK"), "tools must remain in personal inventory")
+	var ui := player.get_node_or_null("BuildingUI")
+	_check(ui == null or not ui.visible, "storage test must not require an open UI")
+	settlement.buildings.erase(building_id)
+	building.queue_free()
+	player.queue_free()
+
+func _test_wildlife_empty_snapshot_contract() -> void:
+	var manager_script := load("res://scripts/animal_manager.gd")
+	var manager: AnimalManager = manager_script.new()
+	root.add_child(manager)
+	var animal := manager.spawn_animal("snapshot_test", "lumen_grazer", Vector3.ZERO)
+	_check(animal != null, "snapshot wildlife test animal must spawn")
+	var before := manager.states.size()
+	manager.apply_network_snapshot([])
+	_check(manager.states.size() == before, "empty wildlife snapshot must not erase live client wildlife")
+	manager.despawn_animal("snapshot_test")
+	manager.queue_free()
 
 func _test_water_system_contract() -> void:
 	var generator_script := load("res://scripts/world_generator.gd")
