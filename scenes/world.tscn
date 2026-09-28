@@ -10,7 +10,6 @@
 [ext_resource type="Script" path="res://scripts/water_system.gd" id="10_water"]
 [ext_resource type="Script" path="res://scripts/npc_manager.gd" id="11_npc"]
 [ext_resource type="Script" path="res://scripts/animal_manager.gd" id="13_animals"]
-[ext_resource type="Script" path="res://scripts/animal_manager.gd" id="13_animals"]
 [ext_resource type="Script" path="res://scripts/pause_menu.gd" id="12_pause"]
 
 [sub_resource type="CylinderMesh" id="EchoStoneMesh"]
@@ -117,11 +116,6 @@ material_override = SubResource("EchoStoneMaterial")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="EchoStone5"]
 shape = SubResource("EchoStoneShape")
-
-[node name="AnimalManager" type="Node3D" parent="."]
-script = ExtResource("13_animals")
-beta_animal_count = 6
-spawn_radius = 12.0
 
 [node name="AnimalManager" type="Node3D" parent="."]
 script = ExtResource("13_animals")
