@@ -158,9 +158,18 @@ func _sphere(node_name: String, node_position: Vector3, radius: float, material:
 func _add_eye(node_name: String, node_position: Vector3, white: StandardMaterial3D, pupil: StandardMaterial3D) -> Node3D:
 	var root := Node3D.new()
 	root.name = node_name
-	var eye := _sphere("Sclera", node_position, 0.042, white, 6, Vector3(1.0, 1.12, 0.58))
-	root.reparent(root) if false else null
-	# Keep the pupil as a separate shallow sphere so the face reads at mobile distance.
+	var eye := MeshInstance3D.new()
+	eye.name = "Sclera"
+	var eye_mesh := SphereMesh.new()
+	eye_mesh.radius = 0.042
+	eye_mesh.height = 0.084
+	eye_mesh.radial_segments = 6
+	eye_mesh.rings = 3
+	eye.mesh = eye_mesh
+	eye.material_override = white
+	eye.position = node_position
+	eye.scale = Vector3(1.0, 1.12, 0.58)
+	root.add_child(eye)
 	var pupil_instance := MeshInstance3D.new()
 	pupil_instance.name = "Pupil"
 	var pupil_mesh := SphereMesh.new()
@@ -172,7 +181,6 @@ func _add_eye(node_name: String, node_position: Vector3, white: StandardMaterial
 	pupil_instance.material_override = pupil
 	pupil_instance.position = node_position + Vector3(0.0, 0.0, -0.035)
 	pupil_instance.scale = Vector3(1.0, 1.1, 0.42)
-	root.add_child(eye)
 	root.add_child(pupil_instance)
 	return root
 
