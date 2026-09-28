@@ -242,6 +242,17 @@ func _refresh_campfire() -> void:
 	var heat := float(_building.get_campfire_heat()) if _building.has_method("get_campfire_heat") else 0.0
 	_add_or_update_status("Heat remaining: %.0f sec" % heat)
 
+func _get_storage_snapshot() -> Dictionary:
+	var settlement := get_node_or_null("/root/SettlementManager")
+	if not settlement or not settlement.has_method("get_building_storage"):
+		return {"resources": {}, "items": {}}
+	var storage: Dictionary = settlement.get_building_storage(_building.building_id)
+	if not (storage.get("resources", {}) is Dictionary):
+		storage["resources"] = {}
+	if not (storage.get("items", {}) is Dictionary):
+		storage["items"] = {}
+	return storage
+
 func _refresh_storage() -> void:
 	if _mode != "storage" or not _building or not _player:
 		return
@@ -249,7 +260,7 @@ func _refresh_storage() -> void:
 	_add_text("PERSONAL TOOLS STAY WITH YOU.\nResources and non-tool items can be stored here.")
 	_add_action("DEPOSIT ALL", _deposit_storage)
 	_add_action("WITHDRAW ALL", _withdraw_storage)
-	var storage: Dictionary = _building.get_storage_snapshot() if _building.has_method("get_storage_snapshot") else {}
+	var storage := _get_storage_snapshot()
 	var resources: Dictionary = storage.get("resources", {})
 	var items: Dictionary = storage.get("items", {})
 	var lines: Array[String] = []
@@ -261,20 +272,66 @@ func _refresh_storage() -> void:
 		var amount := int(items[key])
 		if amount > 0:
 			lines.append("%s  x%d" % [VeyraItemCatalog.display_name(str(key)), amount])
-	if lines.is_empty():
-		_add_text("Storage is empty.")
-	else:
-		_add_text("STORED\n" + "\n".join(lines))
+	_add_text("STORED\n" + ("\n".join(lines) if not lines.is_empty() else "Storage is empty."))
 
 func _deposit_storage() -> void:
-	if _building and _building.has_method("deposit_all_storage"):
-		_building.deposit_all_storage(_player)
+	var inventory := _player.get_node_or_null("Inventory") as VeyraInventory
+	var settlement := get_node_or_null("/root/SettlementManager")
+	if not inventory or not settlement:
+		return
+	var storage := _get_storage_snapshot()
+	var stored_resources: Dictionary = storage.get("resources", {})
+	var stored_items: Dictionary = storage.get("items", {})
+	for resource_type in inventory.get_resource_types():
+		var amount := inventory.get_amount(resource_type)
+		if amount > 0:
+			var removed := inventory.remove_resource(resource_type, amount)
+			if removed > 0:
+				stored_resources[resource_type] = int(stored_resources.get(resource_type, 0)) + removed
+	for item_id in inventory.get_item_types():
+		if VeyraItemCatalog.is_valid_tool(item_id):
+			continue
+		var amount := inventory.get_item_amount(item_id)
+		if amount > 0:
+			var removed := inventory.remove_item(item_id, amount)
+			if removed > 0:
+				stored_items[item_id] = int(stored_items.get(item_id, 0)) + removed
+	storage["resources"] = stored_resources
+	storage["items"] = stored_items
+	settlement.set_building_storage(_building.building_id, storage)
 	_refresh_storage()
 
 func _withdraw_storage() -> void:
-	if _building and _building.has_method("withdraw_all_storage"):
-		_building.withdraw_all_storage(_player)
+	var inventory := _player.get_node_or_null("Inventory") as VeyraInventory
+	var settlement := get_node_or_null("/root/SettlementManager")
+	if not inventory or not settlement:
+		return
+	var storage := _get_storage_snapshot()
+	var stored_resources: Dictionary = storage.get("resources", {})
+	var stored_items: Dictionary = storage.get("items", {})
+	for resource_type in stored_resources.keys().duplicate():
+		var amount := int(stored_resources[resource_type])
+		if amount <= 0:
+			stored_resources.erase(resource_type)
+			continue
+		var accepted := inventory.add_resource(str(resource_type), amount)
+		stored_resources[resource_type] = amount - accepted
+		if stored_resources[resource_type] <= 0:
+			stored_resources.erase(resource_type)
+	for item_id in stored_items.keys().duplicate():
+		var amount := int(stored_items[item_id])
+		if amount <= 0:
+			stored_items.erase(item_id)
+			continue
+		var accepted := inventory.add_item(str(item_id), amount)
+		stored_items[item_id] = amount - accepted
+		if stored_items[item_id] <= 0:
+			stored_items.erase(item_id)
+	storage["resources"] = stored_resources
+	storage["items"] = stored_items
+	settlement.set_building_storage(_building.building_id, storage)
 	_refresh_storage()
+
 
 func _refresh_townhall() -> void:
 	if _mode != "townhall" or not _player:
