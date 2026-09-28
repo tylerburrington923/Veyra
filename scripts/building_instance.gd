@@ -647,9 +647,15 @@ func _forge_tool(player: Node, tool_id: String) -> bool:
     var inventory: VeyraInventory = player.get_node_or_null("Inventory") as VeyraInventory if player else null
     if not inventory:
         return false
-    var cost := {"Refined Metal": 1, "Wood": 2, "Stone": 1}
-    if tool_id == "I02_STONE_PICK":
+    var cost := {"Refined Metal": 1, "Wood": 2}
+    if tool_id in ["I01_STONE_AXE", "I04_METAL_AXE", "I06_ECHO_AXE"]:
+        cost["Stone"] = 1
+    if tool_id in ["I02_STONE_PICK", "I05_METAL_PICK", "I07_ECHO_PICK"]:
         cost["Stone"] = 2
+    if tool_id in ["I06_ECHO_AXE", "I07_ECHO_PICK"]:
+        cost["Refined Metal"] = 2
+        cost["Echo-Stone"] = 1
+        cost["Vitreous Lux"] = 1
     for key in cost:
         if not inventory.has_resource(key, int(cost[key])):
             _last_interaction_feedback = "Blacksmith: missing %s." % key
