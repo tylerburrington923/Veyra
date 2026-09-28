@@ -212,7 +212,7 @@ func _update_visuals(delta: float) -> void:
 
 func _update_behavior(state: AnimalState, definition: AnimalDefinition, delta: float) -> void:
 	state.behavior_timer += delta
-	if definition.behavior_type == "PREDATOR":
+	if definition.behavior_archetype == "PREDATOR":
 		var player := get_tree().get_first_node_in_group("local_player") as Node3D
 		if player:
 			var current := _state_position(state.position)
