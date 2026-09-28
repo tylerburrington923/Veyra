@@ -256,7 +256,10 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 			target_action.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		if target_detail:
 			target_detail.visible = has_target
-			var detail_text := target_name if target_name != "" else "UNKNOWN"
+			var display_name := target_name if target_name != "" else "UNKNOWN"
+			if handler_node and handler_node.has_method("get_interaction_name"):
+				display_name = str(handler_node.get_interaction_name())
+			var detail_text := display_name
 			if not eligible and last_requirement != "":
 				detail_text = "REQUIRES " + last_requirement.to_upper()
 			elif player:
