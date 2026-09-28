@@ -37,11 +37,16 @@ This is the active engineering review list. Items are observations from source/c
 
 ## P2 — Performance hardening
 
+- [x] NPC simulation allocation churn — Reuse the NPC typed-state scratch buffer instead of allocating a new Array every simulation tick.
 - [ ] NPC mesh-instance count — Current NPC visuals use many individual MeshInstance3D parts. Profile before scaling villager population; consider shared meshes/materials or MultiMesh for repeated parts if population rises.
+- [x] Wildlife resource duplication — Wildlife now shares mesh/material resources within the manager instead of creating duplicate geometry/material resources per creature.
 - [ ] Wildlife actor cost — Profile simulation/visual updates with the intended 2–4-player beta population plus wildlife.
 - [ ] Terrain collision cost — Current terrain uses a ConcavePolygonShape3D generated from the full terrain mesh. Confirm mobile physics cost and interaction/build placement ray performance.
 - [ ] Resource collision count — Audit the number of StaticBody3D resource nodes and whether harvesting/movement collisions can be simplified.
 - [ ] Foliage harvesting architecture — Current MultiMesh foliage is efficient visually but creates individual harvest physics bodies. Profile at higher tree counts.
+- [x] Terrain runtime sampling — Cache generated terrain heights and provide fast bilinear sampling for actor/foliage runtime queries; exact noise remains authoritative for mesh generation.
+- [x] Terrain lighting cost — Terrain moved from per-pixel to per-vertex material shading; geometry/texture quality is unchanged.
+- [x] Foliage shadow cost — Foliage MultiMesh instances no longer cast dynamic shadows; scene lighting remains intact while removing an expensive mobile shadow pass.
 - [ ] World draw distance — Tune foliage/camera/fog distances against actual device FPS rather than desktop appearance.
 - [ ] UI allocation churn — Building/crafting UI clears and recreates child controls. Confirm this is only modal/occasional and does not occur every frame.
 
@@ -75,6 +80,15 @@ This is the active engineering review list. Items are observations from source/c
 8. Interaction/building/crafting/resource/save systems are tested on device.
 9. Visual review specifically checks NPCs, tools, HUD, Town Hall, terrain, water and floating geometry.
 10. No completion claim is made from CI alone when a physical-device behavior is required.
+
+## Performance research findings
+
+- Godot's Compatibility renderer remains the intended low-end/mobile path for Veyra. It has a low base rendering cost, while its scaling cost makes object count, draw calls, overdraw and expensive lighting especially important. citeturn0search0
+- Godot MultiMesh is the correct mechanism for repeated simple environmental geometry, but large spatially spread MultiMeshes should be split into chunks because individual instances cannot be frustum/occlusion culled. citeturn0search1turn0search8
+- Godot LOD/visibility ranges and occlusion culling are complementary. Occlusion is most valuable where level geometry actually creates occlusion opportunities; blindly enabling it in open terrain can add CPU/setup cost without benefit. citeturn0search3turn0search7
+- Android's game-performance guidance emphasizes reducing geometry, draw calls, unnecessary attachments, and using LOD/culling; ASTC texture compression can substantially reduce texture memory. Veyra already has ETC2/ASTC import enabled, so the next gains should come from runtime object/shadow/CPU budgets rather than adding larger textures. citeturn0search2
+- Mobile/tile-based GPUs are especially sensitive to expensive shader, viewport-texture and post-processing work, reinforcing Veyra's Compatibility + simple-material approach. citeturn0search4
+- A useful external benchmark for the direction is NetEase's *Life After*: its mobile occlusion solution reportedly reduced draw calls by about 65% on low-end phones, illustrating the scale available from visibility management when a world has enough occlusion structure. This is research context, not a claim about Veyra's current performance. citeturn0search6
 
 ## Current review notes
 
