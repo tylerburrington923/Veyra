@@ -192,6 +192,8 @@ func _update_villager_behavior(state: NPCState, delta: float) -> void:
 		if job:
 			var definition: JobDefinition = settlement.get_job_definition(job.definition_id)
 			var target := settlement.get_job_target_position(job.definition_id, job.target_building_id)
+			var target_position := _ground_position(_state_position(target))
+			target = _vector_dict(target_position)
 			if definition:
 				if state.current_job != definition.id or state.current_task == "IDLE":
 					NPCJobSimulation.assign_job(state, definition, target)
