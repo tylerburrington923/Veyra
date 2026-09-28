@@ -28,6 +28,7 @@ func _run_tests() -> void:
 	_test_npc_beta_wander_contract()
 	_test_npc_trade_and_service_contract()
 	_test_wildlife_beta_contract()
+	_test_wildlife_generation_contract()
 	_test_wildlife_combat_contract()
 	_test_wildlife_meat_hide_contract()
 	_test_wildlife_empty_snapshot_contract()
@@ -61,7 +62,7 @@ func _run_tests() -> void:
 	_test_performance_cache_contract()
 	_test_alpha_presentation_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (51 suites)")
+		print("VEYRA CORE TESTS: PASS (52 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -1063,6 +1064,47 @@ func _test_wildlife_beta_contract() -> void:
 	_check(not manager.states.has("grazer_test_01"), "wildlife despawn must remove authoritative state")
 	manager.queue_free()
 
+
+
+func _test_wildlife_generation_contract() -> void:
+	var manager: AnimalManager = load("res://scripts/animal_manager.gd").new()
+	root.add_child(manager)
+	var female_visual := manager.spawn_animal("generation_female", "lumen_grazer", Vector3.ZERO)
+	var male_visual := manager.spawn_animal("generation_male", "lumen_grazer", Vector3(2.0, 0.0, 0.0))
+	_check(female_visual != null and male_visual != null, "generation test animals must spawn")
+	var female: AnimalState = manager.states["generation_female"]
+	var male: AnimalState = manager.states["generation_male"]
+	female.sex = "F"
+	male.sex = "M"
+	female.age_seconds = 200.0
+	male.age_seconds = 200.0
+	female.life_stage = "ADULT"
+	male.life_stage = "ADULT"
+	female.reproduction_cooldown = 0.0
+	male.reproduction_cooldown = 0.0
+	manager.population_cap = 3
+	manager._process_reproduction()
+	var child: AnimalState = null
+	for value in manager.states.values():
+		var candidate: AnimalState = value as AnimalState
+		if candidate and candidate.animal_id.begins_with("wild_gen_"):
+			child = candidate
+			break
+	_check(child != null, "compatible adult wildlife must produce a bounded child")
+	if child:
+		_check(child.generation == 2, "offspring generation must advance")
+		_check(child.parent_a_id == female.animal_id and child.parent_b_id == male.animal_id, "offspring must retain parent metadata")
+		_check(child.life_stage == "JUVENILE", "offspring must start juvenile")
+	var snapshot := manager.get_save_state()
+	_check(snapshot.size() == 3, "wildlife save state must contain the bounded living population")
+	var restored_manager: AnimalManager = load("res://scripts/animal_manager.gd").new()
+	root.add_child(restored_manager)
+	restored_manager.set_saved_state(snapshot)
+	restored_manager._restore_saved_state()
+	_check(restored_manager.states.size() == 3, "wildlife save restore must preserve living population")
+	_check(restored_manager.states.has(child.animal_id), "wildlife save restore must preserve offspring identity")
+	manager.queue_free()
+	restored_manager.queue_free()
 
 
 func _test_wildlife_combat_contract() -> void:
