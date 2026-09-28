@@ -57,6 +57,7 @@ func _run_tests() -> void:
 	_test_advanced_tool_and_hide_contract()
 	_test_tool_tier_progression_contract()
 	_test_progression_contract()
+	_test_building_progression_contract()
 	_test_building_catalog_contract()
 	_test_simulation_cadence_contract()
 	_test_job_simulation_contract()
@@ -65,7 +66,7 @@ func _run_tests() -> void:
 	_test_performance_cache_contract()
 	_test_alpha_presentation_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (55 suites)")
+		print("VEYRA CORE TESTS: PASS (56 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -1250,6 +1251,34 @@ func _test_progression_contract() -> void:
 	_check(restored.get_xp("EXTRACTION") == progression.get_xp("EXTRACTION"), "progression save/load must retain XP")
 	progression.queue_free()
 	restored.queue_free()
+
+func _test_building_progression_contract() -> void:
+	var progression := get_node_or_null("/root/ProgressionManager") as VeyraProgressionManager
+	var settlement := get_node_or_null("/root/SettlementManager")
+	_check(progression != null, "building progression test requires the ProgressionManager autoload")
+	_check(settlement != null, "building progression test requires the SettlementManager autoload")
+	if not progression or not settlement:
+		return
+
+	var saved_progression := progression.get_save_state()
+	var saved_buildings: Dictionary = settlement.get("buildings").duplicate(true)
+	var manager := VeyraBuildingManager.new()
+	root.add_child(manager)
+
+	var test_building_id := "BUILD-PROGRESSION-TEST"
+	settlement.add_building(test_building_id, "B01_CAMPFIRE", Vector3.ZERO)
+	var before_xp := progression.get_xp("SETTLEMENT")
+	manager.building_completed.emit(test_building_id, Vector3.ZERO)
+
+	_check(progression.get_xp("SETTLEMENT") == before_xp + 20, "completed building must award settlement XP exactly once")
+	var quest := progression.get_quest_state("SETTLEMENT")
+	var objective := quest.get("objectives", {}).get("BUILD:B01_CAMPFIRE", {})
+	_check(int(objective.get("current", 0)) >= 1, "completed Campfire must advance the settlement quest")
+
+	manager.queue_free()
+	settlement.buildings = saved_buildings
+	progression.load_save_state(saved_progression)
+
 
 func _test_building_catalog_contract() -> void:
 	_check(VeyraBuildingCatalog.exists("B05_TOWNHALL"), "Town Hall must remain buildable")
