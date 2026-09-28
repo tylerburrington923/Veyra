@@ -246,6 +246,7 @@ func _trunk_material() -> StandardMaterial3D:
     var material := StandardMaterial3D.new()
     material.albedo_color = Color(0.25, 0.20, 0.13, 1)
     material.roughness = 1.0
+    material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
     return material
 
 
