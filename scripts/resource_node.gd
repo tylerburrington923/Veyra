@@ -101,7 +101,7 @@ func interact(player_override: Node = null) -> void:
 		return
 
 	remaining -= accepted
-	var progression := get_node_or_null("/root/ProgressionManager")
+	progression = get_node_or_null("/root/ProgressionManager")
 	if progression and progression.has_method("record_action"):
 		progression.record_action("GATHER", accepted, resource_type)
 	interaction_cooldown = 0.18
