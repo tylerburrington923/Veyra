@@ -184,18 +184,37 @@ func _spawn_resources() -> void:
         add_child(_make_resource_node(spawned, Vector3(x, y, z)))
         spawned += 1
 
-func get_required_tool_for_resource(resource_type: String) -> String:
-    # The first loop is intentionally hand-driven: loose sticks and usable
-    # field rocks are gatherable before the player owns any tool.
-    if resource_type == "Wood" or resource_type == "Stone":
+func get_required_tool_for_resource(resource_type: String, node_kind: String = "") -> String:
+    # Loose sticks and small field stones are the hand-gathered starter resources.
+    # Large stone is deliberately pickaxe-only so the first tool has a purpose.
+    if node_kind == "stick" or node_kind == "small_stone":
         return VeyraItemCatalog.HANDS_ID
-    return "I02_STONE_PICK"
+    if resource_type == "Stone" or resource_type == "Metal" or resource_type == "Vitreous Lux" or resource_type == "Echo-Stone":
+        return "I02_STONE_PICK"
+    return VeyraItemCatalog.HANDS_ID
 
 func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
     var rng := RandomNumberGenerator.new()
     rng.seed = seed_value + index * 17
-    var types := ["Stone", "Wood", "Metal", "Vitreous Lux"]
-    var resource_type: String = types[rng.randi_range(0, types.size() - 1)]
+    # Deterministic starter distribution guarantees the intended first loop:
+    # sticks + small stones by hand, then large stone behind the stone pick.
+    var resource_type: String
+    var node_kind: String
+    if index < 3:
+        resource_type = "Wood"
+        node_kind = "stick"
+    elif index < 6:
+        resource_type = "Stone"
+        node_kind = "small_stone"
+    elif index < 18:
+        resource_type = "Stone"
+        node_kind = "large_stone"
+    elif index % 5 == 0:
+        resource_type = "Vitreous Lux"
+        node_kind = "lux"
+    else:
+        resource_type = "Metal"
+        node_kind = "metal"
 
     var node = RESOURCE_NODE_SCENE.instantiate()
     node.resource_id = "R01-%03d" % (index + 1)
@@ -203,12 +222,13 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
     var ground_y := get_height_at_world(spawn_position.x, spawn_position.z)
     node.position = Vector3(spawn_position.x, ground_y, spawn_position.z)
     node.resource_type = resource_type
+    node.node_kind = node_kind
     node.amount = 3
-    node.tool_required = get_required_tool_for_resource(resource_type)
+    node.tool_required = get_required_tool_for_resource(resource_type, node_kind)
     node.collision_layer = 4
     node.collision_mask = 1
 
-    if resource_type == "Wood":
+    if node_kind == "stick":
         # Hand-gathered wood is represented as loose sticks lying on the ground.
         node.position.y += 0.04
         var stick_mesh := _wood_stick_mesh()
@@ -230,6 +250,15 @@ func _make_resource_node(index: int, spawn_position: Vector3) -> Node:
             )
             stick.scale = Vector3.ONE * rng.randf_range(0.82, 1.08)
             node.add_child(stick)
+    elif node_kind == "small_stone":
+        var visual := MeshInstance3D.new()
+        visual.mesh = _resource_mesh("Stone")
+        visual.material_override = _resource_material("Stone")
+        visual.rotation.y = rng.randf_range(0.0, TAU)
+        var visual_scale := rng.randf_range(0.28, 0.42)
+        visual.scale = Vector3.ONE * visual_scale
+        node.position.y += 0.18 * visual_scale + 0.03
+        node.add_child(visual)
     else:
         var visual := MeshInstance3D.new()
         visual.mesh = _resource_mesh(resource_type)
