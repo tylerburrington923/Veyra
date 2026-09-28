@@ -6,8 +6,8 @@ const ANIMAL_ACTOR_SCRIPT = preload("res://scripts/animal_actor.gd")
 ## Host owns simulation in multiplayer; clients only present authoritative snapshots.
 ## Creatures use primitive meshes/materials so the build stays small and mobile-friendly.
 
-@export var beta_animal_count: int = 5
-@export var spawn_radius: float = 18.0
+@export var beta_animal_count: int = 6
+@export var spawn_radius: float = 14.0
 
 var definitions: Dictionary = {}
 var states: Dictionary = {}
@@ -17,6 +17,8 @@ var visuals: Dictionary = {}
 var death_timers: Dictionary = {}
 var _mesh_cache: Dictionary = {}
 var _material_cache: Dictionary = {}
+var _visual_clock: float = 0.0
+var _network_snapshot_initialized := false
 
 func _ready() -> void:
 	add_to_group("animal_manager")
@@ -70,7 +72,7 @@ func _register_definitions() -> void:
 	)
 
 func _spawn_beta_wildlife() -> void:
-	var ids: Array[String] = ["lumen_grazer", "mireback", "veilwolf", "lumen_grazer", "stonebear"]
+	var ids: Array[String] = ["lumen_grazer", "mireback", "veilwolf", "lumen_grazer", "stonebear", "veilwolf"]
 	var count := mini(beta_animal_count, ids.size())
 	for index in range(count):
 		var definition_id := ids[index]
@@ -165,6 +167,10 @@ func get_network_snapshot() -> Array:
 	return snapshot
 
 func apply_network_snapshot(snapshot: Array) -> void:
+	# Unreliable snapshots can arrive before wildlife has spawned on the host.
+	# An empty packet must never erase already-present client wildlife.
+	if snapshot.is_empty() and not states.is_empty():
+		return
 	var incoming: Dictionary = {}
 	for value in snapshot:
 		if not value is Dictionary:
@@ -195,6 +201,7 @@ func apply_network_snapshot(snapshot: Array) -> void:
 			despawn_animal(str(animal_id))
 
 func _update_visuals(delta: float) -> void:
+	_visual_clock += delta
 	for animal_id in visuals.keys():
 		var visual: Node3D = visuals[animal_id]
 		var state: AnimalState = states.get(animal_id)
@@ -211,6 +218,20 @@ func _update_visuals(delta: float) -> void:
 			direction.y = 0.0
 			if direction.length_squared() > 0.01:
 				visual.look_at(visual.global_position + direction.normalized(), Vector3.UP)
+		var moving := state.behavior_state == "WANDER" or state.behavior_state == "CHASE"
+		var gait_speed := 7.5 if state.behavior_state == "CHASE" else 5.0
+		for part in visual.get_children():
+			if not part is MeshInstance3D:
+				continue
+			var mesh_part := part as MeshInstance3D
+			if bool(mesh_part.get_meta("animal_limb", false)):
+				var base_rotation: Vector3 = mesh_part.get_meta("animal_base_rotation", mesh_part.rotation)
+				var phase: float = float(mesh_part.get_meta("animal_phase", 0.0))
+				var stride := sin(_visual_clock * gait_speed + phase) * (0.32 if moving else 0.04)
+				mesh_part.rotation = base_rotation + Vector3(stride, 0.0, 0.0)
+			if bool(mesh_part.get_meta("animal_head", false)):
+				var base_position: Vector3 = mesh_part.get_meta("animal_base_position", mesh_part.position)
+				mesh_part.position = base_position + Vector3(0.0, sin(_visual_clock * gait_speed * 0.5) * (0.025 if moving else 0.008), 0.0)
 
 func _update_behavior(state: AnimalState, definition: AnimalDefinition, delta: float) -> void:
 	state.behavior_timer += delta
@@ -362,6 +383,10 @@ func _add_capsule(root: Node3D, position_value: Vector3, dimensions: Vector3, ma
 	instance.material_override = material
 	instance.position = position_value
 	instance.rotation_degrees.z = rotation_z
+	if position_value.y < 0.6:
+		instance.set_meta("animal_limb", true)
+		instance.set_meta("animal_base_rotation", instance.rotation)
+		instance.set_meta("animal_phase", 0.0 if position_value.z < 0.0 else PI)
 	root.add_child(instance)
 
 func _add_sphere(root: Node3D, position_value: Vector3, radius: float, material: Material, segments: int = 7, scale_value := Vector3.ONE) -> void:
@@ -375,6 +400,9 @@ func _add_sphere(root: Node3D, position_value: Vector3, radius: float, material:
 	instance.material_override = material
 	instance.position = position_value
 	instance.scale = scale_value
+	if position_value.x > 0.35 and position_value.y > 0.55:
+		instance.set_meta("animal_head", true)
+		instance.set_meta("animal_base_position", position_value)
 	root.add_child(instance)
 
 func _add_cylinder(root: Node3D, position_value: Vector3, radius: float, height: float, material: Material, segments: int, rotation_value: Vector3) -> void:
