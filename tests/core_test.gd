@@ -862,11 +862,16 @@ func _test_building_storage_contract() -> void:
 	var building := VeyraBuildingInstance.new()
 	root.add_child(building)
 	building.setup(building_id, "B02_STORAGE", Vector3.ZERO)
-	_check(building.deposit_all_storage(player) == 7, "storage deposit must move carried wood")
+	building.interact(player)
+	var ui := player.get_node_or_null("BuildingUI") as VeyraBuildingUI
+	_check(ui != null and ui.visible, "storage interaction must open storage UI")
+	if ui:
+		ui._deposit_storage()
 	_check(inventory.get_amount("Wood") == 0, "storage deposit must remove carried wood")
 	var stored: Dictionary = settlement.get_building_storage(building_id)
 	_check(int(stored.get("resources", {}).get("Wood", 0)) == 7, "storage must persist deposited wood")
-	_check(building.withdraw_all_storage(player) == 7, "storage withdrawal must restore deposited wood")
+	if ui:
+		ui._withdraw_storage()
 	_check(inventory.get_amount("Wood") == 7, "storage withdrawal must restore deposited wood")
 	var emptied_storage: Dictionary = settlement.get_building_storage(building_id)
 	_check(
@@ -895,7 +900,11 @@ func _test_storage_protects_tools_contract() -> void:
 	var building := VeyraBuildingInstance.new()
 	root.add_child(building)
 	building.setup(building_id, "B02_STORAGE", Vector3.ZERO)
-	_check(building.deposit_all_storage(player) == 0, "storage must not deposit tools")
+	building.interact(player)
+	var ui := player.get_node_or_null("BuildingUI") as VeyraBuildingUI
+	_check(ui != null and ui.visible, "tool storage interaction must open UI")
+	if ui:
+		ui._deposit_storage()
 	_check(inventory.has_item("I01_STONE_AXE") and inventory.has_item("I02_STONE_PICK"), "tools must remain in personal inventory")
 	var ui := player.get_node_or_null("BuildingUI")
 	_check(ui == null or not ui.visible, "storage test must not require an open UI")
