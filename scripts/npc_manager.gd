@@ -200,7 +200,8 @@ func _update_villager_behavior(state: NPCState, delta: float) -> void:
 				NPCJobSimulation.process_tick(state, definition, job, delta)
 				state.position = _vector_dict(_ground_position(_state_position(state.position)))
 				if job.completed:
-					settlement.complete_villager_job(state.npc_id, state)
+					var committed := settlement.complete_villager_job(state.npc_id, state)
+					print("NPC_COMPLETE result=%s job_states=%s" % [str(committed), str(settlement.job_states.has(state.npc_id))])
 				else:
 					settlement.sync_villager_job(state.npc_id, state)
 				return
