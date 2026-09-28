@@ -19,6 +19,7 @@ var building_root: Node3D
 
 func _ready() -> void:
     add_to_group("building_manager")
+    building_completed.connect(_on_building_completed)
     call_deferred("_initialize_building_root")
 
 func select_building(building_id: String) -> bool:
@@ -287,6 +288,11 @@ func _spawn_building_visual(
     building_root.add_child(instance)
     instance.setup(building_id, building_type, position_value, door_open)
     instance.door_state_changed.connect(_on_door_state_changed)
+
+func _on_building_completed(building_id: String, _position: Vector3) -> void:
+    var progression := get_node_or_null("/root/ProgressionManager")
+    if progression and progression.has_method("record_action"):
+        progression.call("record_action", "BUILD", 1, building_id)
 
 func _on_door_state_changed(building_id: String, open: bool) -> void:
     var settlement := _get_settlement_manager()
