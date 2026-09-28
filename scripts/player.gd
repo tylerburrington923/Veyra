@@ -66,6 +66,8 @@ var touch_start: Dictionary = {}
 @onready var fp_right_arm: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightArmFP") as MeshInstance3D
 @onready var fp_left_hand: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftHandFP") as MeshInstance3D
 @onready var fp_right_hand: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightHandFP") as MeshInstance3D
+@onready var fp_left_cuff: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/LeftCuffFP") as MeshInstance3D
+@onready var fp_right_cuff: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/RightCuffFP") as MeshInstance3D
 @onready var tool_holder: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder") as Node3D
 @onready var equipped_tool_visual: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool") as Node3D
 var walk_time: float = 0.0
@@ -626,8 +628,12 @@ func _update_punch_animation(delta: float) -> void:
 		fp_right_arm.position = Vector3(0.24, -0.48 - 0.10 * thrust, -0.66 - 0.58 * thrust)
 	if fp_left_hand:
 		fp_left_hand.position = Vector3(-0.24, -0.93 - 0.05 * thrust, -0.94 - 0.45 * thrust)
+	if fp_left_cuff:
+		fp_left_cuff.position = Vector3(-0.22, -0.94 - 0.04 * thrust, -1.00 - 0.25 * thrust)
 	if fp_right_hand:
 		fp_right_hand.position = Vector3(0.24, -0.93 - 0.08 * thrust, -0.96 - 0.62 * thrust)
+	if fp_right_cuff:
+		fp_right_cuff.position = Vector3(0.22, -0.94 - 0.06 * thrust, -1.00 - 0.32 * thrust)
 	if progress >= 1.0:
 		_punch_active = false
 		if fp_left_arm:
@@ -638,8 +644,12 @@ func _update_punch_animation(delta: float) -> void:
 			fp_right_arm.rotation = Vector3(deg_to_rad(-18.0), deg_to_rad(6.0), deg_to_rad(8.0))
 		if fp_left_hand:
 			fp_left_hand.position = Vector3(-0.24, -0.93, -0.94)
+		if fp_left_cuff:
+			fp_left_cuff.position = Vector3(-0.22, -0.94, -1.00)
 		if fp_right_hand:
 			fp_right_hand.position = Vector3(0.24, -0.93, -0.96)
+		if fp_right_cuff:
+			fp_right_cuff.position = Vector3(0.22, -0.94, -1.00)
 
 func _update_player_visuals(delta: float, direction: Vector3) -> void:
 	var moving := direction.length_squared() > 0.001 and is_on_floor()
