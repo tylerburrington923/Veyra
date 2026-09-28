@@ -2,7 +2,7 @@ extends Node
 
 const SAVE_PATH := "user://veyra_world.json"
 const BACKUP_PATH := "user://veyra_world.backup.json"
-const SAVE_VERSION := 6
+const SAVE_VERSION := 7
 
 func save_world(world: Node, inventory: Dictionary, settlement: Dictionary = {}, player_state: Dictionary = {}) -> bool:
     if not world or not world.has_method("get_world_state"):
@@ -139,7 +139,10 @@ func _sanitize_settlement(settlement: Dictionary) -> Dictionary:
         "population": maxi(0, int(settlement.get("population", 0))),
         "stock": {},
         "buildings": {},
-        "villagers": {}
+        "villagers": {},
+        "jobs": {},
+        "productions": {},
+        "next_job_index": maxi(1, int(settlement.get("next_job_index", 1)))
     }
 
     var stock = settlement.get("stock", {})
@@ -195,5 +198,40 @@ func _sanitize_settlement(settlement: Dictionary) -> Dictionary:
     var villagers = settlement.get("villagers", {})
     if villagers is Dictionary:
         clean["villagers"] = villagers.duplicate(true)
+
+    var jobs = settlement.get("jobs", {})
+    if jobs is Dictionary:
+        for villager_id in jobs.keys():
+            var job = jobs[villager_id]
+            if not (job is Dictionary):
+                continue
+            var clean_job := {
+                "job_id": str(job.get("job_id", "")),
+                "definition_id": str(job.get("definition_id", "")),
+                "assigned_worker_id": str(job.get("assigned_worker_id", villager_id)),
+                "target_building_id": str(job.get("target_building_id", "")),
+                "progress": maxf(0.0, float(job.get("progress", 0.0))),
+                "active": bool(job.get("active", false)),
+                "completed": bool(job.get("completed", false))
+            }
+            if not clean_job["job_id"].is_empty() and not clean_job["definition_id"].is_empty():
+                clean["jobs"][str(villager_id)] = clean_job
+
+    var productions = settlement.get("productions", {})
+    if productions is Dictionary:
+        for production_id in productions.keys():
+            var production = productions[production_id]
+            if not (production is Dictionary):
+                continue
+            var clean_production := {
+                "production_id": str(production.get("production_id", production_id)),
+                "definition_id": str(production.get("definition_id", "")),
+                "active": bool(production.get("active", false)),
+                "progress": maxf(0.0, float(production.get("progress", 0.0))),
+                "assigned_worker_id": str(production.get("assigned_worker_id", "")),
+                "source_building_id": str(production.get("source_building_id", ""))
+            }
+            if not clean_production["production_id"].is_empty() and not clean_production["definition_id"].is_empty():
+                clean["productions"][str(production_id)] = clean_production
 
     return clean
