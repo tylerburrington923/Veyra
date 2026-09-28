@@ -258,8 +258,14 @@ func _on_animal_death(state: AnimalState, player: Node = null) -> void:
 			if definition:
 				var meat_amount := 3 if definition.id == "lumen_grazer" else 4
 				var hide_amount := 1 if definition.id == "lumen_grazer" else 2
-				inventory.add_resource("Meat", meat_amount)
-				inventory.add_resource("Hide", hide_amount)
+				var accepted_meat := inventory.add_resource("Meat", meat_amount)
+				var accepted_hide := inventory.add_resource("Hide", hide_amount)
+				var progression := get_node_or_null("/root/ProgressionManager")
+				if progression and progression.has_method("record_action"):
+					if accepted_meat > 0:
+						progression.record_action("HUNT", accepted_meat, "Meat")
+					if accepted_hide > 0:
+						progression.record_action("HUNT", accepted_hide, "Hide")
 
 func _update_dead_animals(delta: float) -> void:
 	for animal_id in death_timers.keys().duplicate():
