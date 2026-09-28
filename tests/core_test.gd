@@ -67,7 +67,7 @@ func _run_tests() -> void:
 	_test_performance_cache_contract()
 	_test_alpha_presentation_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (57 suites)")
+		print("VEYRA CORE TESTS: PASS (60 suites)")
 		quit(0)
 	else:
 		for failure in failures:
@@ -1254,8 +1254,8 @@ func _test_progression_contract() -> void:
 	restored.queue_free()
 
 func _test_building_progression_contract() -> void:
-	var progression := get_node_or_null("/root/ProgressionManager") as VeyraProgressionManager
-	var settlement := get_node_or_null("/root/SettlementManager")
+	var progression := root.get_node_or_null("/root/ProgressionManager") as VeyraProgressionManager
+	var settlement := root.get_node_or_null("/root/SettlementManager")
 	_check(progression != null, "building progression test requires the ProgressionManager autoload")
 	_check(settlement != null, "building progression test requires the SettlementManager autoload")
 	if not progression or not settlement:
@@ -1273,7 +1273,7 @@ func _test_building_progression_contract() -> void:
 
 	_check(progression.get_xp("SETTLEMENT") == before_xp + 20, "completed building must award settlement XP exactly once")
 	var quest := progression.get_quest_state("SETTLEMENT")
-	var objective := quest.get("objectives", {}).get("BUILD:B01_CAMPFIRE", {})
+	var objective: Dictionary = quest.get("objectives", {}).get("BUILD:B01_CAMPFIRE", {})
 	_check(int(objective.get("current", 0)) >= 1, "completed Campfire must advance the settlement quest")
 
 	manager.queue_free()
