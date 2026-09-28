@@ -20,6 +20,9 @@ var resource_meshes: Dictionary = {}
 var resource_materials: Dictionary = {}
 var resource_collision_shape := SphereShape3D.new()
 var saved_resource_state: Dictionary = {}
+# Runtime height cache avoids repeated noise evaluation for actor/world sampling.
+var _height_cache: PackedFloat32Array = PackedFloat32Array()
+var _height_cache_ready := false
 
 func _ready() -> void:
     add_to_group("world_generator")
@@ -42,12 +45,14 @@ func generate() -> void:
     var normals := PackedVector3Array()
     var uvs := PackedVector2Array()
     var indices := PackedInt32Array()
+    _height_cache.resize((grid_size + 1) * (grid_size + 1))
 
     for z in range(grid_size + 1):
         for x in range(grid_size + 1):
             var px := (x - grid_size * 0.5) * cell_size
             var pz := (z - grid_size * 0.5) * cell_size
             var h := get_height_at_world(px, pz)
+            _height_cache[z * (grid_size + 1) + x] = h
             vertices.append(Vector3(px, h, pz))
             normals.append(_sample_normal(x, z))
             var terrain_uv_scale := 10.0
@@ -98,6 +103,7 @@ func generate() -> void:
     body.add_child(collision)
     add_child(body)
     terrain_collision = body
+    _height_cache_ready = true
 
     _spawn_resources()
     _spawn_landmark()
@@ -134,6 +140,22 @@ func get_height_at_world(x: float, z: float) -> float:
     var sample_x := x / cell_size + grid_size * 0.5
     var sample_z := z / cell_size + grid_size * 0.5
     return noise.get_noise_2d(sample_x, sample_z) * height_scale + detail_noise.get_noise_2d(sample_x, sample_z) * 1.2
+
+func get_height_at_world_fast(x: float, z: float) -> float:
+    if not _height_cache_ready or _height_cache.is_empty():
+        return get_height_at_world(x, z)
+    var sx := clampf(x / cell_size + grid_size * 0.5, 0.0, float(grid_size))
+    var sz := clampf(z / cell_size + grid_size * 0.5, 0.0, float(grid_size))
+    var x0 := mini(int(floor(sx)), grid_size - 1)
+    var z0 := mini(int(floor(sz)), grid_size - 1)
+    var tx := sx - float(x0)
+    var tz := sz - float(z0)
+    var row := grid_size + 1
+    var h00 := _height_cache[z0 * row + x0]
+    var h10 := _height_cache[z0 * row + x0 + 1]
+    var h01 := _height_cache[(z0 + 1) * row + x0]
+    var h11 := _height_cache[(z0 + 1) * row + x0 + 1]
+    return lerpf(lerpf(h00, h10, tx), lerpf(h01, h11, tx), tz)
 
 func _sample_normal(x: int, z: int) -> Vector3:
     var left := get_height_at_world((x - 1 - grid_size * 0.5) * cell_size, (z - grid_size * 0.5) * cell_size)
