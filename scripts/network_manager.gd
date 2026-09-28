@@ -313,7 +313,7 @@ func _server_has_line_of_sight(player: Node3D, target: Node3D) -> bool:
 	query.collide_with_bodies = true
 	query.collide_with_areas = true
 	query.exclude = [player.get_rid()]
-	var hit := get_tree().current_scene.get_world_3d().direct_space_state.intersect_ray(query)
+	var hit: Dictionary = get_tree().current_scene.get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty():
 		return true
 	var collider := hit.get("collider") as Node
