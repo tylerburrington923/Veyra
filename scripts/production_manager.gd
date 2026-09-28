@@ -63,6 +63,18 @@ func complete_production(production_id: String, stock: Dictionary) -> bool:
 	_active_productions.erase(production_id)
 	return true
 
+func cancel_production(production_id: String, stock: Dictionary, refund_inputs: bool = true) -> bool:
+	var state: ProductionState = _active_productions.get(production_id, null)
+	if state == null:
+		return false
+	var definition: ProductionDefinition = _definitions.get(state.definition_id, null)
+	if definition != null and refund_inputs:
+		for resource_type in definition.inputs.keys():
+			var key := str(resource_type)
+			stock[key] = int(stock.get(key, 0)) + int(definition.inputs[resource_type])
+	_active_productions.erase(production_id)
+	return true
+
 func set_progress(production_id: String, progress: float) -> bool:
 	var state: ProductionState = _active_productions.get(production_id, null)
 	if state == null or not state.active:
