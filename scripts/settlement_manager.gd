@@ -274,9 +274,11 @@ func prepare_villager_job(villager_id: String) -> JobState:
     if existing != null and existing.active and not existing.completed:
         var active_productions := production_manager.get_active_productions()
         var valid_production := false
+        var existing_definition: JobDefinition = job_definitions.get(existing.definition_id, null)
+        var expected_production_id := existing_definition.production_id if existing_definition != null else ""
         for production_value in active_productions.values():
             var production: ProductionState = production_value
-            if production != null and production.active and production.assigned_worker_id == villager_id and production.definition_id == existing.definition_id:
+            if production != null and production.active and production.assigned_worker_id == villager_id and production.definition_id == expected_production_id:
                 valid_production = true
                 break
         if valid_production:
