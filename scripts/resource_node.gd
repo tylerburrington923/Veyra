@@ -84,6 +84,9 @@ func interact(player_override: Node = null) -> void:
 
 	var yield_amount: int = maxi(1, int(round(tool_efficiency)))
 	yield_amount += VeyraItemCatalog.gathering_bonus(equipped_tool, resource_type)
+	var progression := get_node_or_null("/root/ProgressionManager")
+	if progression and progression.has_method("has_skill") and progression.has_skill("FIELDCRAFT"):
+		yield_amount += 1
 	yield_amount = mini(yield_amount, remaining)
 
 	if not inventory.has_method("add_resource"):
