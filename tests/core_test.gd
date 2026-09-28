@@ -1172,6 +1172,8 @@ func _test_alpha_presentation_contract() -> void:
 	var world_text := FileAccess.get_file_as_string("res://scenes/world.tscn") if FileAccess.file_exists("res://scenes/world.tscn") else ""
 	_check(not world_text.contains("WorldDetail"), "world scene must not instantiate duplicate floating detail resources")
 	_check(not world_text.contains("VeyraArtifact"), "world scene must not instantiate placeholder artifact geometry")
+	_check(world_text.count('[node name="AnimalManager" type="Node3D" parent="."]') == 1, "world scene must instantiate exactly one AnimalManager")
+	_check(world_text.count('[ext_resource type="Script" path="res://scripts/animal_manager.gd" id="13_animals"]') == 1, "world scene must register AnimalManager script exactly once")
 	player.queue_free()
 
 	var manager := NPCManager.new()
