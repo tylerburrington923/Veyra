@@ -164,11 +164,30 @@ func _sample_normal(x: int, z: int) -> Vector3:
     var front := get_height_at_world((x - grid_size * 0.5) * cell_size, (z + 1 - grid_size * 0.5) * cell_size)
     return Vector3(left - right, 2.0, back - front).normalized()
 
+const STARTER_RESOURCE_POSITIONS: Array[Vector2] = [
+    Vector2(-3.8, -2.4),
+    Vector2(-1.4, 4.2),
+    Vector2(2.8, 3.2),
+    Vector2(4.0, -1.2),
+    Vector2(-3.2, 2.6),
+    Vector2(1.0, -4.5)
+]
+
 func _spawn_resources() -> void:
     var rng := RandomNumberGenerator.new()
     rng.seed = seed_value + 991
 
-    var spawned := 0
+    # The first six nodes are the intended opening loop: three loose sticks and
+    # three small stones that can be gathered by hand immediately after spawn.
+    # Keep them inside a short walking radius instead of applying the distant
+    # resource exclusion used by the broader world distribution.
+    var starter_count := mini(resource_count, STARTER_RESOURCE_POSITIONS.size())
+    for index in range(starter_count):
+        var starter_position := STARTER_RESOURCE_POSITIONS[index]
+        var starter_y: float = get_height_at_world(starter_position.x, starter_position.y)
+        add_child(_make_resource_node(index, Vector3(starter_position.x, starter_y, starter_position.y)))
+
+    var spawned := starter_count
     var attempts := 0
     var max_attempts := maxi(resource_count * 3, 12)
 
