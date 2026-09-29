@@ -276,6 +276,21 @@ func _ensure_food_button() -> void:
 		controls.add_child(_food_button)
 	if not _food_button.pressed.is_connected(consume_food):
 		_food_button.pressed.connect(consume_food)
+	var survival_label := controls.get_node_or_null("SurvivalHUD") as Control
+	if not survival_label:
+		survival_label = Control.new()
+		survival_label.name = "SurvivalHUD"
+		survival_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		survival_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		survival_label.position = Vector2(24.0, 92.0)
+		survival_label.size = Vector2(140.0, 28.0)
+		controls.add_child(survival_label)
+		var label := Label.new()
+		label.name = "Label"
+		label.add_theme_font_size_override("font_size", 13)
+		label.add_theme_color_override("font_color", Color(0.86, 0.91, 0.82, 0.92))
+		label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		survival_label.add_child(label)
 
 func get_resonance() -> float:
 	return resonance_charge
@@ -458,6 +473,8 @@ func _update_equipped_tool_visual() -> void:
 	var pick_head := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickHead") as MeshInstance3D
 	var pick_spike_left := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickSpikeLeft") as MeshInstance3D
 	var pick_spike_right := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickSpikeRight") as MeshInstance3D
+	var knife_equipped := selected_tool_id == "I08_HUNTER_KNIFE"
+	var spear_equipped := selected_tool_id in ["I09_STONE_SPEAR", "I10_METAL_SPEAR"]
 	var axe_equipped := selected_tool_id in ["I01_STONE_AXE", "I04_METAL_AXE", "I06_ECHO_AXE"]
 	var pick_equipped := selected_tool_id in ["I02_STONE_PICK", "I05_METAL_PICK", "I07_ECHO_PICK"]
 	if axe_head:
@@ -477,7 +494,9 @@ func _update_equipped_tool_visual() -> void:
 	if pick_spike_left:
 		pick_spike_left.visible = pick_equipped
 	if pick_spike_right:
-		pick_spike_right.visible = pick_equipped
+		pick_spike_right.visible = pick_equipped or spear_equipped
+	if axe_blade:
+		axe_blade.visible = axe_equipped or knife_equipped
 	match selected_tool_id:
 		"I01_STONE_AXE", "I04_METAL_AXE", "I06_ECHO_AXE":
 			tool_visual.rotation_degrees = Vector3(0, 0, -12)
@@ -485,11 +504,20 @@ func _update_equipped_tool_visual() -> void:
 		"I02_STONE_PICK", "I05_METAL_PICK", "I07_ECHO_PICK":
 			tool_visual.rotation_degrees = Vector3(0, 0, 12)
 			tool_visual.scale = Vector3(0.76, 0.76, 0.76)
+		"I08_HUNTER_KNIFE":
+			tool_visual.rotation_degrees = Vector3(12, 0, -35)
+			tool_visual.scale = Vector3(0.52, 0.52, 0.52)
+		"I09_STONE_SPEAR":
+			tool_visual.rotation_degrees = Vector3(0, 0, 90)
+			tool_visual.scale = Vector3(0.62, 0.62, 0.62)
+		"I10_METAL_SPEAR":
+			tool_visual.rotation_degrees = Vector3(0, 0, 90)
+			tool_visual.scale = Vector3(0.68, 0.68, 0.68)
 		_:
 			tool_visual.visible = false
 
 func _apply_advanced_tool_materials() -> void:
-	var advanced := selected_tool_id in ["I04_METAL_AXE", "I05_METAL_PICK", "I06_ECHO_AXE", "I07_ECHO_PICK"]
+	var advanced := selected_tool_id in ["I04_METAL_AXE", "I05_METAL_PICK", "I06_ECHO_AXE", "I07_ECHO_PICK", "I10_METAL_SPEAR"]
 	if not advanced:
 		return
 	var metal := StandardMaterial3D.new()
