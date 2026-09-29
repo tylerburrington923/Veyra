@@ -203,6 +203,14 @@ func get_armor_rating() -> float:
 func equip_armor(item_id: String) -> bool:
 	if item_id not in VeyraItemCatalog.ARMOR_IDS:
 		return false
+	if _network_mode and _network_local and not multiplayer.is_server():
+		var network_manager := get_tree().get_first_node_in_group("network_manager")
+		if network_manager and network_manager.session_active and network_manager.has_method("submit_local_armor_equip"):
+			network_manager.submit_local_armor_equip(item_id)
+			return true
+	return _equip_armor_local(item_id)
+
+func _equip_armor_local(item_id: String) -> bool:
 	var inventory := get_inventory()
 	if not inventory or not inventory.has_item(item_id):
 		return false
@@ -212,11 +220,20 @@ func equip_armor(item_id: String) -> bool:
 		return true
 	if not previous.is_empty() and inventory.add_item(previous, 1) != 1:
 		return false
-	if previous.is_empty() or inventory.add_item(item_id, 0) == 0:
-		inventory.remove_item(item_id, 1)
+	inventory.remove_item(item_id, 1)
 	equipped_armor[slot] = item_id
 	armor_changed.emit(item_id, get_armor_rating())
 	return true
+
+func get_armor_state() -> Dictionary:
+	return equipped_armor.duplicate(true)
+
+func set_armor_state(state: Dictionary) -> void:
+	if not state is Dictionary:
+		return
+	equipped_armor["head"] = str(state.get("head", "")) if str(state.get("head", "")) in VeyraItemCatalog.ARMOR_IDS else ""
+	equipped_armor["body"] = str(state.get("body", "")) if str(state.get("body", "")) in VeyraItemCatalog.ARMOR_IDS else ""
+	armor_changed.emit("", get_armor_rating())
 
 func consume_food() -> bool:
 	if _death_active:
