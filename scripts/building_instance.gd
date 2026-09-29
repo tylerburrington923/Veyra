@@ -35,6 +35,21 @@ func setup(id: String, type_id: String, position_value: Vector3, door_open_value
     set_process(type_id == "B01_CAMPFIRE")
 
 
+func open_local_ui(player: Node) -> void:
+	if not player:
+		return
+	match building_type:
+		"B01_CAMPFIRE":
+			_open_building_ui(player, "campfire")
+		"B02_STORAGE":
+			_open_building_ui(player, "storage")
+		"B05_TOWNHALL":
+			_open_building_ui(player, "townhall")
+		"B09_BLACKSMITH":
+			_open_building_ui(player, "blacksmith")
+		"B10_TANNERY":
+			_open_building_ui(player, "tannery")
+
 func interact(player_override: Node = null) -> void:
     _last_interaction_feedback = ""
     var player: Node = player_override if player_override else get_tree().get_first_node_in_group("local_player")
@@ -228,6 +243,8 @@ func _open_building_ui(player: Node, mode: String) -> void:
         ui.open_townhall(self, player)
     elif mode == "blacksmith" and ui.has_method("open_blacksmith"):
         ui.open_blacksmith(self, player)
+    elif mode == "tannery" and ui.has_method("open_tannery"):
+        ui.open_tannery(self, player)
 
 func add_campfire_fuel(player: Node, amount: int = 1) -> bool:
     if building_type != "B01_CAMPFIRE" or not player or amount <= 0:
