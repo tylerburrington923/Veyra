@@ -5,10 +5,11 @@ const ITEM_TYPES: Array[String] = [
 	"I01_STONE_AXE",
 	"I02_STONE_PICK",
 	"I03_CAMPFIRE_KIT",
-	"I04_METAL_AXE", "I05_METAL_PICK", "I06_ECHO_AXE", "I07_ECHO_PICK"
+	"I04_METAL_AXE", "I05_METAL_PICK", "I06_ECHO_AXE", "I07_ECHO_PICK", "I08_HUNTER_KNIFE", "I09_STONE_SPEAR", "I10_METAL_SPEAR", "A01_HIDE_CAP", "A02_HIDE_VEST", "A03_LEATHER_ARMOR"
 ]
 
-const TOOL_IDS: Array[String] = ["I01_STONE_AXE", "I02_STONE_PICK", "I04_METAL_AXE", "I05_METAL_PICK", "I06_ECHO_AXE", "I07_ECHO_PICK"]
+const TOOL_IDS: Array[String] = ["I01_STONE_AXE", "I02_STONE_PICK", "I04_METAL_AXE", "I05_METAL_PICK", "I06_ECHO_AXE", "I07_ECHO_PICK", "I08_HUNTER_KNIFE", "I09_STONE_SPEAR", "I10_METAL_SPEAR"]
+const ARMOR_IDS: Array[String] = ["A01_HIDE_CAP", "A02_HIDE_VEST", "A03_LEATHER_ARMOR"]
 const HANDS_ID := "T00_HANDS"
 
 static func is_valid(item_id: String) -> bool:
@@ -60,6 +61,18 @@ static func display_name(item_id: String) -> String:
 			return "Echo Axe"
 		"I07_ECHO_PICK":
 			return "Echo Pick"
+		"I08_HUNTER_KNIFE":
+			return "Hunter Knife"
+		"I09_STONE_SPEAR":
+			return "Stone Spear"
+		"I10_METAL_SPEAR":
+			return "Metal Spear"
+		"A01_HIDE_CAP":
+			return "Hide Cap"
+		"A02_HIDE_VEST":
+			return "Hide Vest"
+		"A03_LEATHER_ARMOR":
+			return "Leather Armor"
 		_:
 			return item_id
 
@@ -78,5 +91,17 @@ static func weight(item_id: String) -> float:
 			return 3.0
 		"I06_ECHO_AXE", "I07_ECHO_PICK":
 			return 3.2
+		"I08_HUNTER_KNIFE":
+			return 1.0
+		"I09_STONE_SPEAR":
+			return 1.6
+		"I10_METAL_SPEAR":
+			return 1.8
+		"A01_HIDE_CAP":
+			return 0.8
+		"A02_HIDE_VEST":
+			return 2.0
+		"A03_LEATHER_ARMOR":
+			return 3.0
 		_:
 			return 1.0
