@@ -320,13 +320,13 @@ func _show_building() -> void:
 	cancel_button.visible = true
 	set_process(true)
 	_clear_options()
-	status.text = "Select a building, then find a clear location."
+	status.text = "Foundations are free. Materials are supplied after placement."
 	for building_id in VeyraBuildingCatalog.all_building_ids():
 		var definition := VeyraBuildingCatalog.get_building(building_id)
 		_add_recipe_option(
 			str(definition.get("name", building_id)),
-			_format_cost(definition.get("cost", {})),
-			_has_cost(definition.get("cost", {})),
+			"FOUNDATION FREE • " + _format_cost(definition.get("cost", {})),
+			true,
 			_select_building.bind(building_id),
 			definition.get("cost", {})
 		)
@@ -421,19 +421,12 @@ func _cancel_build() -> void:
 func _update_build_status() -> void:
 	if not building:
 		return
-	var can_afford := building.has_required_materials(inventory)
-	if building.placement_location_valid and can_afford:
-		status.text = "Location ready. Tap PLACE."
+	if building.placement_location_valid:
+		status.text = "Foundation free. Supply materials at the site or dispatch a Town Hall worker."
 		confirm_button.disabled = false
 		if placement_status:
-			placement_status.text = "Location ready. Tap PLACE."
+			placement_status.text = "Clear location • Foundation free"
 			placement_place.disabled = false
-	elif building.placement_location_valid:
-		status.text = "Gather the listed materials."
-		confirm_button.disabled = true
-		if placement_status:
-			placement_status.text = "Gather the listed materials."
-			placement_place.disabled = true
 	else:
 		status.text = "Move to a clear location."
 		confirm_button.disabled = true
