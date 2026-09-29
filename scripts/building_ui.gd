@@ -248,6 +248,11 @@ func _dispatch_site(site_id: String) -> void:
 	if not logistics:
 		return
 	var remaining := logistics.get_remaining_materials(site_id)
+	var network := get_node_or_null("/root/NetworkManager")
+	if network and bool(network.get("session_active")) and not bool(network.get("is_host")):
+		network.submit_local_worker_delivery(site_id, remaining)
+		_add_or_update_status("Worker delivery request sent to host.")
+		return
 	var order_id := str(logistics.dispatch_available_worker(site_id, remaining))
 	_add_or_update_status("Worker dispatched." if not order_id.is_empty() else "No worker or Town Hall materials available.")
 
