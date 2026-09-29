@@ -133,12 +133,14 @@ func interact_with_npc(npc_id: String, player: Node) -> String:
 		return "No inventory available."
 	match state.current_job:
 		"TRADER":
-			var merchant_ui := player.get_node_or_null("MerchantUI") as VeyraMerchantUI
-			if not merchant_ui:
-			merchant_ui = VeyraMerchantUI.new()
-			merchant_ui.name = "MerchantUI"
-			player.add_child(merchant_ui)
-			merchant_ui.open(player)
+			var is_local_player := bool(player.get_meta("network_local", true)) if player else false
+			if is_local_player:
+				var merchant_ui := player.get_node_or_null("MerchantUI") as VeyraMerchantUI
+				if not merchant_ui:
+					merchant_ui = VeyraMerchantUI.new()
+					merchant_ui.name = "MerchantUI"
+					player.add_child(merchant_ui)
+				merchant_ui.open(player)
 			return "%s opened the merchant ledger." % _npc_name(npc_id)
 		"BUILDER":
 			if inventory.has_item("I01_STONE_AXE"):
