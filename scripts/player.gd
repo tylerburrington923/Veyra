@@ -185,6 +185,11 @@ func _update_health_hud() -> void:
 func get_hunger() -> float:
 	return hunger
 
+func set_hunger(value: float) -> void:
+	hunger = clampf(value, 0.0, max_hunger)
+	survival_changed.emit(hunger)
+	_update_survival_hud()
+
 func get_armor_rating() -> float:
 	var rating := 0.0
 	if str(equipped_armor.get("head", "")) == "A01_HIDE_CAP":
