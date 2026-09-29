@@ -188,6 +188,19 @@ func try_interact() -> void:
 		_set_target_state("UNKNOWN", "", "", collision_point)
 		return
 
+	if handler.has_method("get_interaction_text") and str(handler.get_interaction_text()).to_upper() == "TRADE":
+		var local_player := get_tree().get_first_node_in_group("local_player") as Node
+		if local_player:
+			var merchant_ui := local_player.get_node_or_null("MerchantUI")
+			if not merchant_ui:
+				merchant_ui = load("res://scripts/merchant_ui.gd").new()
+				merchant_ui.name = "MerchantUI"
+				local_player.add_child(merchant_ui)
+			if merchant_ui.has_method("open"):
+				merchant_ui.open(local_player)
+		_set_target_state(_classify_target(handler), handler.name, "trade()", collision_point)
+		return
+
 	if handler.has_method("interact"):
 		var network_manager := get_tree().get_first_node_in_group("network_manager")
 		var network_active: bool = network_manager != null and network_manager.has_method("submit_local_interaction") and bool(network_manager.session_active) and not bool(network_manager.is_host)
