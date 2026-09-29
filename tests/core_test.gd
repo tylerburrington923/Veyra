@@ -1663,6 +1663,30 @@ func _test_construction_logistics_contract() -> void:
 	settlement.buildings.erase(townhall_id)
 	settlement.villagers.erase(worker_id)
 
+	var refund_hall_id := "BUILD-LOGISTICS-REFUND-HALL"
+	settlement.add_building(refund_hall_id, "B05_TOWNHALL", Vector3(80.0, 0.0, 80.0))
+	settlement.set_building_storage(refund_hall_id, {"resources": {"Wood": 10}, "items": {}})
+	var refund_worker := "BUILD-LOGISTICS-REFUND-WORKER"
+	settlement.add_villager(refund_worker, "Refund Worker")
+	var refund_player := player_scene.instantiate()
+	root.add_child(refund_player)
+	refund_player.global_position = Vector3(90.0, 0.0, 90.0)
+	var refund_inventory: VeyraInventory = refund_player.get_inventory()
+	refund_inventory.add_resource("Wood", 6)
+	var refund_site := logistics.create_foundation("BUILD-LOGISTICS-OVERDELIVERY", "B02_STORAGE", refund_player.global_position, {"Wood": 10})
+	var first_order := logistics.queue_worker_delivery(refund_site, refund_worker, {"Wood": 6})
+	var second_order := logistics.queue_worker_delivery(refund_site, refund_worker, {"Wood": 4})
+	_check(not first_order.is_empty() and not second_order.is_empty(), "multiple delivery orders must reserve distinct available cargo")
+	_check(logistics.deposit_from_player(refund_site, refund_player), "player may supply a site while workers are in transit")
+	logistics._complete_delivery(first_order)
+	_check(not logistics.has_site(refund_site), "the remaining delivered materials must complete the site")
+	var refunded_storage := settlement.get_building_storage(refund_hall_id)
+	_check(int(refunded_storage.get("resources", {}).get("Wood", 0)) == 6, "over-delivery and canceled cargo must be refunded to Town Hall storage")
+	settlement.buildings.erase("BUILD-LOGISTICS-OVERDELIVERY")
+	settlement.buildings.erase(refund_hall_id)
+	settlement.villagers.erase(refund_worker)
+	refund_player.queue_free()
+
 func _test_economy_and_survival_contract() -> void:
 	var merchant := root.get_node_or_null("/root/MerchantManager") as VeyraMerchantManager
 	_check(merchant != null, "merchant manager must exist")
