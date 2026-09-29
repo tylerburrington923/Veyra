@@ -75,6 +75,8 @@ var touch_start: Dictionary = {}
 @onready var fp_pick_collar: MeshInstance3D = get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickCollar") as MeshInstance3D
 @onready var tool_holder: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder") as Node3D
 @onready var equipped_tool_visual: Node3D = get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool") as Node3D
+var _knife_visual: Node3D
+var _spear_visual: Node3D
 var walk_time: float = 0.0
 var _tool_swing_time: float = 0.0
 var _tool_swing_duration: float = 0.28
@@ -175,6 +177,7 @@ func equip_armor(item_id: String) -> bool:
 	if inventory.remove_item(item_id, 1) != 1:
 		return false
 	equipped_armor[slot] = item_id
+	_update_armor_visuals()
 	return true
 
 func consume_food() -> bool:
@@ -435,8 +438,11 @@ func load_save_state(state: Dictionary) -> void:
 	if selected_tool_id == "T00_HANDS":
 		tool_durability = 100.0
 	tool_changed.emit(selected_tool_id, tool_durability)
+	_ensure_weapon_visuals()
 	_update_equipped_tool_visual()
+	_update_armor_visuals()
 	_update_health_hud()
+	_update_survival_hud()
 
 func _update_equipped_tool_visual() -> void:
 	var tool_visual := equipped_tool_visual
@@ -464,6 +470,8 @@ func _update_equipped_tool_visual() -> void:
 	var pick_spike_right := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickSpikeRight") as MeshInstance3D
 	var axe_equipped := selected_tool_id in ["I01_STONE_AXE", "I04_METAL_AXE", "I06_ECHO_AXE"]
 	var pick_equipped := selected_tool_id in ["I02_STONE_PICK", "I05_METAL_PICK", "I07_ECHO_PICK"]
+	var knife_equipped := selected_tool_id == "I08_HUNTER_KNIFE"
+	var spear_equipped := selected_tool_id in ["I09_STONE_SPEAR", "I10_METAL_SPEAR"]
 	if axe_head:
 		axe_head.visible = axe_equipped
 	if axe_blade:
@@ -489,8 +497,108 @@ func _update_equipped_tool_visual() -> void:
 		"I02_STONE_PICK", "I05_METAL_PICK", "I07_ECHO_PICK":
 			tool_visual.rotation_degrees = Vector3(0, 0, 12)
 			tool_visual.scale = Vector3(0.76, 0.76, 0.76)
+		"I08_HUNTER_KNIFE":
+			tool_visual.rotation_degrees = Vector3(0, 0, -8)
+			tool_visual.scale = Vector3(0.78, 0.78, 0.78)
+		"I09_STONE_SPEAR", "I10_METAL_SPEAR":
+			tool_visual.rotation_degrees = Vector3(0, 0, 0)
+			tool_visual.scale = Vector3(0.78, 0.78, 0.78)
 		_:
 			tool_visual.visible = false
+	if _knife_visual:
+		_knife_visual.visible = knife_equipped
+	if _spear_visual:
+		_spear_visual.visible = spear_equipped
+	var generic_handle := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/Handle") as MeshInstance3D
+	var generic_grip := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/ToolGrip") as MeshInstance3D
+	if generic_handle:
+		generic_handle.visible = not knife_equipped
+	if generic_grip:
+		generic_grip.visible = not knife_equipped
+
+func _ensure_weapon_visuals() -> void:
+	if not equipped_tool_visual:
+		return
+	if not _knife_visual:
+		_knife_visual = Node3D.new()
+		_knife_visual.name = "HunterKnifeVisual"
+		equipped_tool_visual.add_child(_knife_visual)
+		var handle_mesh := BoxMesh.new()
+		handle_mesh.size = Vector3(0.065, 0.22, 0.07)
+		var handle := MeshInstance3D.new()
+		handle.name = "KnifeHandle"
+		handle.mesh = handle_mesh
+		handle.position = Vector3(0.0, 0.16, 0.0)
+		var handle_material := StandardMaterial3D.new()
+		handle_material.albedo_color = Color(0.25, 0.12, 0.055, 1.0)
+		handle_material.roughness = 0.9
+		handle.material_override = handle_material
+		_knife_visual.add_child(handle)
+		var blade_mesh := BoxMesh.new()
+		blade_mesh.size = Vector3(0.085, 0.30, 0.035)
+		var blade := MeshInstance3D.new()
+		blade.name = "KnifeBlade"
+		blade.mesh = blade_mesh
+		blade.position = Vector3(0.0, 0.40, 0.0)
+		var blade_material := StandardMaterial3D.new()
+		blade_material.albedo_color = Color(0.54, 0.59, 0.61, 1.0)
+		blade_material.metallic = 0.55
+		blade_material.roughness = 0.38
+		blade.material_override = blade_material
+		_knife_visual.add_child(blade)
+		_knife_visual.visible = false
+	if not _spear_visual:
+		_spear_visual = Node3D.new()
+		_spear_visual.name = "SpearVisual"
+		equipped_tool_visual.add_child(_spear_visual)
+		var shaft_mesh := CylinderMesh.new()
+		shaft_mesh.top_radius = 0.025
+		shaft_mesh.bottom_radius = 0.035
+		shaft_mesh.height = 1.55
+		var shaft := MeshInstance3D.new()
+		shaft.name = "SpearShaft"
+		shaft.mesh = shaft_mesh
+		shaft.position = Vector3(0.0, 0.78, 0.0)
+		var wood_material := StandardMaterial3D.new()
+		wood_material.albedo_color = Color(0.31, 0.16, 0.065, 1.0)
+		wood_material.roughness = 0.9
+		shaft.material_override = wood_material
+		_spear_visual.add_child(shaft)
+		var head_mesh := PrismMesh.new()
+		head_mesh.size = Vector3(0.20, 0.36, 0.10)
+		var head := MeshInstance3D.new()
+		head.name = "SpearHead"
+		head.mesh = head_mesh
+		head.position = Vector3(0.0, 1.67, 0.0)
+		var head_material := StandardMaterial3D.new()
+		head_material.albedo_color = Color(0.47, 0.51, 0.53, 1.0)
+		head_material.metallic = 0.42
+		head_material.roughness = 0.4
+		head.material_override = head_material
+		_spear_visual.add_child(head)
+		_spear_visual.visible = false
+
+func _update_armor_visuals() -> void:
+	var body_id := str(equipped_armor.get("body", ""))
+	var armor_color := Color(0.12, 0.34, 0.44, 1.0)
+	if body_id == "A02_HIDE_VEST":
+		armor_color = Color(0.35, 0.24, 0.13, 1.0)
+	elif body_id == "A03_LEATHER_ARMOR":
+		armor_color = Color(0.16, 0.105, 0.065, 1.0)
+	var shirt_material := StandardMaterial3D.new()
+	shirt_material.albedo_color = armor_color
+	shirt_material.roughness = 0.88
+	for path in ["Torso", "Camera3D/ViewModel/ChestFP", "Camera3D/ViewModel/LeftSleeveFP", "Camera3D/ViewModel/RightSleeveFP"]:
+		var mesh := get_node_or_null(path) as MeshInstance3D
+		if mesh:
+			mesh.material_override = shirt_material
+	var head_id := str(equipped_armor.get("head", ""))
+	var hair_mesh := get_node_or_null("Hair") as MeshInstance3D
+	if hair_mesh and head_id == "A01_HIDE_CAP":
+		var cap_material := StandardMaterial3D.new()
+		cap_material.albedo_color = Color(0.31, 0.20, 0.11, 1.0)
+		cap_material.roughness = 0.92
+		hair_mesh.material_override = cap_material
 
 func _apply_advanced_tool_materials() -> void:
 	var advanced := selected_tool_id in ["I04_METAL_AXE", "I05_METAL_PICK", "I06_ECHO_AXE", "I07_ECHO_PICK"]
@@ -554,7 +662,9 @@ func _ready() -> void:
 		_hide_joystick()
 	else:
 		_disable_local_presentation()
+	_ensure_weapon_visuals()
 	_update_equipped_tool_visual()
+	_update_armor_visuals()
 	_apply_advanced_tool_materials()
 	_tool_base_rotation = Vector3(-14.0, -12.0, -8.0)
 	if tool_holder:
