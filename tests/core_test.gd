@@ -68,8 +68,10 @@ func _run_tests() -> void:
 	_test_settlement_production_save_contract()
 	_test_performance_cache_contract()
 	_test_alpha_presentation_contract()
+	_test_construction_logistics_contract()
+	_test_economy_and_survival_contract()
 	if failures.is_empty():
-		print("VEYRA CORE TESTS: PASS (60 suites)")
+		print("VEYRA CORE TESTS: PASS")
 		quit(0)
 	else:
 		for failure in failures:
@@ -1603,3 +1605,90 @@ func _test_save_sanitization_preserves_health_and_discovery() -> void:
 	var progression_state: Dictionary = manager.call("_sanitize_progression", {"version": 2, "discovered_events": {"ANCIENT_LANDMARK": {"explored": true}}})
 	_check(progression_state.get("discovered_events", {}).has("ANCIENT_LANDMARK"), "save sanitization must preserve discovered events")
 	manager.free()
+
+
+func _test_construction_logistics_contract() -> void:
+	var logistics := root.get_node_or_null("/root/BuildSiteManager") as VeyraBuildSiteManager
+	var settlement := root.get_node_or_null("/root/SettlementManager") as VeyraSettlementManager
+	_check(logistics != null, "construction logistics manager must exist")
+	_check(settlement != null, "settlement manager must exist for construction logistics")
+	if not logistics or not settlement:
+		return
+
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var site_position := Vector3(40.0, 0.0, 40.0)
+	player.global_position = site_position
+	var inventory: VeyraInventory = player.get_inventory()
+	inventory.add_resource("Wood", 12)
+	inventory.add_resource("Stone", 4)
+	var site_id := logistics.create_foundation(
+		"BUILD-LOGISTICS-TEST",
+		"B02_STORAGE",
+		site_position,
+		{"Wood": 12, "Stone": 4}
+	)
+	_check(not site_id.is_empty(), "foundation placement must create a persistent build site")
+	_check(inventory.get_amount("Wood") == 12, "foundation placement must not consume Wood")
+	_check(inventory.get_amount("Stone") == 4, "foundation placement must not consume Stone")
+	_check(logistics.get_completion_ratio(site_id) == 0.0, "new foundation must start at zero material progress")
+	_check(logistics.deposit_from_player(site_id, player), "player must be able to deposit materials at the build site")
+	_check(not logistics.has_site(site_id), "fully supplied foundation must complete into a building")
+	_check(settlement.buildings.has("BUILD-LOGISTICS-TEST"), "completed build site must create settlement building state")
+	settlement.buildings.erase("BUILD-LOGISTICS-TEST")
+	var building_visual := root.get_tree().current_scene.get_node_or_null("PlacedBuildings/BUILD-LOGISTICS-TEST")
+	if building_visual:
+		building_visual.queue_free()
+	player.queue_free()
+
+	var townhall_id := "BUILD-LOGISTICS-TOWNHALL"
+	settlement.add_building(townhall_id, "B05_TOWNHALL", Vector3(48.0, 0.0, 48.0))
+	settlement.set_building_storage(townhall_id, {"resources": {"Wood": 6}, "items": {}})
+	var worker_id := "BUILD-LOGISTICS-WORKER"
+	settlement.add_villager(worker_id, "Delivery Worker")
+	var worker_site := logistics.create_foundation(
+		"BUILD-LOGISTICS-WORK",
+		"B02_STORAGE",
+		Vector3(55.0, 0.0, 55.0),
+		{"Wood": 6}
+	)
+	_check(not worker_site.is_empty(), "worker logistics test foundation must be created")
+	var order_id := logistics.queue_worker_delivery(worker_site, worker_id, {"Wood": 6})
+	_check(not order_id.is_empty(), "Town Hall must dispatch stored materials to a build site")
+	var townhall_storage := settlement.get_building_storage(townhall_id)
+	_check(int(townhall_storage.get("resources", {}).get("Wood", 0)) == 0, "Town Hall dispatch must reserve its cargo")
+	logistics._complete_delivery(order_id)
+	_check(not logistics.has_site(worker_site), "worker delivery completing the material bill must finish the site")
+	_check(settlement.buildings.has("BUILD-LOGISTICS-WORK"), "worker delivery must create the completed building")
+	settlement.buildings.erase("BUILD-LOGISTICS-WORK")
+	settlement.buildings.erase(townhall_id)
+	settlement.villagers.erase(worker_id)
+
+func _test_economy_and_survival_contract() -> void:
+	var merchant := root.get_node_or_null("/root/MerchantManager") as VeyraMerchantManager
+	_check(merchant != null, "merchant manager must exist")
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	var player := player_scene.instantiate()
+	root.add_child(player)
+	var inventory: VeyraInventory = player.get_inventory()
+	inventory.add_resource("Meat", 2)
+	_check(merchant.sell(player, "Meat", 1), "merchant must buy huntable Meat")
+	_check(inventory.get_coins() == 2, "selling Meat must award deterministic coins")
+	_check(merchant.buy(player, "Food"), "merchant must sell Food for coins")
+	_check(inventory.get_coins() == 0, "buying Food must spend its listed coin price")
+	_check(inventory.has_resource("Food", 3), "merchant purchase must deliver the advertised Food amount")
+
+	inventory.add_item("A02_HIDE_VEST", 1)
+	_check(player.equip_armor("A02_HIDE_VEST"), "hide armor must equip from inventory")
+	_check(is_equal_approx(player.get_armor_rating(), 0.18), "hide vest must provide its documented mitigation")
+	player.set_health(100.0)
+	player.take_damage(50.0, "armor_test")
+	_check(is_equal_approx(player.get_health(), 59.0), "armor mitigation must reduce incoming damage before health")
+	player.set_hunger(10.0)
+	inventory.add_resource("Meat", 1)
+	_check(player.consume_food(), "player must be able to eat hunt-sourced Meat")
+	_check(player.get_hunger() > 10.0, "eating Meat must restore hunger")
+	_check(VeyraItemCatalog.is_valid("I08_HUNTER_KNIFE") and VeyraItemCatalog.is_valid("I10_METAL_SPEAR"), "new hunting tools must be catalogued")
+	_check(VeyraItemCatalog.is_valid("A01_HIDE_CAP") and VeyraItemCatalog.is_valid("A03_LEATHER_ARMOR"), "new armor must be catalogued")
+	player.queue_free()
