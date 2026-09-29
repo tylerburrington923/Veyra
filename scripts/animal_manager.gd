@@ -17,6 +17,7 @@ var _simulation_accumulator := 0.0
 const SIMULATION_INTERVAL := 0.10
 var visuals: Dictionary = {}
 var death_timers: Dictionary = {}
+var attack_cooldowns: Dictionary = {}
 var _mesh_cache: Dictionary = {}
 var _material_cache: Dictionary = {}
 var _visual_clock: float = 0.0
@@ -279,6 +280,7 @@ func _update_dead_animals(delta: float) -> void:
 func despawn_animal(animal_id: String) -> void:
 	states.erase(animal_id)
 	death_timers.erase(animal_id)
+	attack_cooldowns.erase(animal_id)
 	var visual: Node3D = visuals.get(animal_id)
 	if visual:
 		visual.queue_free()
@@ -371,6 +373,14 @@ func _update_behavior(state: AnimalState, definition: AnimalDefinition, delta: f
 			var player_distance := flat_offset.length()
 			if player_distance < 9.0:
 				state.behavior_state = "CHASE"
+				if player_distance <= 2.0:
+					var cooldown := float(attack_cooldowns.get(state.animal_id, 0.0))
+					if cooldown <= 0.0 and player.has_method("take_damage") and (not player.has_method("is_alive") or player.is_alive()):
+						player.take_damage(10.0 if definition.id == "veilwolf" else 14.0, definition.id)
+						attack_cooldowns[state.animal_id] = 1.15
+					else:
+						attack_cooldowns[state.animal_id] = maxf(0.0, cooldown - delta)
+					return
 				if player_distance > 2.0:
 					var step := minf(definition.movement_speed * delta, player_distance)
 					state.position = _vector_dict(_get_grounded_position(current + flat_offset.normalized() * step))
@@ -378,6 +388,7 @@ func _update_behavior(state: AnimalState, definition: AnimalDefinition, delta: f
 				state.behavior_state = "IDLE"
 				return
 			if state.behavior_state == "CHASE":
+				attack_cooldowns[state.animal_id] = 0.0
 				state.behavior_state = "IDLE"
 				state.behavior_timer = 0.0
 	if state.behavior_state == "IDLE":
