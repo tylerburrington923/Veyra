@@ -24,7 +24,7 @@ extends CharacterBody3D
 
 @export_category("Camera")
 @export var camera_distance: float = 0.0
-@export var camera_height: float = 1.72
+@export var camera_height: float = 1.70
 @export var camera_fov: float = 66.0
 @export var camera_far: float = 140.0
 
@@ -33,7 +33,7 @@ extends CharacterBody3D
 @export_range(0.0, 0.5, 0.01) var joystick_deadzone: float = 0.12
 @export_range(0.1, 0.9, 0.01) var left_screen_ratio: float = 0.48
 
-var look_pitch: float = deg_to_rad(-5.0)
+var look_pitch: float = 0.0
 var target_yaw: float = 0.0
 @export_range(0.0, 30.0, 0.5) var camera_yaw_smoothing: float = 18.0
 var move_input: Vector2 = Vector2.ZERO
@@ -449,7 +449,7 @@ func _configure_camera() -> void:
 	camera.current = true
 	camera.fov = camera_fov
 	camera.far = camera_far
-	camera.position = Vector3(0.0, camera_height, 0.08 + camera_distance)
+	camera.position = Vector3(0.0, camera_height, -0.10 + camera_distance)
 	camera.rotation = Vector3(look_pitch, 0.0, 0.0)
 	look_pitch = camera.rotation.x
 	target_yaw = rotation.y
