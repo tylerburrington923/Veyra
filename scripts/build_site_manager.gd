@@ -32,6 +32,8 @@ func _process(delta: float) -> void:
 	var completed_orders: Array[String] = []
 	for order_id in delivery_orders.keys():
 		var order: Dictionary = delivery_orders[order_id]
+		if not _worker_has_reached_site(order):
+			continue
 		order["remaining_time"] = maxf(0.0, float(order.get("remaining_time", DELIVERY_TRAVEL_SECONDS)) - delta)
 		delivery_orders[order_id] = order
 		if float(order["remaining_time"]) <= 0.0:
@@ -372,6 +374,12 @@ func _find_available_worker() -> String:
 		if not record is Dictionary or not bool(record.get("active", false)):
 			return str(worker_id)
 	return str(settlement.villagers.keys()[0]) if not settlement.villagers.is_empty() else ""
+
+func _worker_has_reached_site(order: Dictionary) -> bool:
+	var npc_manager := get_tree().get_first_node_in_group("npc_manager")
+	if not npc_manager or not npc_manager.has_method("is_worker_at_site"):
+		return true
+	return bool(npc_manager.is_worker_at_site(str(order.get("worker_id", "")), str(order.get("site_id", ""))))
 
 func _set_worker_delivery_state(worker_id: String, site_id: String) -> void:
 	var npc_manager := get_tree().get_first_node_in_group("npc_manager")
