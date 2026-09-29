@@ -18,7 +18,11 @@ const BUY_OFFERS := {
 	"I04_METAL_AXE": {"price": 70, "amount": 1},
 	"I05_METAL_PICK": {"price": 78, "amount": 1},
 	"I08_HUNTER_KNIFE": {"price": 32, "amount": 1},
-	"I09_STONE_SPEAR": {"price": 36, "amount": 1}
+	"I09_STONE_SPEAR": {"price": 36, "amount": 1},
+	"I10_METAL_SPEAR": {"price": 85, "amount": 1},
+	"A01_HIDE_CAP": {"price": 20, "amount": 1},
+	"A02_HIDE_VEST": {"price": 45, "amount": 1},
+	"A03_LEATHER_ARMOR": {"price": 90, "amount": 1}
 }
 
 const SELL_OFFERS := {
