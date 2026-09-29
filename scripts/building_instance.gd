@@ -721,3 +721,35 @@ func _build_generic() -> void:
         _:
             _mesh_box(Vector3(2.0, 1.5, 2.0), Vector3(0, 0.75, 0), material)
             _add_box_collision(Vector3(2.0, 1.5, 2.0), Vector3(0, 0.75, 0))
+
+
+func deposit_build_materials(player: Node) -> bool:
+	if building_type != "B05_TOWNHALL" or not player or not player.has_method("get_inventory"):
+		return false
+	var inventory: VeyraInventory = player.get_inventory()
+	var settlement := get_node_or_null("/root/SettlementManager")
+	if not inventory or not settlement:
+		return false
+	var storage := settlement.get_building_storage(building_id)
+	var resources: Dictionary = storage.get("resources", {}).duplicate(true)
+	var deposited := 0
+	for resource_type in inventory.get_resource_types():
+		if resource_type in ["Water", "Food"]:
+			continue
+		var amount := inventory.get_amount(resource_type)
+		if amount <= 0:
+			continue
+		var removed := inventory.remove_resource(resource_type, amount)
+		if removed > 0:
+			resources[resource_type] = int(resources.get(resource_type, 0)) + removed
+			deposited += removed
+	storage["resources"] = resources
+	settlement.set_building_storage(building_id, storage)
+	_last_interaction_feedback = "Town Hall logistics stock: +%d materials." % deposited if deposited > 0 else "No build materials to deposit."
+	return deposited > 0
+
+func get_logistics_storage() -> Dictionary:
+	var settlement := get_node_or_null("/root/SettlementManager")
+	if not settlement:
+		return {}
+	return settlement.get_building_storage(building_id)
