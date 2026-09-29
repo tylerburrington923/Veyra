@@ -44,6 +44,8 @@ func create_foundation(building_id: String, building_type: String, position: Vec
 		return ""
 	if not VeyraBuildingCatalog.exists(building_type) or cost.is_empty():
 		return ""
+	if building_type == "B05_TOWNHALL" and _townhall_exists_or_reserved():
+		return ""
 	if _has_site_near(position, VeyraBuildingCatalog.get_building(building_type).get("size", Vector2.ONE)):
 		return ""
 	var site_id := "SITE-%04d" % _next_site_index
@@ -425,3 +427,16 @@ func _sanitize_order(value) -> Dictionary:
 func _is_authoritative() -> bool:
 	var network := get_node_or_null("/root/NetworkManager")
 	return network == null or not bool(network.get("session_active")) or bool(network.get("is_host"))
+
+
+func _townhall_exists_or_reserved() -> bool:
+	var settlement := get_node_or_null("/root/SettlementManager")
+	if settlement and settlement.has_method("get_building"):
+		var buildings: Dictionary = settlement.get("buildings")
+		for record in buildings.values():
+			if record is Dictionary and str(record.get("type", "")) == "B05_TOWNHALL":
+				return true
+	for site in build_sites.values():
+		if site is Dictionary and str(site.get("building_type", "")) == "B05_TOWNHALL":
+			return true
+	return false
