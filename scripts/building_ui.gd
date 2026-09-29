@@ -11,6 +11,7 @@ var _player: Node
 var _mode := ""
 var _backdrop: ColorRect
 var _townhall_buttons: Dictionary = {}
+var _logistics_buttons: Dictionary = {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -32,15 +33,19 @@ func open_townhall(building: Node, player: Node) -> void:
 	_open(building, player, "TOWN HALL")
 	_add_text("SETTLEMENT COMMAND")
 	_add_or_update_status("Loading settlement status...")
-	_add_action("DEPOSIT 10 WOOD + 10 STONE", _deposit_civic_materials)
+	_add_action("DEPOSIT CIVIC 10 WOOD + 10 STONE", _deposit_civic_materials)
+	_add_action("DEPOSIT ALL BUILD MATERIALS", _deposit_build_materials)
+	_add_text("FOUNDATIONS COST NOTHING. Deliver materials yourself at the foundation, or dispatch a worker from Town Hall logistics.")
 	_add_text("Build new structures from the list below. Town Hall itself is excluded because each settlement has one civic anchor.")
 	_townhall_buttons.clear()
+	_logistics_buttons.clear()
 	for building_id in VeyraBuildingCatalog.all_building_ids():
 		if building_id == "B05_TOWNHALL":
 			continue
 		var definition := VeyraBuildingCatalog.get_building(building_id)
 		_add_build_option(building_id, definition)
 	_refresh_townhall()
+	_build_logistics_controls()
 
 func open_blacksmith(building: Node, player: Node) -> void:
 	_open(building, player, "BLACKSMITH")
@@ -221,6 +226,31 @@ func _deposit_civic_materials() -> void:
 		_building.deposit_civic_materials(_player, 10)
 		_refresh_townhall()
 
+func _deposit_build_materials() -> void:
+	if _building and _building.has_method("deposit_build_materials"):
+		_building.deposit_build_materials(_player)
+		_refresh_townhall()
+
+func _build_logistics_controls() -> void:
+	var logistics := get_node_or_null("/root/BuildSiteManager") as VeyraBuildSiteManager
+	if not logistics:
+		return
+	for site_id in logistics.get_all_sites().keys():
+		var site: Dictionary = logistics.get_site(str(site_id))
+		var definition := VeyraBuildingCatalog.get_building(str(site.get("building_type", "")))
+		var remaining := logistics.get_remaining_materials(str(site_id))
+		_add_text("%s  •  %d%% delivered" % [str(definition.get("name", "Build Site")), int(round(logistics.get_completion_ratio(str(site_id)) * 100.0))])
+		_add_action("DISPATCH WORKER  •  %s" % _format_cost(remaining), _dispatch_site.bind(str(site_id)))
+		_logistics_buttons[str(site_id)] = true
+
+func _dispatch_site(site_id: String) -> void:
+	var logistics := get_node_or_null("/root/BuildSiteManager") as VeyraBuildSiteManager
+	if not logistics:
+		return
+	var remaining := logistics.get_remaining_materials(site_id)
+	var order_id := str(logistics.dispatch_available_worker(site_id, remaining))
+	_add_or_update_status("Worker dispatched." if not order_id.is_empty() else "No worker or Town Hall materials available.")
+
 func _campfire_action() -> void:
 	if _building and _building.has_method("add_campfire_fuel"):
 		_building.add_campfire_fuel(_player, 1)
@@ -381,9 +411,8 @@ func _refresh_townhall() -> void:
 		if not button:
 			continue
 		var definition := VeyraBuildingCatalog.get_building(str(building_id))
-		var affordable := _can_afford(inventory, definition.get("cost", {}))
-		button.disabled = not affordable
-		button.tooltip_text = "Select %s" % button.text if affordable else "Missing: %s" % _missing_cost(inventory, definition.get("cost", {}))
+		button.disabled = false
+		button.tooltip_text = "Place free foundation for %s" % button.text
 
 func _can_afford(inventory: VeyraInventory, cost: Dictionary) -> bool:
 	for resource_type in cost.keys():
