@@ -456,7 +456,7 @@ func _refresh_option_affordability() -> void:
 		var button := _option_buttons[index]
 		if not button or not is_instance_valid(button):
 			continue
-		var affordable := _has_cost(_option_costs[index])
+		var affordable := true if mode == "build" else _has_cost(_option_costs[index])
 		button.disabled = not affordable
 		button.tooltip_text = "Select %s" % button.text if affordable else "Missing materials"
 
