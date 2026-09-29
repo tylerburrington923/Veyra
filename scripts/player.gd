@@ -309,6 +309,7 @@ func load_save_state(state: Dictionary) -> void:
 	tool_durability = clampf(float(state.get("tool_durability", 100.0)), 0.0, 100.0)
 	resonance_charge = clampf(float(state.get("resonance_charge", 0.0)), 0.0, 100.0)
 	resonance_discovered = bool(state.get("resonance_discovered", resonance_charge > 0.0))
+	max_health = clampf(float(state.get("max_health", max_health)), 1.0, 1000.0)
 	health = clampf(float(state.get("health", max_health)), 0.0, max_health)
 	_respawn_position = global_position
 	_respawn_yaw = rotation.y
