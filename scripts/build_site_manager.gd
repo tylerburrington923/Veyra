@@ -25,6 +25,8 @@ func _ready() -> void:
 	call_deferred("_restore_presentations")
 
 func _process(delta: float) -> void:
+	if not _is_authoritative():
+		return
 	if delta <= 0.0 or delivery_orders.is_empty():
 		return
 	var completed_orders: Array[String] = []
@@ -38,6 +40,8 @@ func _process(delta: float) -> void:
 		_complete_delivery(order_id)
 
 func create_foundation(building_id: String, building_type: String, position: Vector3, cost: Dictionary, creator_peer_id: int = 1) -> String:
+	if not _is_authoritative():
+		return ""
 	if not VeyraBuildingCatalog.exists(building_type) or cost.is_empty():
 		return ""
 	if _has_site_near(position, VeyraBuildingCatalog.get_building(building_type).get("size", Vector2.ONE)):
@@ -97,6 +101,8 @@ func get_completion_ratio(site_id: String) -> float:
 	return 1.0 if total <= 0 else float(supplied) / float(total)
 
 func deposit_from_player(site_id: String, player: Node, requested: Dictionary = {}) -> bool:
+	if not _is_authoritative():
+		return false
 	var site := get_site(site_id)
 	if site.is_empty() or not player or not player.has_method("get_inventory"):
 		return false
@@ -134,6 +140,8 @@ func deposit_from_player(site_id: String, player: Node, requested: Dictionary = 
 	return deposited
 
 func queue_worker_delivery(site_id: String, worker_id: String, requested: Dictionary) -> String:
+	if not _is_authoritative():
+		return ""
 	var site := get_site(site_id)
 	if site.is_empty() or worker_id.is_empty():
 		return ""
@@ -179,6 +187,8 @@ func dispatch_available_worker(site_id: String, requested: Dictionary) -> String
 	return queue_worker_delivery(site_id, worker_id, requested)
 
 func cancel_delivery(order_id: String) -> bool:
+	if not _is_authoritative():
+		return false
 	if not delivery_orders.has(order_id):
 		return false
 	var order: Dictionary = delivery_orders[order_id]
@@ -410,3 +420,8 @@ func _sanitize_order(value) -> Dictionary:
 		"remaining_time": clampf(float(value.get("remaining_time", DELIVERY_TRAVEL_SECONDS)), 0.0, DELIVERY_TRAVEL_SECONDS),
 		"source_building_id": str(value.get("source_building_id", ""))
 	}
+
+
+func _is_authoritative() -> bool:
+	var network := get_node_or_null("/root/NetworkManager")
+	return network == null or not bool(network.get("session_active")) or bool(network.get("is_host"))
