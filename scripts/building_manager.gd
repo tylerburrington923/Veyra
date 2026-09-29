@@ -137,6 +137,12 @@ func confirm_build(player: Node3D, inventory: VeyraInventory) -> bool:
     if not placement_valid or selected_building_id.is_empty():
         return false
     var definition := get_selected_building()
+    if definition.is_empty() or not player or not inventory:
+        return false
+    if not _is_build_terrain_valid(placement_position, definition.get("size", Vector2.ONE)):
+        return false
+    if not _is_space_clear(placement_position, definition.get("size", Vector2.ONE), player):
+        return false
     if selected_building_id == "B05_TOWNHALL" and _has_townhall():
         return false
     var cost: Dictionary = definition.get("cost", {})
