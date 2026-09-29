@@ -38,6 +38,42 @@ const RECIPES := {
 		"cost": {"Refined Metal": 2, "Echo-Stone": 1, "Vitreous Lux": 1, "Wood": 2},
 		"output": 1
 	},
+	"I08_HUNTER_KNIFE": {
+		"id": "I08_HUNTER_KNIFE",
+		"name": "Hunter Knife",
+		"cost": {"Stone": 2, "Wood": 1, "Hide": 1},
+		"output": 1
+	},
+	"I09_STONE_SPEAR": {
+		"id": "I09_STONE_SPEAR",
+		"name": "Stone Spear",
+		"cost": {"Stone": 2, "Wood": 3},
+		"output": 1
+	},
+	"I10_METAL_SPEAR": {
+		"id": "I10_METAL_SPEAR",
+		"name": "Metal Spear",
+		"cost": {"Refined Metal": 2, "Wood": 3, "Leather": 1},
+		"output": 1
+	},
+	"A01_HIDE_CAP": {
+		"id": "A01_HIDE_CAP",
+		"name": "Hide Cap",
+		"cost": {"Hide": 3},
+		"output": 1
+	},
+	"A02_HIDE_VEST": {
+		"id": "A02_HIDE_VEST",
+		"name": "Hide Vest",
+		"cost": {"Hide": 6},
+		"output": 1
+	},
+	"A03_LEATHER_ARMOR": {
+		"id": "A03_LEATHER_ARMOR",
+		"name": "Leather Armor",
+		"cost": {"Leather": 8, "Hide": 2},
+		"output": 1
+	},
 	"I03_CAMPFIRE_KIT": {
 		"id": "I03_CAMPFIRE_KIT",
 		"name": "Campfire Kit",
