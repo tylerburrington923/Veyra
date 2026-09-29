@@ -16,6 +16,9 @@ func _ready() -> void:
     var progression := get_node_or_null("/root/ProgressionManager")
     if progression and progression.has_method("load_save_state"):
         progression.load_save_state(loaded_save.get("progression", {}))
+    var logistics := get_node_or_null("/root/BuildSiteManager")
+    if logistics and logistics.has_method("load_save_state"):
+        logistics.load_save_state(loaded_save.get("logistics", {}))
 
 func get_loaded_save() -> Dictionary:
     return loaded_save.duplicate(true)
@@ -41,7 +44,11 @@ func save_current_game(world: Node) -> bool:
     var progression := get_node_or_null("/root/ProgressionManager")
     if progression and progression.has_method("get_save_state"):
         progression_state = progression.get_save_state()
-    var saved: bool = SaveManager.save_world(world, inventory.get_snapshot(), settlement_state, player_state, progression_state)
+    var logistics_state := {}
+    var logistics := get_node_or_null("/root/BuildSiteManager")
+    if logistics and logistics.has_method("get_save_state"):
+        logistics_state = logistics.get_save_state()
+    var saved: bool = SaveManager.save_world(world, inventory.get_snapshot(), settlement_state, player_state, progression_state, logistics_state)
     if saved:
         loaded_save = SaveManager.load_world()
     return saved
