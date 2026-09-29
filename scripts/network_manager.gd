@@ -755,3 +755,25 @@ func request_worker_delivery(site_id: String, requested: Dictionary) -> void:
 	var logistics := get_node_or_null("/root/BuildSiteManager")
 	if logistics and logistics.has_method("dispatch_available_worker"):
 		logistics.dispatch_available_worker(site_id, requested)
+
+
+func submit_local_merchant_trade(direction: String, item_id: String, amount: int) -> void:
+	if not session_active or is_host or amount <= 0:
+		return
+	merchant_trade_request.rpc_id(1, direction, item_id, amount)
+
+@rpc("any_peer", "reliable")
+func merchant_trade_request(direction: String, item_id: String, amount: int) -> void:
+	if not multiplayer.is_server():
+		return
+	var sender_id := multiplayer.get_remote_sender_id()
+	var player := players.get(sender_id) as Node
+	if not player or amount <= 0:
+		return
+	var merchant := get_node_or_null("/root/MerchantManager") as VeyraMerchantManager
+	if not merchant:
+		return
+	if direction == "BUY":
+		merchant.buy(player, item_id)
+	elif direction == "SELL":
+		merchant.sell(player, item_id, amount)
