@@ -2,6 +2,7 @@ extends Node
 class_name VeyraBuildingManager
 
 signal placement_changed(building_id: String, valid: bool, position: Vector3)
+signal foundation_placed(building_id: String, position: Vector3)
 signal building_completed(building_id: String, position: Vector3)
 
 const BUILDING_VERSION := 1
@@ -121,7 +122,7 @@ func server_build(player: Node3D, building_id: String, requested_position: Vecto
     var site_id := str(logistics.call("create_foundation", building_id_value, building_id, position, definition.get("cost", {}), multiplayer.get_unique_id() if multiplayer.has_multiplayer_peer() else 1))
     if site_id.is_empty():
         return false
-    building_completed.emit(building_id, position)
+    foundation_placed.emit(building_id, position)
     return true
 
 func confirm_build(player: Node3D, inventory: VeyraInventory) -> bool:
