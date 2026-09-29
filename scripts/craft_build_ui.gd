@@ -456,6 +456,11 @@ func _on_inventory_changed(_snapshot: Dictionary, _changed_type: String, _change
 	_refresh_option_affordability()
 
 func _refresh_option_affordability() -> void:
+	if mode == "build":
+		for button in _option_buttons:
+			if button:
+				button.disabled = false
+		return
 	for index in range(_option_buttons.size()):
 		var button := _option_buttons[index]
 		if not button or not is_instance_valid(button):
