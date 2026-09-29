@@ -119,6 +119,8 @@ func _sanitize_player_state(player_state: Dictionary) -> Dictionary:
     var clean_position := [0.0, 1.5, 0.0]
     if position is Array and position.size() >= 3:
         clean_position = [float(position[0]), float(position[1]), float(position[2])]
+    var max_health := clampf(float(player_state.get("max_health", 100.0)), 1.0, 1000.0)
+    var health := clampf(float(player_state.get("health", max_health)), 0.0, max_health)
     var resonance_charge := clampf(float(player_state.get("resonance_charge", 0.0)), 0.0, 100.0)
     var resonance_discovered := bool(player_state.get("resonance_discovered", resonance_charge > 0.0))
     return {
@@ -126,6 +128,8 @@ func _sanitize_player_state(player_state: Dictionary) -> Dictionary:
         "tool_durability": clampf(float(player_state.get("tool_durability", 100.0)), 0.0, 100.0),
         "resonance_charge": resonance_charge,
         "resonance_discovered": resonance_discovered,
+        "health": health,
+        "max_health": max_health,
         "position": clean_position,
         "yaw": float(player_state.get("yaw", 0.0)),
         "pitch": clampf(float(player_state.get("pitch", deg_to_rad(-8.0))), deg_to_rad(-70.0), deg_to_rad(55.0))
@@ -140,7 +144,8 @@ func _sanitize_progression(progression: Dictionary) -> Dictionary:
         "levels": {},
         "skill_points": maxi(0, int(progression.get("skill_points", 0))),
         "unlocked_skills": [],
-        "quest_progress": {}
+        "quest_progress": {},
+        "discovered_events": {}
     }
     for discipline in VeyraProgressionManager.DISCIPLINES:
         clean["xp"][discipline] = maxi(0, int(progression.get("xp", {}).get(discipline, 0)))
@@ -148,6 +153,15 @@ func _sanitize_progression(progression: Dictionary) -> Dictionary:
     for skill_id in progression.get("unlocked_skills", []):
         if VeyraProgressionManager.SKILLS.has(str(skill_id)):
             clean["unlocked_skills"].append(str(skill_id))
+    var discovered_events = progression.get("discovered_events", {})
+    if discovered_events is Dictionary:
+        for event_id in discovered_events.keys():
+            if str(event_id).is_empty():
+                continue
+            var event_state = discovered_events[event_id]
+            if event_state is Dictionary:
+                clean["discovered_events"][str(event_id)] = event_state.duplicate(true)
+
     var quests = progression.get("quest_progress", {})
     if quests is Dictionary:
         for quest_id in VeyraProgressionManager.QUESTS:
