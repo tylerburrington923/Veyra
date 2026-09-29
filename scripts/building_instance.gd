@@ -36,19 +36,19 @@ func setup(id: String, type_id: String, position_value: Vector3, door_open_value
 
 
 func open_local_ui(player: Node) -> void:
-	if not player:
-		return
-	match building_type:
-		"B01_CAMPFIRE":
-			_open_building_ui(player, "campfire")
-		"B02_STORAGE":
-			_open_building_ui(player, "storage")
-		"B05_TOWNHALL":
-			_open_building_ui(player, "townhall")
-		"B09_BLACKSMITH":
-			_open_building_ui(player, "blacksmith")
-		"B10_TANNERY":
-			_open_building_ui(player, "tannery")
+    if not player:
+        return
+    match building_type:
+        "B01_CAMPFIRE":
+            _open_building_ui(player, "campfire")
+        "B02_STORAGE":
+            _open_building_ui(player, "storage")
+        "B05_TOWNHALL":
+            _open_building_ui(player, "townhall")
+        "B09_BLACKSMITH":
+            _open_building_ui(player, "blacksmith")
+        "B10_TANNERY":
+            _open_building_ui(player, "tannery")
 
 func interact(player_override: Node = null) -> void:
     _last_interaction_feedback = ""
