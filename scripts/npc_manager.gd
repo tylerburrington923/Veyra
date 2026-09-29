@@ -15,6 +15,7 @@ var states: Dictionary = {}
 var controllers: Dictionary = {}
 var _simulation_accumulator := 0.0
 var _simulation_scratch: Array[NPCState] = []
+var delivery_targets: Dictionary = {}
 const SIMULATION_INTERVAL := 0.10
 
 func _ready() -> void:
@@ -183,9 +184,56 @@ func _ground_position(position: Vector3) -> Vector3:
 		position.y = float(generator.get_height_at_world(position.x, position.z)) + 0.05
 	return position
 
+func set_delivery_target(worker_id: String, site_id: String) -> bool:
+	var settlement := _settlement_manager()
+	var site_manager := get_node_or_null("/root/BuildSiteManager")
+	if not settlement or not site_manager or not site_manager.has_method("get_site"):
+		return false
+	var site: Dictionary = site_manager.get_site(site_id)
+	if site.is_empty():
+		return false
+	delivery_targets[worker_id] = site_id
+	var state := states.get(worker_id) as NPCState
+	if state:
+		state.current_task = "DELIVER"
+		state.target_position = NPCState.make_vector_dict(
+			float(site.get("position", [0.0, 0.0, 0.0])[0]),
+			float(site.get("position", [0.0, 0.0, 0.0])[1]),
+			float(site.get("position", [0.0, 0.0, 0.0])[2])
+		)
+	return true
+
+func clear_delivery_target(worker_id: String) -> void:
+	delivery_targets.erase(worker_id)
+	var state := states.get(worker_id) as NPCState
+	if state and state.current_task == "DELIVER":
+		state.current_task = "IDLE"
+		state.target_position = state.position
+
 func _update_villager_behavior(state: NPCState, delta: float) -> void:
 	if not state.alive:
 		return
+
+	if delivery_targets.has(state.npc_id):
+		var site_manager := get_node_or_null("/root/BuildSiteManager")
+		var site: Dictionary = site_manager.get_site(str(delivery_targets[state.npc_id])) if site_manager else {}
+		if site.is_empty():
+			clear_delivery_target(state.npc_id)
+		else:
+			var target_data = site.get("position", [0.0, 0.0, 0.0])
+			var target := _ground_position(Vector3(float(target_data[0]), float(target_data[1]), float(target_data[2])))
+			var current := _state_position(state.position)
+			var offset := target - current
+			offset.y = 0.0
+			var distance := offset.length()
+			state.current_task = "DELIVER"
+			state.target_position = _vector_dict(target)
+			if distance > 0.3:
+				var step := minf(3.5 * delta, distance)
+				state.position = _vector_dict(_ground_position(current + offset.normalized() * step))
+				return
+			state.current_task = "IDLE"
+			return
 
 	var settlement := _settlement_manager()
 	if settlement and settlement.villagers.has(state.npc_id):
