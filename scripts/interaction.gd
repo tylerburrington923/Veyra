@@ -250,31 +250,18 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 		target_label.visible = false
 		var has_target := handler != ""
 		if target_panel:
-			if has_target != _hud_target_visible:
-				_hud_target_visible = has_target
-				target_panel.visible = true
-				target_panel.modulate.a = 0.0 if has_target else 1.0
-				var tween := target_panel.create_tween()
-				tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-				if has_target:
-					target_panel.scale = Vector2(0.96, 0.96)
-					tween.parallel().tween_property(target_panel, "modulate:a", 1.0, 0.12)
-					tween.parallel().tween_property(target_panel, "scale", Vector2.ONE, 0.14)
-				else:
-					tween.parallel().tween_property(target_panel, "modulate:a", 0.0, 0.10)
-					tween.tween_callback(func(): target_panel.visible = false)
-			elif not has_target:
-				target_panel.visible = false
+			target_panel.visible = true
+			_hud_target_visible = has_target
 		if target_action:
-			target_action.text = action_label.to_upper() if eligible else "LOCKED"
+			target_action.text = action_label.to_upper() if eligible else ("AIM TO INTERACT" if not has_target else "LOCKED")
 			target_action.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			target_action.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		if target_detail:
-			target_detail.visible = has_target
+			target_detail.visible = true
 			var display_name := target_name if target_name != "" else "UNKNOWN"
 			if handler_node and handler_node.has_method("get_interaction_name"):
 				display_name = str(handler_node.get_interaction_name())
-			var detail_text := display_name
+			var detail_text := display_name if has_target else "LOOK AT AN OBJECT"
 			if not eligible and last_requirement != "":
 				detail_text = "REQUIRES " + last_requirement.to_upper()
 			elif player:
