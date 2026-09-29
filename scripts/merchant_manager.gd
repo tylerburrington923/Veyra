@@ -6,7 +6,7 @@ signal trade_completed(direction: String, item_id: String, amount: int, coins: i
 const SAVE_VERSION := 1
 
 const BUY_OFFERS := {
-	"Food": {"price": 4, "amount": 3},
+	"Food": {"price": 2, "amount": 3},
 	"Meat": {"price": 3, "amount": 3},
 	"Stone": {"price": 2, "amount": 5},
 	"Wood": {"price": 2, "amount": 5},
@@ -80,6 +80,8 @@ func buy(player: Node, item_id: String) -> bool:
 	return true
 
 func sell(player: Node, item_id: String, amount: int = 1) -> bool:
+	if not _is_authoritative():
+		return false
 	if not player or not player.has_method("get_inventory") or not SELL_OFFERS.has(item_id) or amount <= 0:
 		return false
 	var inventory: VeyraInventory = player.get_inventory()
