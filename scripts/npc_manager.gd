@@ -13,6 +13,7 @@ func _settlement_manager() -> VeyraSettlementManager:
 var definitions: Dictionary = {}
 var states: Dictionary = {}
 var controllers: Dictionary = {}
+var delivery_targets: Dictionary = {}
 var _simulation_accumulator := 0.0
 var _simulation_scratch: Array[NPCState] = []
 const SIMULATION_INTERVAL := 0.10
@@ -182,9 +183,65 @@ func _ground_position(position: Vector3) -> Vector3:
 		position.y = float(generator.get_height_at_world(position.x, position.z)) + 0.05
 	return position
 
+func set_delivery_target(worker_id: String, site_id: String) -> void:
+	if worker_id.is_empty() or site_id.is_empty():
+		return
+	var logistics := get_node_or_null("/root/BuildSiteManager") as VeyraBuildSiteManager
+	var site := logistics.get_site(site_id) if logistics else {}
+	if site.is_empty():
+		return
+	delivery_targets[worker_id] = site_id
+	var state := states.get(worker_id) as NPCState
+	if state:
+		state.current_task = "DELIVER"
+		state.target_position = _vector_dict(_site_position(site))
+
+func clear_delivery_target(worker_id: String) -> void:
+	delivery_targets.erase(worker_id)
+	var state := states.get(worker_id) as NPCState
+	if state and state.current_task == "DELIVER":
+		state.current_task = "IDLE"
+		state.behavior_timer = 0.0
+
+func is_worker_at_site(worker_id: String, site_id: String) -> bool:
+	var state := states.get(worker_id) as NPCState
+	if not state:
+		return true
+	var logistics := get_node_or_null("/root/BuildSiteManager") as VeyraBuildSiteManager
+	var site := logistics.get_site(site_id) if logistics else {}
+	if site.is_empty():
+		return false
+	return _state_position(state.position).distance_to(_site_position(site)) <= 1.25
+
+func _site_position(site: Dictionary) -> Vector3:
+	var raw = site.get("position", [0.0, 0.0, 0.0])
+	if raw is Array and raw.size() >= 3:
+		return Vector3(float(raw[0]), float(raw[1]), float(raw[2]))
+	return Vector3.ZERO
+
 func _update_villager_behavior(state: NPCState, delta: float) -> void:
 	if not state.alive:
 		return
+
+	if delivery_targets.has(state.npc_id):
+		var logistics := get_node_or_null("/root/BuildSiteManager") as VeyraBuildSiteManager
+		var delivery_site := logistics.get_site(str(delivery_targets[state.npc_id])) if logistics else {}
+		if delivery_site.is_empty():
+			clear_delivery_target(state.npc_id)
+		else:
+			var destination := _ground_position(_site_position(delivery_site))
+			var current_position := _state_position(state.position)
+			var offset := destination - current_position
+			offset.y = 0.0
+			var distance := offset.length()
+			state.current_task = "DELIVER"
+			state.target_position = _vector_dict(destination)
+			if distance > 0.55:
+				var step := minf(3.5 * delta, distance)
+				state.position = _vector_dict(_ground_position(current_position + offset.normalized() * step))
+			else:
+				state.position = _vector_dict(destination)
+			return
 
 	var settlement := _settlement_manager()
 	if settlement and settlement.villagers.has(state.npc_id):
