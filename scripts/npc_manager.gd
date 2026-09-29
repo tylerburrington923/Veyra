@@ -144,6 +144,14 @@ func interact_with_npc(npc_id: String, player: Node) -> String:
 		return "No inventory available."
 	match state.current_job:
 		"TRADER":
+			var inventory: VeyraInventory = player.get_inventory()
+			var trade_result := "%s opened the merchant ledger." % _npc_name(npc_id)
+			if inventory.has_resource("Stone", 5):
+				var paid := inventory.remove_resource("Stone", 5)
+				if paid == 5 and inventory.add_resource("Metal", 1) == 1:
+					trade_result = "%s traded 5 Stone for 1 Metal. Merchant ledger opened." % _npc_name(npc_id)
+				elif paid > 0:
+					inventory.add_resource("Stone", paid)
 			var is_local_player := bool(player.get_meta("network_local", true)) if player else false
 			if is_local_player:
 				var merchant_ui := player.get_node_or_null("MerchantUI") as VeyraMerchantUI
@@ -152,7 +160,7 @@ func interact_with_npc(npc_id: String, player: Node) -> String:
 					merchant_ui.name = "MerchantUI"
 					player.add_child(merchant_ui)
 				merchant_ui.open(player)
-			return "%s opened the merchant ledger." % _npc_name(npc_id)
+			return trade_result
 		"BUILDER":
 			if inventory.has_item("I01_STONE_AXE"):
 				return "%s: I can service your tools, but your Stone Axe is already made." % _npc_name(npc_id)
