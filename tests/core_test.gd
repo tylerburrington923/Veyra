@@ -1550,7 +1550,6 @@ func _test_player_health_and_respawn_contract() -> void:
 		return
 	var player := player_scene.instantiate()
 	get_tree().root.add_child(player)
-	await get_tree().process_frame
 	_check(absf(player.get_health() - player.max_health) < 0.01, "player health must initialize to max")
 	_check(player.is_alive(), "fresh player must be alive")
 	player.take_damage(25.0, "test")
