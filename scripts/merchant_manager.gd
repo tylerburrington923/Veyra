@@ -43,8 +43,26 @@ const SELL_OFFERS := {
 	"A03_LEATHER_ARMOR": 55
 }
 
+func request_buy(player: Node, item_id: String) -> bool:
+	if _is_authoritative():
+		return buy(player, item_id)
+	var network := get_node_or_null("/root/NetworkManager")
+	if network and bool(network.get("session_active")):
+		network.submit_local_merchant_trade("BUY", item_id, 1)
+		return true
+	return false
+
+func request_sell(player: Node, item_id: String, amount: int = 1) -> bool:
+	if _is_authoritative():
+		return sell(player, item_id, amount)
+	var network := get_node_or_null("/root/NetworkManager")
+	if network and bool(network.get("session_active")):
+		network.submit_local_merchant_trade("SELL", item_id, amount)
+		return true
+	return false
+
 func buy(player: Node, item_id: String) -> bool:
-	if not player or not player.has_method("get_inventory") or not BUY_OFFERS.has(item_id):
+	if not _is_authoritative() or not player or not player.has_method("get_inventory") or not BUY_OFFERS.has(item_id):
 		return false
 	var inventory: VeyraInventory = player.get_inventory()
 	var offer: Dictionary = BUY_OFFERS[item_id]
@@ -101,3 +119,8 @@ func _has_item_or_resource(inventory: VeyraInventory, id: String, amount: int) -
 	if VeyraItemCatalog.is_valid(id):
 		return inventory.has_item(id, amount)
 	return false
+
+
+func _is_authoritative() -> bool:
+	var network := get_node_or_null("/root/NetworkManager")
+	return network == null or not bool(network.get("session_active")) or bool(network.get("is_host"))
