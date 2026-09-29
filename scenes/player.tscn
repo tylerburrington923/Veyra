@@ -271,6 +271,7 @@ near = 0.08
 [node name="ViewModel" type="Node3D" parent="Camera3D"]
 
 [node name="ChestFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+visible = false
 layers = 2
 position = Vector3(0, -1.08, -0.96)
 scale = Vector3(0.54, 0.48, 0.40)
@@ -278,6 +279,7 @@ mesh = SubResource("TorsoMesh")
 material_override = SubResource("Shirt")
 
 [node name="BeltFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+visible = false
 layers = 2
 position = Vector3(0, -1.38, -0.88)
 scale = Vector3(0.72, 0.72, 0.72)
@@ -285,6 +287,7 @@ mesh = SubResource("FPBeltMesh")
 material_override = SubResource("Pants")
 
 [node name="LeftLegFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+visible = false
 layers = 2
 position = Vector3(-0.16, -1.56, -0.60)
 scale = Vector3(0.60, 0.78, 0.60)
@@ -292,6 +295,7 @@ mesh = SubResource("LimbMesh")
 material_override = SubResource("Pants")
 
 [node name="RightLegFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+visible = false
 layers = 2
 position = Vector3(0.16, -1.56, -0.60)
 scale = Vector3(0.60, 0.78, 0.60)
@@ -299,6 +303,7 @@ mesh = SubResource("LimbMesh")
 material_override = SubResource("Pants")
 
 [node name="LeftBootFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+visible = false
 layers = 2
 position = Vector3(-0.16, -1.84, -0.54)
 scale = Vector3(0.72, 0.40, 0.90)
@@ -306,6 +311,7 @@ mesh = SubResource("FootMesh")
 material_override = SubResource("Pants")
 
 [node name="RightBootFP" type="MeshInstance3D" parent="Camera3D/ViewModel"]
+visible = false
 layers = 2
 position = Vector3(0.16, -1.84, -0.54)
 scale = Vector3(0.72, 0.40, 0.90)
