@@ -12,6 +12,8 @@ ProgressionManager="*res://scripts/progression_manager.gd"
 GameManager="*res://scripts/game_manager.gd"
 CraftingManager="*res://scripts/crafting_manager.gd"
 BuildingManager="*res://scripts/building_manager.gd"
+BuildSiteManager="*res://scripts/build_site_manager.gd"
+MerchantManager="*res://scripts/merchant_manager.gd"
 NetworkManager="*res://scripts/network_manager.gd"
 
 [display]
