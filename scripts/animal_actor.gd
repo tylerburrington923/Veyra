@@ -40,11 +40,27 @@ func interact(player: Node = null) -> void:
 		return
 	interaction_cooldown = 0.45
 	var damage := 8.0
+	var tool_id := "T00_HANDS"
 	if player and player.has_method("get_tool_id"):
-		match str(player.get_tool_id()):
+		tool_id = str(player.get_tool_id())
+		if tool_id != VeyraItemCatalog.HANDS_ID and player.has_method("can_use_tool") and not player.can_use_tool(1.0):
+			return
+		match tool_id:
 			"I01_STONE_AXE", "I02_STONE_PICK":
 				damage = 20.0
+			"I04_METAL_AXE", "I05_METAL_PICK":
+				damage = 30.0
+			"I06_ECHO_AXE", "I07_ECHO_PICK":
+				damage = 36.0
+			"I08_HUNTER_KNIFE":
+				damage = 24.0
+			"I09_STONE_SPEAR":
+				damage = 32.0
+			"I10_METAL_SPEAR":
+				damage = 46.0
 	var result := animal_manager.damage_animal(animal_id, damage, player)
+	if player and tool_id != VeyraItemCatalog.HANDS_ID and player.has_method("use_tool"):
+		player.use_tool(1.0)
 	var hotbar := player.get_node_or_null("Hotbar") if player else null
 	if hotbar and hotbar.has_method("_show_toast"):
 		hotbar._show_toast(result)
