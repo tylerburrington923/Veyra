@@ -22,8 +22,15 @@ func _ready() -> void:
 
 func open_campfire(building: Node, player: Node) -> void:
 	_open(building, player, "CAMPFIRE")
-	_add_text("Add wood to keep the fire burning.")
+	_add_text("Add wood to keep the fire burning. Cook meat while the fire is hot.")
 	_add_action("ADD WOOD", _campfire_action)
+	_add_action("COOK 2 MEAT → 1 FOOD", _cook_meat_action)
+
+func open_tannery(building: Node, player: Node) -> void:
+	_open(building, player, "TANNERY")
+	_add_text("Process animal Hide into Leather for advanced equipment.")
+	_add_action("PROCESS 2 HIDE → 1 LEATHER", _tannery_action)
+	_refresh_tannery()
 
 func open_storage(building: Node, player: Node) -> void:
 	_open(building, player, "STORAGE")
@@ -82,6 +89,8 @@ func _process(_delta: float) -> void:
 		pass
 	elif _mode == "blacksmith":
 		_refresh_blacksmith()
+	elif _mode == "tannery":
+		_refresh_tannery()
 
 func _input(event: InputEvent) -> void:
 	if not visible:
@@ -259,6 +268,17 @@ func _dispatch_site(site_id: String) -> void:
 func _campfire_action() -> void:
 	if _building and _building.has_method("add_campfire_fuel"):
 		_building.add_campfire_fuel(_player, 1)
+	_refresh_campfire()
+
+func _cook_meat_action() -> void:
+	if _building and _building.has_method("cook_meat"):
+		_building.cook_meat(_player)
+	_refresh_campfire()
+
+func _tannery_action() -> void:
+	if _building and _building.has_method("refine_hide_to_leather"):
+		_building.refine_hide_to_leather(_player)
+	_refresh_tannery()
 
 func _refine_action() -> void:
 	if _building and _building.has_method("blacksmith_refine"):
@@ -433,6 +453,14 @@ func _missing_cost(inventory: VeyraInventory, cost: Dictionary) -> String:
 		if have < required:
 			missing.append("%s %d/%d" % [str(resource_type), have, required])
 	return " • ".join(missing)
+
+func _refresh_tannery() -> void:
+	if _mode != "tannery" or not _player:
+		return
+	var inventory: VeyraInventory = _player.get_inventory() if _player.has_method("get_inventory") else null
+	if not inventory:
+		return
+	_add_or_update_status("HIDE %d  •  LEATHER %d" % [inventory.get_amount("Hide"), inventory.get_amount("Leather")])
 
 func _refresh_blacksmith() -> void:
 	if _mode != "blacksmith" or not _player:
