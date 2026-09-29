@@ -238,6 +238,8 @@ func load_save_state(state: Dictionary) -> void:
 			if not clean_order.is_empty():
 				delivery_orders[str(order_id)] = clean_order
 	call_deferred("_restore_presentations")
+	for order in delivery_orders.values():
+		_set_worker_delivery_state(str(order.get("worker_id", "")), str(order.get("site_id", "")))
 
 func remove_site(site_id: String) -> bool:
 	if not build_sites.has(site_id):
