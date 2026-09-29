@@ -4,6 +4,7 @@ class_name VeyraMerchantUI
 var player: Node
 var panel: Panel
 var body: VBoxContainer
+var scroll: ScrollContainer
 var status: Label
 var manager: VeyraMerchantManager
 
@@ -11,11 +12,14 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 300
 	manager = get_node_or_null("/root/MerchantManager") as VeyraMerchantManager
+	add_to_group("modal_ui")
 	_build()
 	visible = false
 
 func open(p_player: Node) -> void:
 	player = p_player
+	var viewport_size := get_viewport().get_visible_rect().size
+	panel.position = (viewport_size - panel.size) * 0.5
 	visible = true
 	_refresh()
 
@@ -36,12 +40,15 @@ func _build() -> void:
 	style.corner_radius_bottom_right = 16
 	panel.add_theme_stylebox_override("panel", style)
 	panel.size = Vector2(520, 620)
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 16)
-	panel.add_child(margin)
+	scroll = ScrollContainer.new()
+	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 16)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	panel.add_child(scroll)
 	body = VBoxContainer.new()
 	body.add_theme_constant_override("separation", 8)
-	margin.add_child(body)
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(body)
 
 func _refresh() -> void:
 	for child in body.get_children():
@@ -107,3 +114,14 @@ func _sellable_ids() -> Array[String]:
 
 func _display_name(id: String) -> String:
 	return VeyraItemCatalog.display_name(id) if VeyraItemCatalog.is_valid(id) else VeyraResourceCatalog.display_name(id)
+
+
+func is_modal_open() -> bool:
+	return visible
+
+func _input(event: InputEvent) -> void:
+	if not visible:
+		return
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+		visible = false
+		get_viewport().set_input_as_handled()
