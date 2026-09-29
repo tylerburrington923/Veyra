@@ -103,7 +103,7 @@ func _open(building: Node, player: Node, title_text: String) -> void:
 	_building = building
 	_player = player
 	title_label.text = title_text
-	_mode = "campfire" if title_text == "CAMPFIRE" else ("storage" if title_text == "STORAGE" else ("townhall" if title_text == "TOWN HALL" else "blacksmith"))
+	_mode = "campfire" if title_text == "CAMPFIRE" else ("storage" if title_text == "STORAGE" else ("townhall" if title_text == "TOWN HALL" else ("tannery" if title_text == "TANNERY" else "blacksmith")))
 	_clear_body()
 	visible = true
 	_backdrop.visible = true
@@ -231,11 +231,15 @@ func _begin_build(building_id: String) -> void:
 	close_ui()
 
 func _deposit_civic_materials() -> void:
+	if _request_remote_action("TOWNHALL_CIVIC"):
+		return
 	if _building and _building.has_method("deposit_civic_materials"):
 		_building.deposit_civic_materials(_player, 10)
 		_refresh_townhall()
 
 func _deposit_build_materials() -> void:
+	if _request_remote_action("TOWNHALL_DEPOSIT"):
+		return
 	if _building and _building.has_method("deposit_build_materials"):
 		_building.deposit_build_materials(_player)
 		_refresh_townhall()
@@ -266,51 +270,71 @@ func _dispatch_site(site_id: String) -> void:
 	_add_or_update_status("Worker dispatched." if not order_id.is_empty() else "No worker or Town Hall materials available.")
 
 func _campfire_action() -> void:
+	if _request_remote_action("CAMPFIRE_FUEL"):
+		return
 	if _building and _building.has_method("add_campfire_fuel"):
 		_building.add_campfire_fuel(_player, 1)
 	_refresh_campfire()
 
 func _cook_meat_action() -> void:
+	if _request_remote_action("CAMPFIRE_COOK"):
+		return
 	if _building and _building.has_method("cook_meat"):
 		_building.cook_meat(_player)
 	_refresh_campfire()
 
 func _tannery_action() -> void:
+	if _request_remote_action("TANNERY_PROCESS"):
+		return
 	if _building and _building.has_method("refine_hide_to_leather"):
 		_building.refine_hide_to_leather(_player)
 	_refresh_tannery()
 
 func _refine_action() -> void:
+	if _request_remote_action("BLACKSMITH_REFINE"):
+		return
 	if _building and _building.has_method("blacksmith_refine"):
 		_building.blacksmith_refine(_player)
 		_refresh_blacksmith()
 
 func _forge_axe() -> void:
+	if _request_remote_action("BLACKSMITH_FORGE", "I01_STONE_AXE"):
+		return
 	if _building and _building.has_method("blacksmith_forge"):
 		_building.blacksmith_forge(_player, "I01_STONE_AXE")
 		_refresh_blacksmith()
 
 func _forge_metal_axe() -> void:
+	if _request_remote_action("BLACKSMITH_FORGE", "I04_METAL_AXE"):
+		return
 	if _building and _building.has_method("blacksmith_forge"):
 		_building.blacksmith_forge(_player, "I04_METAL_AXE")
 		_refresh_blacksmith()
 
 func _forge_metal_pick() -> void:
+	if _request_remote_action("BLACKSMITH_FORGE", "I05_METAL_PICK"):
+		return
 	if _building and _building.has_method("blacksmith_forge"):
 		_building.blacksmith_forge(_player, "I05_METAL_PICK")
 		_refresh_blacksmith()
 
 func _forge_echo_axe() -> void:
+	if _request_remote_action("BLACKSMITH_FORGE", "I06_ECHO_AXE"):
+		return
 	if _building and _building.has_method("blacksmith_forge"):
 		_building.blacksmith_forge(_player, "I06_ECHO_AXE")
 		_refresh_blacksmith()
 
 func _forge_echo_pick() -> void:
+	if _request_remote_action("BLACKSMITH_FORGE", "I07_ECHO_PICK"):
+		return
 	if _building and _building.has_method("blacksmith_forge"):
 		_building.blacksmith_forge(_player, "I07_ECHO_PICK")
 		_refresh_blacksmith()
 
 func _forge_pick() -> void:
+	if _request_remote_action("BLACKSMITH_FORGE", "I02_STONE_PICK"):
+		return
 	if _building and _building.has_method("blacksmith_forge"):
 		_building.blacksmith_forge(_player, "I02_STONE_PICK")
 		_refresh_blacksmith()
@@ -354,6 +378,8 @@ func _refresh_storage() -> void:
 	_add_text("STORED\n" + ("\n".join(lines) if not lines.is_empty() else "Storage is empty."))
 
 func _deposit_storage() -> void:
+	if _request_remote_action("STORAGE_DEPOSIT"):
+		return
 	var inventory := _player.get_node_or_null("Inventory") as VeyraInventory
 	var settlement := get_node_or_null("/root/SettlementManager")
 	if not inventory or not settlement:
@@ -381,6 +407,8 @@ func _deposit_storage() -> void:
 	_refresh_storage()
 
 func _withdraw_storage() -> void:
+	if _request_remote_action("STORAGE_WITHDRAW"):
+		return
 	var inventory := _player.get_node_or_null("Inventory") as VeyraInventory
 	var settlement := get_node_or_null("/root/SettlementManager")
 	if not inventory or not settlement:
@@ -453,6 +481,46 @@ func _missing_cost(inventory: VeyraInventory, cost: Dictionary) -> String:
 		if have < required:
 			missing.append("%s %d/%d" % [str(resource_type), have, required])
 	return " • ".join(missing)
+
+func _request_remote_action(action: String, argument: String = "") -> bool:
+	var network := get_node_or_null("/root/NetworkManager")
+	if not network or not bool(network.get("session_active")) or bool(network.get("is_host")):
+		return false
+	if _building and network.has_method("submit_local_building_action"):
+		network.submit_local_building_action(str(_building.get("building_id")), action, argument)
+		_add_or_update_status("Request sent to host.")
+		return true
+	return false
+
+func perform_remote_action(building: Node, player: Node, action: String, argument: String = "") -> void:
+	_building = building
+	_player = player
+	match action:
+		"TOWNHALL_CIVIC":
+			if _building and _building.has_method("deposit_civic_materials"):
+				_building.deposit_civic_materials(_player, 10)
+		"TOWNHALL_DEPOSIT":
+			if _building and _building.has_method("deposit_build_materials"):
+				_building.deposit_build_materials(_player)
+		"STORAGE_DEPOSIT":
+			_deposit_storage()
+		"STORAGE_WITHDRAW":
+			_withdraw_storage()
+		"CAMPFIRE_FUEL":
+			if _building and _building.has_method("add_campfire_fuel"):
+				_building.add_campfire_fuel(_player, 1)
+		"CAMPFIRE_COOK":
+			if _building and _building.has_method("cook_meat"):
+				_building.cook_meat(_player)
+		"TANNERY_PROCESS":
+			if _building and _building.has_method("refine_hide_to_leather"):
+				_building.refine_hide_to_leather(_player)
+		"BLACKSMITH_REFINE":
+			if _building and _building.has_method("blacksmith_refine"):
+				_building.blacksmith_refine(_player)
+		"BLACKSMITH_FORGE":
+			if _building and _building.has_method("blacksmith_forge"):
+				_building.blacksmith_forge(_player, argument)
 
 func _refresh_tannery() -> void:
 	if _mode != "tannery" or not _player:
