@@ -1541,3 +1541,25 @@ func _test_multiplayer_contract() -> void:
 	_check(player.has_method("set_network_input"), "player must accept authoritative network input")
 	_check(player.has_method("apply_network_state"), "player must accept authoritative network state")
 	player.queue_free()
+
+
+func _test_player_health_and_respawn_contract() -> void:
+	var player_scene := load("res://scenes/player.tscn") as PackedScene
+	_check(player_scene != null, "player scene must remain loadable for health contract")
+	if player_scene == null:
+		return
+	var player := player_scene.instantiate()
+	get_tree().root.add_child(player)
+	await get_tree().process_frame
+	_check(absf(player.get_health() - player.max_health) < 0.01, "player health must initialize to max")
+	_check(player.is_alive(), "fresh player must be alive")
+	player.take_damage(25.0, "test")
+	_check(absf(player.get_health() - 75.0) < 0.01, "damage must reduce player health")
+	player.heal(10.0)
+	_check(absf(player.get_health() - 85.0) < 0.01, "healing must restore player health")
+	player.take_damage(1000.0, "test")
+	_check(not player.is_alive(), "lethal damage must enter death state")
+	player.respawn()
+	_check(player.is_alive(), "respawn must restore alive state")
+	_check(absf(player.get_health() - player.max_health) < 0.01, "respawn must restore max health")
+	player.queue_free()
