@@ -29,6 +29,7 @@ var last_handler_name: String = ""
 var last_requirement: String = ""
 var last_collision_point: Vector3 = Vector3.ZERO
 var _target_update_accumulator := 0.0
+var _hud_target_visible := false
 
 func _ready() -> void:
 	interact_distance = MAX_TARGET_DISTANCE
@@ -249,7 +250,21 @@ func _set_target_state(target_type: String, target_name: String, handler: String
 		target_label.visible = false
 		var has_target := handler != ""
 		if target_panel:
-			target_panel.visible = has_target
+			if has_target != _hud_target_visible:
+				_hud_target_visible = has_target
+				target_panel.visible = true
+				target_panel.modulate.a = 0.0 if has_target else 1.0
+				var tween := target_panel.create_tween()
+				tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+				if has_target:
+					target_panel.scale = Vector2(0.96, 0.96)
+					tween.parallel().tween_property(target_panel, "modulate:a", 1.0, 0.12)
+					tween.parallel().tween_property(target_panel, "scale", Vector2.ONE, 0.14)
+				else:
+					tween.parallel().tween_property(target_panel, "modulate:a", 0.0, 0.10)
+					tween.tween_callback(func(): target_panel.visible = false)
+			elif not has_target:
+				target_panel.visible = false
 		if target_action:
 			target_action.text = action_label.to_upper() if eligible else "LOCKED"
 			target_action.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -353,8 +368,8 @@ func _interaction_hud_style() -> void:
 		return
 	target_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.015, 0.025, 0.035, 0.90)
-	panel_style.border_color = Color(0.20, 0.68, 0.72, 0.70)
+	panel_style.bg_color = Color(0.015, 0.025, 0.035, 0.72)
+	panel_style.border_color = Color(0.20, 0.68, 0.72, 0.55)
 	panel_style.set_border_width_all(1)
 	panel_style.corner_radius_top_left = 7
 	panel_style.corner_radius_top_right = 7
@@ -363,10 +378,10 @@ func _interaction_hud_style() -> void:
 	panel_style.content_margin_left = 12.0
 	panel_style.content_margin_right = 12.0
 	target_panel.add_theme_stylebox_override("panel", panel_style)
-	target_panel.custom_minimum_size = Vector2(228.0, 46.0)
+	target_panel.custom_minimum_size = Vector2(200.0, 38.0)
 	target_panel.add_theme_constant_override("separation", 0)
 	if target_action:
-		target_action.add_theme_font_size_override("font_size", 12)
+		target_action.add_theme_font_size_override("font_size", 11)
 		target_action.custom_minimum_size.y = 18.0
 		target_action.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		target_action.add_theme_color_override("font_color", Color(0.48, 0.91, 0.92, 1.0))
