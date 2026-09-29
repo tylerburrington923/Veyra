@@ -1,7 +1,7 @@
 extends CanvasLayer
 
 const RESOURCE_TYPES: Array[String] = ["Stone", "Wood", "Metal", "Vitreous Lux", "Echo-Stone", "Meat", "Hide"]
-const TOOL_ORDER: Array[String] = ["T00_HANDS", "I01_STONE_AXE", "I02_STONE_PICK", "I04_METAL_AXE", "I05_METAL_PICK", "I06_ECHO_AXE", "I07_ECHO_PICK"]
+const TOOL_ORDER: Array[String] = ["T00_HANDS", "I01_STONE_AXE", "I02_STONE_PICK", "I08_HUNTER_KNIFE", "I09_STONE_SPEAR", "I04_METAL_AXE", "I05_METAL_PICK", "I10_METAL_SPEAR", "I06_ECHO_AXE", "I07_ECHO_PICK"]
 
 @onready var player: Node = get_parent()
 @onready var inventory: Node = player.get_node_or_null("Inventory") if player else null
@@ -235,6 +235,12 @@ func _tool_name(tool_id: String) -> String:
 			return "ECHO AXE"
 		"I07_ECHO_PICK":
 			return "ECHO PICK"
+		"I08_HUNTER_KNIFE":
+			return "HUNTER KNIFE"
+		"I09_STONE_SPEAR":
+			return "STONE SPEAR"
+		"I10_METAL_SPEAR":
+			return "METAL SPEAR"
 		_:
 			return "HANDS"
 
@@ -243,6 +249,7 @@ func _format_hotbar(snapshot: Dictionary) -> String:
 	var parts: Array[String] = []
 	for resource_type in ["Stone", "Wood", "Metal", "Vitreous Lux"]:
 		parts.append("%s  %d" % [_short_name(resource_type), int(resources.get(resource_type, 0))])
+	parts.append("COINS  %d" % inventory.get_coins())
 	return "  |  ".join(parts)
 
 func _format_inventory(snapshot: Dictionary) -> String:
@@ -371,7 +378,10 @@ func _inventory_slot_tooltip(id: String, amount: int) -> String:
 	return "%s x%d" % [id, amount]
 
 func _equip_inventory_item(item_id: String) -> void:
-	if player and player.has_method("set_tool") and player.set_tool(item_id):
+	if player and item_id in VeyraItemCatalog.TOOL_IDS and player.has_method("set_tool") and player.set_tool(item_id):
+		_show_toast("Equipped %s" % VeyraItemCatalog.display_name(item_id))
+		_refresh()
+	elif player and item_id in VeyraItemCatalog.ARMOR_IDS and player.has_method("equip_armor") and player.equip_armor(item_id):
 		_show_toast("Equipped %s" % VeyraItemCatalog.display_name(item_id))
 		_refresh()
 
