@@ -290,9 +290,9 @@ func _complete_site(site_id: String) -> void:
 	var building_manager := get_node_or_null("/root/BuildingManager")
 	if building_manager and building_manager.has_method("_spawn_building_visual"):
 		building_manager.call("_spawn_building_visual", building_id, building_type, position)
-	var building_completed_signal := building_manager.get("building_completed") if building_manager else null
-	if building_manager and building_completed_signal is Signal:
-		building_completed_signal.emit(building_type, position)
+	var typed_building_manager := building_manager as VeyraBuildingManager
+	if typed_building_manager:
+		typed_building_manager.building_completed.emit(building_type, position)
 	build_site_completed.emit(site_id, building_type)
 
 func _spawn_site_visual(site_id: String) -> void:
