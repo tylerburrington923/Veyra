@@ -216,16 +216,30 @@ func _update_survival_hud() -> void:
 
 func _ensure_survival_hud() -> void:
 	var controls := get_node_or_null("MobileControls") as CanvasLayer
-	if not controls or controls.get_node_or_null("HungerHUD"):
+	if not controls:
 		return
-	var label := Label.new()
-	label.name = "HungerHUD"
-	label.position = Vector2(24.0, 91.0)
-	label.size = Vector2(170.0, 24.0)
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.add_theme_font_size_override("font_size", 13)
-	controls.add_child(label)
+	var label := controls.get_node_or_null("HungerHUD") as Label
+	if not label:
+		label = Label.new()
+		label.name = "HungerHUD"
+		label.position = Vector2(24.0, 91.0)
+		label.size = Vector2(170.0, 24.0)
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.add_theme_font_size_override("font_size", 13)
+		controls.add_child(label)
 	label.visible = _network_local
+	var eat_button := controls.get_node_or_null("EatButton") as Button
+	if not eat_button:
+		eat_button = Button.new()
+		eat_button.name = "EatButton"
+		eat_button.text = "EAT"
+		eat_button.position = Vector2(212.0, 56.0)
+		eat_button.size = Vector2(76.0, 32.0)
+		eat_button.add_to_group("camera_blocking_ui")
+		eat_button.add_theme_font_size_override("font_size", 12)
+		eat_button.pressed.connect(consume_food)
+		controls.add_child(eat_button)
+		eat_button.visible = _network_local
 	_update_survival_hud()
 
 func _die(source: String) -> void:
