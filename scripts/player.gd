@@ -175,6 +175,8 @@ func equip_armor(item_id: String) -> bool:
 	if not previous.is_empty() and inventory.add_item(previous, 1) != 1:
 		return false
 	if inventory.remove_item(item_id, 1) != 1:
+		if not previous.is_empty():
+			inventory.remove_item(previous, 1)
 		return false
 	equipped_armor[slot] = item_id
 	_update_armor_visuals()
