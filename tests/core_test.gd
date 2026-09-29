@@ -17,6 +17,7 @@ func _run_tests() -> void:
 	_test_first_person_presentation_contract()
 	_test_resource_interaction_matrix()
 	_test_world_resource_tool_contract()
+	_test_starter_resource_spawn_contract()
 	_test_hand_gathered_wood_contract()
 	_test_npc_definition_data_layer()
 	_test_npc_state_data_layer()
@@ -460,7 +461,12 @@ func _test_first_person_presentation_contract() -> void:
 	var right_leg := player.get_node_or_null("Camera3D/ViewModel/RightLegFP") as MeshInstance3D
 	var hotbar := player.get_node_or_null("HUDInventory/ToolHotbar") as Control
 	_check(tool_holder != null, "tool holder must exist for first-person presentation")
-	_check(chest != null and left_leg != null and right_leg != null, "first-person body viewmodel must include torso and legs")
+	var camera := player.get_node_or_null("Camera3D") as Camera3D
+	_check(camera != null and is_equal_approx(camera.rotation.x, 0.0), "first-person camera must start level instead of pitching into the ground")
+	_check(camera != null and camera.position.z < -0.05, "first-person camera must sit slightly forward of the body")
+	_check(chest != null and not chest.visible, "first-person torso must not dominate the lower frame")
+	_check(left_leg != null and not left_leg.visible, "first-person left leg must not distort perspective")
+	_check(right_leg != null and not right_leg.visible, "first-person right leg must not distort perspective")
 	var left_sleeve := player.get_node_or_null("Camera3D/ViewModel/LeftSleeveFP") as MeshInstance3D
 	var right_sleeve := player.get_node_or_null("Camera3D/ViewModel/RightSleeveFP") as MeshInstance3D
 	_check(left_sleeve != null and right_sleeve != null, "first-person body viewmodel must include sleeves")
@@ -541,6 +547,26 @@ func _test_world_resource_tool_contract() -> void:
 	_check(world_generator.get_required_tool_for_resource("Metal", "metal") == "I02_STONE_PICK", "world-generated metal must require the stone pick")
 	_check(world_generator.get_required_tool_for_resource("Vitreous Lux", "lux") == "I02_STONE_PICK", "world-generated lux must require the stone pick")
 
+	world_generator.free()
+
+
+func _test_starter_resource_spawn_contract() -> void:
+	var world_generator_script := load("res://scripts/world_generator.gd")
+	_check(world_generator_script != null, "world generator must remain loadable for starter resources")
+	if world_generator_script == null:
+		return
+	var world_generator = world_generator_script.new()
+	var starter_positions: Array = world_generator.STARTER_RESOURCE_POSITIONS
+	_check(starter_positions.size() >= 6, "starter resource contract requires six hand-gatherable positions")
+	for index in range(mini(6, starter_positions.size())):
+		var position: Vector2 = starter_positions[index]
+		_check(position.length() <= 6.5, "starter resource %d must spawn within immediate walking range" % index)
+	var starter_ids := ["stick", "stick", "stick", "small_stone", "small_stone", "small_stone"]
+	for index in range(mini(6, starter_ids.size())):
+		var node = world_generator._make_resource_node(index, Vector3(starter_positions[index].x, 0.0, starter_positions[index].y))
+		_check(str(node.node_kind) == starter_ids[index], "starter resource %d must remain %s" % [index, starter_ids[index]])
+		_check(str(node.tool_required) == VeyraItemCatalog.HANDS_ID, "starter resource %d must be hand-gatherable" % index)
+		node.free()
 	world_generator.free()
 
 
