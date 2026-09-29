@@ -23,6 +23,7 @@ var _last_client_resonance: Dictionary = {}
 var _last_client_resources: Dictionary = {}
 var _last_client_settlement: Dictionary = {}
 var _last_client_progression: Dictionary = {}
+var _last_client_logistics: Dictionary = {}
 
 var lobby_layer: CanvasLayer
 var status_label: Label
@@ -106,6 +107,7 @@ func leave_game() -> void:
 	_last_client_resources.clear()
 	_last_client_settlement.clear()
 	_last_client_progression.clear()
+	_last_client_logistics.clear()
 	_despawn_all_network_players()
 	if lobby_layer:
 		lobby_layer.visible = false
@@ -137,6 +139,16 @@ func submit_local_craft(recipe_id: String) -> void:
 	if not session_active or is_host:
 		return
 	request_craft.rpc_id(1, recipe_id)
+
+func submit_local_worker_delivery(site_id: String, requested: Dictionary) -> void:
+	if not session_active or is_host:
+		return
+	request_worker_delivery.rpc_id(1, site_id, requested)
+
+func submit_local_merchant_trade(direction: String, item_id: String, amount: int = 1) -> void:
+	if not session_active or is_host:
+		return
+	request_merchant_trade.rpc_id(1, direction.to_upper(), item_id, amount)
 
 @rpc("any_peer", "unreliable")
 func send_input(input_vector: Vector2, yaw: float, pitch: float, jump: bool) -> void:
@@ -376,6 +388,60 @@ func request_craft(recipe_id: String) -> void:
 	var inventory: VeyraInventory = player.get_inventory() if player and player.has_method("get_inventory") else null
 	if manager and inventory:
 		manager.craft(recipe_id, inventory)
+
+@rpc("any_peer", "reliable")
+func request_worker_delivery(site_id: String, requested: Dictionary) -> void:
+	if not multiplayer.is_server():
+		return
+	var peer_id := multiplayer.get_remote_sender_id()
+	var player := players.get(peer_id) as Node3D
+	var logistics := get_node_or_null("/root/BuildSiteManager") as VeyraBuildSiteManager
+	var settlement := get_node_or_null("/root/SettlementManager")
+	if not player or not logistics or not settlement or not logistics.has_site(site_id):
+		return
+	var near_townhall := false
+	for record in settlement.buildings.values():
+		if not record is Dictionary or str(record.get("type", "")) != "B05_TOWNHALL":
+			continue
+		var raw = record.get("position", [])
+		if raw is Array and raw.size() >= 3:
+			var hall_position := Vector3(float(raw[0]), float(raw[1]), float(raw[2]))
+			if player.global_position.distance_to(hall_position) <= 8.0:
+				near_townhall = true
+				break
+	if not near_townhall:
+		return
+	logistics.dispatch_available_worker(site_id, requested)
+
+@rpc("any_peer", "reliable")
+func request_merchant_trade(direction: String, item_id: String, amount: int) -> void:
+	if not multiplayer.is_server() or amount <= 0 or amount > 100:
+		return
+	var peer_id := multiplayer.get_remote_sender_id()
+	var player := players.get(peer_id) as Node3D
+	if not player:
+		return
+	var npc_manager := get_tree().current_scene.get_node_or_null("NPCManager")
+	if not npc_manager:
+		return
+	var near_trader := false
+	for state_value in npc_manager.states.values():
+		if not state_value is NPCState or not state_value.alive or str(state_value.current_job).to_upper() != "TRADER":
+			continue
+		var raw: Dictionary = state_value.position
+		var trader_position := Vector3(float(raw.get("x", 0.0)), float(raw.get("y", 0.0)), float(raw.get("z", 0.0)))
+		if player.global_position.distance_to(trader_position) <= 5.5:
+			near_trader = true
+			break
+	if not near_trader:
+		return
+	var merchant := get_node_or_null("/root/MerchantManager") as VeyraMerchantManager
+	if not merchant:
+		return
+	if direction.to_upper() == "BUY":
+		merchant.buy(player, item_id)
+	elif direction.to_upper() == "SELL":
+		merchant.sell(player, item_id, amount)
 
 @rpc("authority", "reliable")
 func broadcast_interaction_feedback(peer_id: int, target_name: String) -> void:
@@ -663,19 +729,17 @@ func _broadcast_game_state() -> void:
 	var inventories: Dictionary = {}
 	var resonance_states: Dictionary = {}
 	var health_states: Dictionary = {}
+	var survival_states: Dictionary = {}
 	for peer_id in players.keys():
 		var player := players[peer_id] as Node
 		if player and player.has_method("get_inventory"):
 			inventories[int(peer_id)] = player.get_inventory().get_snapshot()
 		if player and player.has_method("get_health"):
-			health_states[int(peer_id)] = {
-				"health": float(player.get_health())
-			}
+			health_states[int(peer_id)] = {"health": float(player.get_health())}
+		if player and player.has_method("get_hunger"):
+			survival_states[int(peer_id)] = {"hunger": float(player.get_hunger())}
 		if player and player.has_method("get_resonance"):
-			resonance_states[int(peer_id)] = {
-				"charge": float(player.get_resonance()),
-				"discovered": bool(player.get_resonance_discovered())
-			}
+			resonance_states[int(peer_id)] = {"charge": float(player.get_resonance()), "discovered": bool(player.get_resonance_discovered())}
 	var world := get_tree().current_scene
 	var generator := world.get_node_or_null("WorldGenerator") if world else null
 	var resources: Dictionary = generator.get_resource_state() if generator and generator.has_method("get_resource_state") else {}
@@ -685,10 +749,14 @@ func _broadcast_game_state() -> void:
 	var progression := get_node_or_null("/root/ProgressionManager")
 	if progression and progression.has_method("get_save_state"):
 		progression_state = progression.get_save_state()
-	receive_game_state.rpc(inventories, resonance_states, health_states, resources, settlement_state, progression_state)
+	var logistics_state: Dictionary = {}
+	var logistics := get_node_or_null("/root/BuildSiteManager")
+	if logistics and logistics.has_method("get_save_state"):
+		logistics_state = logistics.get_save_state()
+	receive_game_state.rpc(inventories, resonance_states, health_states, survival_states, resources, settlement_state, progression_state, logistics_state)
 
 @rpc("authority", "reliable")
-func receive_game_state(inventories: Dictionary, resonance_states: Dictionary, health_states: Dictionary, resources: Dictionary, settlement_state: Dictionary, progression_state: Dictionary) -> void:
+func receive_game_state(inventories: Dictionary, resonance_states: Dictionary, health_states: Dictionary, survival_states: Dictionary, resources: Dictionary, settlement_state: Dictionary, progression_state: Dictionary, logistics_state: Dictionary) -> void:
 	if is_host:
 		return
 	var local_player := get_tree().current_scene.get_node_or_null("Player")
@@ -699,12 +767,12 @@ func receive_game_state(inventories: Dictionary, resonance_states: Dictionary, h
 	var health_snapshot = health_states.get(local_peer_id, {})
 	if local_player and local_player.has_method("set_health") and health_snapshot is Dictionary:
 		local_player.set_health(float(health_snapshot.get("health", 100.0)))
+	var survival_snapshot = survival_states.get(local_peer_id, {})
+	if local_player and local_player.has_method("set_hunger") and survival_snapshot is Dictionary:
+		local_player.set_hunger(float(survival_snapshot.get("hunger", 100.0)))
 	var resonance_snapshot = resonance_states.get(local_peer_id, {})
 	if local_player and local_player.has_method("set_resonance_state") and resonance_snapshot is Dictionary and resonance_snapshot != _last_client_resonance:
-		local_player.set_resonance_state(
-			float(resonance_snapshot.get("charge", 0.0)),
-			bool(resonance_snapshot.get("discovered", false))
-		)
+		local_player.set_resonance_state(float(resonance_snapshot.get("charge", 0.0)), bool(resonance_snapshot.get("discovered", false)))
 		_last_client_resonance = resonance_snapshot.duplicate(true)
 	var world := get_tree().current_scene
 	var generator := world.get_node_or_null("WorldGenerator") if world else null
@@ -720,7 +788,13 @@ func receive_game_state(inventories: Dictionary, resonance_states: Dictionary, h
 	if progression and progression.has_method("load_save_state") and progression_state is Dictionary and progression_state != _last_client_progression:
 		progression.load_save_state(progression_state)
 		_last_client_progression = progression_state.duplicate(true)
+	var logistics := get_node_or_null("/root/BuildSiteManager")
+	var logistics_changed := logistics_state is Dictionary and logistics_state != _last_client_logistics
+	if logistics and logistics.has_method("load_save_state") and logistics_changed:
+		logistics.load_save_state(logistics_state)
+		_last_client_logistics = logistics_state.duplicate(true)
 	if settlement_changed:
 		var building_manager := get_node_or_null("/root/BuildingManager")
 		if building_manager and building_manager.has_method("restore_from_settlement"):
 			building_manager.restore_from_settlement()
+
