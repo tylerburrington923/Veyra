@@ -79,7 +79,8 @@ func evaluate_placement(player: Node3D, position: Vector3, inventory: VeyraInven
         placement_changed.emit(selected_building_id, false, placement_position)
         return false
     placement_location_valid = _is_space_clear(placement_position, definition.get("size", Vector2.ONE), player)
-    placement_valid = placement_location_valid and has_required_materials(inventory)
+    # Placement creates a free foundation. Materials are delivered to the site after placement.
+    placement_valid = placement_location_valid
     _update_preview(placement_location_valid)
     placement_changed.emit(selected_building_id, placement_valid, placement_position)
     return placement_valid
@@ -110,26 +111,16 @@ func server_build(player: Node3D, building_id: String, requested_position: Vecto
         return false
     if building_id == "B05_TOWNHALL" and _has_townhall():
         return false
-    for resource_type in definition.get("cost", {}).keys():
-        var amount := int(definition["cost"][resource_type])
-        if not inventory.has_resource(str(resource_type), amount):
-            return false
     var settlement := _get_settlement_manager()
     if not settlement:
         return false
     var building_id_value := _next_building_id()
-    var cost: Dictionary = definition.get("cost", {})
-    for resource_type in cost.keys():
-        var amount := int(cost[resource_type])
-        if inventory.remove_resource(str(resource_type), amount) < amount:
-            for rollback_type in cost.keys():
-                inventory.add_resource(str(rollback_type), int(cost[rollback_type]))
-            return false
-    if not bool(settlement.call("add_building", building_id_value, building_id, position)):
-        for rollback_type in cost.keys():
-            inventory.add_resource(str(rollback_type), int(cost[rollback_type]))
+    var logistics := get_node_or_null("/root/BuildSiteManager")
+    if not logistics or not logistics.has_method("create_foundation"):
         return false
-    _spawn_building_visual(building_id_value, building_id, position)
+    var site_id := str(logistics.call("create_foundation", building_id_value, building_id, position, definition.get("cost", {}), multiplayer.get_unique_id() if multiplayer.has_multiplayer_peer() else 1))
+    if site_id.is_empty():
+        return false
     building_completed.emit(building_id, position)
     return true
 
@@ -145,17 +136,13 @@ func confirm_build(player: Node3D, inventory: VeyraInventory) -> bool:
         return false
     if selected_building_id == "B05_TOWNHALL" and _has_townhall():
         return false
-    var cost: Dictionary = definition.get("cost", {})
-    for resource_type in cost.keys():
-        if inventory.remove_resource(str(resource_type), int(cost[resource_type])) < int(cost[resource_type]):
-            return false
     var building_id := _next_building_id()
-    var settlement := _get_settlement_manager()
-    if not settlement or not bool(settlement.call("add_building", building_id, selected_building_id, placement_position)):
-        for resource_type in cost.keys():
-            inventory.add_resource(str(resource_type), int(cost[resource_type]))
+    var logistics := get_node_or_null("/root/BuildSiteManager")
+    if not logistics or not logistics.has_method("create_foundation"):
         return false
-    _spawn_building_visual(building_id, selected_building_id, placement_position)
+    var site_id := str(logistics.call("create_foundation", building_id, selected_building_id, placement_position, definition.get("cost", {}), multiplayer.get_unique_id() if multiplayer.has_multiplayer_peer() else 1))
+    if site_id.is_empty():
+        return false
     building_completed.emit(selected_building_id, placement_position)
     placement_valid = false
     placement_location_valid = false
@@ -251,7 +238,9 @@ func _next_building_id() -> String:
     var buildings: Dictionary = settlement.get("buildings") if settlement else {}
     var index := buildings.size() + 1
     var candidate := "B-%04d" % index
-    while buildings.has(candidate):
+    var logistics := get_node_or_null("/root/BuildSiteManager")
+    var sites: Dictionary = logistics.get("build_sites") if logistics else {}
+    while buildings.has(candidate) or sites.values().any(func(site): return site is Dictionary and str(site.get("building_id", "")) == candidate):
         index += 1
         candidate = "B-%04d" % index
     return candidate
