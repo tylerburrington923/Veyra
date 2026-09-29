@@ -292,7 +292,7 @@ func _complete_site(site_id: String) -> void:
 		building_manager.call("_spawn_building_visual", building_id, building_type, position)
 	var typed_building_manager := building_manager as VeyraBuildingManager
 	if typed_building_manager:
-		typed_building_manager.building_completed.emit(building_type, position)
+		typed_building_manager.building_completed.emit(building_id, position)
 	build_site_completed.emit(site_id, building_type)
 
 func _spawn_site_visual(site_id: String) -> void:
