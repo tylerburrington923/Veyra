@@ -730,7 +730,7 @@ func deposit_build_materials(player: Node) -> bool:
     var settlement := get_node_or_null("/root/SettlementManager")
     if not inventory or not settlement:
         return false
-    var storage := settlement.get_building_storage(building_id)
+    var storage: Dictionary = settlement.get_building_storage(building_id)
     var resources: Dictionary = storage.get("resources", {}).duplicate(true)
     var deposited := 0
     for resource_type in inventory.get_resource_types():
