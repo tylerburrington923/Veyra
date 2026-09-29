@@ -9,7 +9,7 @@ This is the active engineering review list. Items are observations from source/c
 - [x] NPC animation pivots — Villager arms/legs currently animate by rotating MeshInstance3D nodes around their own centers. Introduce lightweight shoulder/hip pivot Node3D parents so gait reads naturally without adding a skeletal rig.
 - [ ] First-person hand/tool grip pass — Recheck actual hand-to-handle contact, tool angle, scale, and camera placement for axe/pick. Current geometry is improved but still primitive/interim.
 - [ ] NPC visual polish — Refine silhouette, proportions, face readability, clothing shapes, and color/material separation while keeping the low-poly/mobile budget.
-- [ ] Interaction HUD final pass — Verify the compact HUD against the smallest supported Android viewport, including target/no-target transitions, long names, requirements, and multiplayer targets.
+- [x] Interaction HUD compact pass — Reduced footprint, opacity, animation, and center displacement; physical smallest-viewport verification remains required.
 - [ ] Town Hall doorway/collision decision — Current Town Hall has solid body collision and outside interaction. Decide whether alpha Town Hall should remain exterior-only or receive a true doorway/interior collision layout.
 
 ## P1 — Settlement economy integration
@@ -26,11 +26,11 @@ This is the active engineering review list. Items are observations from source/c
 ## P1 — Alpha quality / systems
 
 - [x] Building placement concurrency — NetworkManager.request_build() uses shared BuildingManager placement state (select_building → evaluate_placement → confirm_build). Audit for two remote build requests arriving close together; server placement state should be request-local or explicitly serialized.
-- [ ] Building placement validation — Add explicit server-side validation for building footprint, distance, duplicate civic structures, and final position rather than relying on transient shared preview state.
+- [x] Building placement validation — Server validates footprint, distance, civic uniqueness, terrain variance, and final position independently of client preview state.
 - [x] Multiplayer interaction line-of-sight — Server currently validates target existence/group and distance, but not line-of-sight. Decide whether walls/closed doors should block remote interaction.
 - [ ] Multiplayer craft/build feedback — Audit client feedback when a remote craft/build request fails due to resources, placement, or stale state.
 - [ ] NPC network presentation — Verify remote NPC interpolation and local/host ownership under Hotspot latency, especially while NPCs change jobs/behavior.
-- [ ] Wildlife combat loop — Animals can simulate health/death and drop Meat/Hide, but the complete player attack/targeting loop should be audited end-to-end.
+- [x] Wildlife threat loop foundation — Predators now apply authoritative close-range damage with cooldowns; player punch/tool damage remains the next combat expansion.
 - [ ] Wildlife respawn/population policy — Current beta wildlife is a fixed five-creature spawn. Define lightweight respawn/despawn rules before increasing population.
 - [ ] Town Hall civic loop — Expand from functional dashboard/deposit into a clear settlement anchor: population, water, stock, available building unlocks, and expansion progress should all be understandable from one compact screen.
 - [ ] Well/water gameplay — Verify the Well interaction, water deposit/withdrawal behavior, settlement stock changes, and water-cycle consumption on device and multiplayer host/client.
@@ -105,4 +105,4 @@ Sources: Godot 4.7 rendering, MultiMesh, LOD, and occlusion-culling documentatio
 
 ## Current review notes
 
-The current main branch is structurally healthy enough that this backlog should be handled as targeted alpha hardening, not a rewrite. The highest-value remaining visual issue is NPC animation/presentation. The first settlement-economy integration cycle is now CI-verified and remains device-unverified. The next systems priority is server-side building placement validation plus NPC/network presentation under Hotspot conditions.
+The current main branch is structurally healthy enough that this backlog should be handled as targeted alpha hardening, not a rewrite. The highest-value remaining visual issue is NPC animation/presentation. The first settlement-economy integration cycle is now CI-verified and remains device-unverified. The next systems priority is physical Hotspot verification, NPC/network presentation, player attack damage, and the Town Hall construction/planning loop.
