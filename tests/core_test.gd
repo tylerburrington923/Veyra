@@ -60,6 +60,7 @@ func _run_tests() -> void:
 	_test_building_progression_contract()
 	_test_discovery_progression_contract()
 	_test_building_catalog_contract()
+	_test_interaction_hud_contract()
 	_test_simulation_cadence_contract()
 	_test_job_simulation_contract()
 	_test_settlement_production_loop()
