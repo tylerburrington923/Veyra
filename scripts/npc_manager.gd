@@ -62,6 +62,7 @@ func _ensure_beta_villager() -> void:
 	if not settlement or not settlement.villagers.is_empty():
 		return
 	settlement.add_villager("villager_beta_01", "Aren")
+	settlement.assign_job("villager_beta_01", "TRADER")
 
 func spawn_npc(npc_id: String, definition_id: String, position: Vector3) -> NPCController:
 	if npc_id.is_empty() or states.has(npc_id) or not definitions.has(definition_id):
@@ -131,13 +132,13 @@ func interact_with_npc(npc_id: String, player: Node) -> String:
 		return "No inventory available."
 	match state.current_job:
 		"TRADER":
-			if inventory.has_resource("Stone", 5):
-				var paid := inventory.remove_resource("Stone", 5)
-				if paid == 5 and inventory.add_resource("Metal", 1) == 1:
-					return "%s traded 5 Stone for 1 Metal." % _npc_name(npc_id)
-				if paid > 0:
-					inventory.add_resource("Stone", paid)
-			return "%s: bring 5 Stone for 1 Metal." % _npc_name(npc_id)
+			var merchant_ui := player.get_node_or_null("MerchantUI") as VeyraMerchantUI
+			if not merchant_ui:
+			merchant_ui = VeyraMerchantUI.new()
+			merchant_ui.name = "MerchantUI"
+			player.add_child(merchant_ui)
+			merchant_ui.open(player)
+			return "%s opened the merchant ledger." % _npc_name(npc_id)
 		"BUILDER":
 			if inventory.has_item("I01_STONE_AXE"):
 				return "%s: I can service your tools, but your Stone Axe is already made." % _npc_name(npc_id)
