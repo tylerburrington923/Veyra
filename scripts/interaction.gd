@@ -193,8 +193,6 @@ func try_interact() -> void:
 		var network_active: bool = network_manager != null and network_manager.has_method("submit_local_interaction") and bool(network_manager.session_active) and not bool(network_manager.is_host)
 		if network_active:
 			network_manager.submit_local_interaction(handler)
-			if handler.has_method("get_interaction_text") and str(handler.get_interaction_text()).to_upper() == "TRADE":
-				_open_local_merchant_ui()
 		else:
 			handler.interact()
 		var player := get_tree().get_first_node_in_group("local_player")
@@ -397,15 +395,3 @@ func _interaction_hud_style() -> void:
 		target_detail.clip_text = true
 		target_detail.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		target_detail.add_theme_color_override("font_color", Color(0.74, 0.82, 0.84, 1.0))
-
-
-func _open_local_merchant_ui() -> void:
-	var player := get_tree().get_first_node_in_group("local_player")
-	if not player:
-		return
-	var merchant_ui := player.get_node_or_null("MerchantUI") as VeyraMerchantUI
-	if not merchant_ui:
-		merchant_ui = VeyraMerchantUI.new()
-		merchant_ui.name = "MerchantUI"
-		player.add_child(merchant_ui)
-	merchant_ui.open(player)
