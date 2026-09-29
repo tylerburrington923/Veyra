@@ -70,6 +70,8 @@ func interact(player_override: Node = null) -> void:
             _tend_garden(player)
         "B09_BLACKSMITH":
             _open_building_ui(player, "blacksmith")
+        "B10_TANNERY":
+            _open_building_ui(player, "tannery")
         _:
             _last_interaction_feedback = "Nothing to use here."
 
@@ -80,7 +82,7 @@ func can_interact(player: Node) -> bool:
             return _door_root != null
         "B02_STORAGE":
             return player != null
-        "B01_CAMPFIRE", "B04_WELL", "B05_TOWNHALL", "B06_SHRINE", "B07_WATCHTOWER", "B08_GARDEN", "B09_BLACKSMITH":
+        "B01_CAMPFIRE", "B04_WELL", "B05_TOWNHALL", "B06_SHRINE", "B07_WATCHTOWER", "B08_GARDEN", "B09_BLACKSMITH", "B10_TANNERY":
             return true
         _:
             return false
@@ -130,6 +132,8 @@ func get_interaction_text() -> String:
             return "Tend Lunar Garden"
         "B09_BLACKSMITH":
             return "Use Blacksmith"
+        "B10_TANNERY":
+            return "Process Hide into Leather"
         _:
             return "Use"
 
@@ -241,6 +245,41 @@ func add_campfire_fuel(player: Node, amount: int = 1) -> bool:
     _last_interaction_feedback = "Campfire: +%d wood fuel." % removed
     return true
 
+func cook_meat(player: Node) -> bool:
+	if building_type != "B01_CAMPFIRE" or not player or campfire_heat_seconds < 8.0:
+		_last_interaction_feedback = "Campfire: add fuel and keep at least 8 seconds of heat."
+		return false
+	var inventory := player.get_node_or_null("Inventory") as VeyraInventory
+	if not inventory or not inventory.has_resource("Meat", 2):
+		_last_interaction_feedback = "Campfire: requires 2 Meat."
+		return false
+	if inventory.remove_resource("Meat", 2) != 2:
+		return false
+	if inventory.add_resource("Food", 1) != 1:
+		inventory.add_resource("Meat", 2)
+		_last_interaction_feedback = "Campfire: inventory is full."
+		return false
+	campfire_heat_seconds = maxf(0.0, campfire_heat_seconds - 8.0)
+	_persist_campfire_state()
+	_last_interaction_feedback = "Campfire: cooked 2 Meat into 1 Food."
+	return true
+
+func refine_hide_to_leather(player: Node) -> bool:
+	if building_type != "B10_TANNERY" or not player:
+		return false
+	var inventory := player.get_node_or_null("Inventory") as VeyraInventory
+	if not inventory or not inventory.has_resource("Hide", 2):
+		_last_interaction_feedback = "Tannery: requires 2 Hide."
+		return false
+	if inventory.remove_resource("Hide", 2) != 2:
+		return false
+	if inventory.add_resource("Leather", 1) != 1:
+		inventory.add_resource("Hide", 2)
+		_last_interaction_feedback = "Tannery: inventory is full."
+		return false
+	_last_interaction_feedback = "Tannery: processed 2 Hide into 1 Leather."
+	return true
+
 func get_campfire_heat() -> float:
     return maxf(0.0, campfire_heat_seconds)
 
@@ -308,6 +347,8 @@ func _build_visual() -> void:
             _build_townhall()
         "B09_BLACKSMITH":
             _build_blacksmith()
+        "B10_TANNERY":
+            _build_tannery()
         _:
             _build_generic()
 
@@ -692,6 +733,22 @@ func _build_blacksmith() -> void:
     _mesh_box(Vector3(0.65, 1.2, 0.65), Vector3(-1.35, 0.72, -1.55), dark)
     _add_box_collision(Vector3(4.1, 2.2, 3.6), Vector3(0, 1.19, 0))
 
+
+func _build_tannery() -> void:
+	var timber := _material(Color(0.28, 0.17, 0.09))
+	var hide_material := _material(Color(0.43, 0.32, 0.20))
+	var stone := _material(Color(0.31, 0.33, 0.34))
+	_mesh_box(Vector3(4.0, 0.16, 3.5), Vector3(0, 0.08, 0), stone)
+	for x in [-1.55, 1.55]:
+		_mesh_box(Vector3(0.16, 2.0, 0.16), Vector3(x, 1.0, -1.15), timber)
+		_mesh_box(Vector3(0.16, 2.0, 0.16), Vector3(x, 1.0, 1.15), timber)
+	_mesh_box(Vector3(3.4, 0.14, 0.14), Vector3(0, 1.9, -1.15), timber)
+	_mesh_box(Vector3(3.4, 0.14, 0.14), Vector3(0, 1.9, 1.15), timber)
+	for x in [-0.9, 0.0, 0.9]:
+		_mesh_box(Vector3(0.72, 0.85, 0.08), Vector3(x, 1.35, -1.05), hide_material)
+	_mesh_cylinder(0.62, 0.82, Vector3(-0.85, 0.42, 0.15), timber, 10)
+	_mesh_cylinder(0.62, 0.82, Vector3(0.85, 0.42, 0.15), timber, 10)
+	_add_box_collision(Vector3(4.0, 1.2, 3.5), Vector3(0, 0.6, 0))
 
 func _build_generic() -> void:
     var material := _material(Color(0.35, 0.28, 0.18))
