@@ -96,21 +96,11 @@ var resonance_discovered: bool = false
 @export var fall_damage_threshold: float = 6.0
 @export var fall_damage_amount: float = 35.0
 var health: float = 100.0
-@export_category("Survival")
-@export var max_hunger: float = 100.0
-@export var hunger_drain_per_second: float = 0.035
-@export var starvation_damage_per_second: float = 1.5
-var hunger: float = 100.0
-var _survival_accumulator: float = 0.0
-var _food_button: Button
-var equipped_armor: Dictionary = {"head": "", "body": ""}
 var _respawn_position: Vector3 = Vector3.ZERO
 var _respawn_yaw: float = 0.0
 var _death_active: bool = false
 var _respawn_timer: float = 0.0
 signal health_changed(current: float, maximum: float)
-signal survival_changed(hunger: float)
-signal armor_changed(armor_id: String, rating: float)
 signal player_died(source: String)
 signal player_respawned()
 
@@ -139,8 +129,7 @@ func take_damage(amount: float, source: String = "unknown") -> bool:
 	var network := get_tree().get_first_node_in_group("network_manager")
 	if _network_mode and network and bool(network.get("session_active")) and not multiplayer.is_server():
 		return false
-	var mitigated := amount * (1.0 - get_armor_rating())
-	set_health(health - mitigated)
+	set_health(health - amount)
 	if health <= 0.0:
 		_die(source)
 	return true
@@ -181,137 +170,6 @@ func _update_health_hud() -> void:
 		bar.value = health
 	if label:
 		label.text = "%d / %d" % [int(round(health)), int(round(max_health))]
-
-func get_hunger() -> float:
-	return hunger
-
-func set_hunger(value: float) -> void:
-	hunger = clampf(value, 0.0, max_hunger)
-	survival_changed.emit(hunger)
-	_update_survival_hud()
-
-func get_armor_rating() -> float:
-	var rating := 0.0
-	if str(equipped_armor.get("head", "")) == "A01_HIDE_CAP":
-		rating += 0.08
-	if str(equipped_armor.get("body", "")) == "A02_HIDE_VEST":
-		rating += 0.18
-	elif str(equipped_armor.get("body", "")) == "A03_LEATHER_ARMOR":
-		rating += 0.30
-	return clampf(rating, 0.0, 0.45)
-
-func equip_armor(item_id: String) -> bool:
-	if item_id not in VeyraItemCatalog.ARMOR_IDS:
-		return false
-	if _network_mode and _network_local and not multiplayer.is_server():
-		var network_manager := get_tree().get_first_node_in_group("network_manager")
-		if network_manager and network_manager.session_active and network_manager.has_method("submit_local_armor_equip"):
-			network_manager.submit_local_armor_equip(item_id)
-			return true
-	return _equip_armor_local(item_id)
-
-func _equip_armor_local(item_id: String) -> bool:
-	var inventory := get_inventory()
-	if not inventory or not inventory.has_item(item_id):
-		return false
-	var slot := "head" if item_id == "A01_HIDE_CAP" else "body"
-	var previous := str(equipped_armor.get(slot, ""))
-	if previous == item_id:
-		return true
-	if not previous.is_empty() and inventory.add_item(previous, 1) != 1:
-		return false
-	inventory.remove_item(item_id, 1)
-	equipped_armor[slot] = item_id
-	armor_changed.emit(item_id, get_armor_rating())
-	return true
-
-func get_armor_state() -> Dictionary:
-	return equipped_armor.duplicate(true)
-
-func set_armor_state(state: Dictionary) -> void:
-	if not state is Dictionary:
-		return
-	equipped_armor["head"] = str(state.get("head", "")) if str(state.get("head", "")) in VeyraItemCatalog.ARMOR_IDS else ""
-	equipped_armor["body"] = str(state.get("body", "")) if str(state.get("body", "")) in VeyraItemCatalog.ARMOR_IDS else ""
-	armor_changed.emit("", get_armor_rating())
-
-func consume_food() -> bool:
-	if _death_active:
-		return false
-	var inventory := get_inventory()
-	if not inventory:
-		return false
-	var consumed_id := ""
-	var nutrition := 0.0
-	if inventory.has_resource("Food", 1):
-		inventory.remove_resource("Food", 1)
-		consumed_id = "Food"
-		nutrition = 45.0
-	elif inventory.has_resource("Meat", 1):
-		inventory.remove_resource("Meat", 1)
-		consumed_id = "Meat"
-		nutrition = 28.0
-	if consumed_id.is_empty():
-		return false
-	hunger = clampf(hunger + nutrition, 0.0, max_hunger)
-	survival_changed.emit(hunger)
-	_update_survival_hud()
-	return true
-
-func _process_survival_tick(delta: float) -> void:
-	if _network_mode and not multiplayer.is_server():
-		return
-	_survival_accumulator += delta
-	if _survival_accumulator < 1.0:
-		return
-	var elapsed := _survival_accumulator
-	_survival_accumulator = 0.0
-	hunger = clampf(hunger - hunger_drain_per_second * elapsed, 0.0, max_hunger)
-	if hunger <= 0.0:
-		set_health(health - starvation_damage_per_second * elapsed)
-		if health <= 0.0:
-			_die("starvation")
-	survival_changed.emit(hunger)
-	_update_survival_hud()
-
-func _update_survival_hud() -> void:
-	var label := get_node_or_null("MobileControls/SurvivalHUD/Label") as Label
-	if label:
-		label.text = "FOOD %d%%" % int(round(hunger))
-
-func _ensure_food_button() -> void:
-	var controls := get_node_or_null("MobileControls") as CanvasLayer
-	if not controls:
-		return
-	_food_button = controls.get_node_or_null("EatButton") as Button
-	if not _food_button:
-		_food_button = Button.new()
-		_food_button.name = "EatButton"
-		_food_button.text = "EAT"
-		_food_button.custom_minimum_size = Vector2(110, 58)
-		_food_button.set_anchors_preset(Control.PRESET_TOP_LEFT)
-		var viewport_size := get_viewport().get_visible_rect().size
-		_food_button.position = Vector2(maxf(12.0, viewport_size.x - 300.0), maxf(120.0, viewport_size.y - 178.0))
-		_food_button.size = Vector2(110.0, 58.0)
-		_food_button.add_to_group("camera_blocking_ui")
-		controls.add_child(_food_button)
-	if not _food_button.pressed.is_connected(consume_food):
-		_food_button.pressed.connect(consume_food)
-	var survival_label := controls.get_node_or_null("SurvivalHUD") as Control
-	if not survival_label:
-		survival_label = Control.new()
-		survival_label.name = "SurvivalHUD"
-		survival_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		survival_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
-		survival_label.position = Vector2(24.0, 92.0)
-		survival_label.size = Vector2(140.0, 28.0)
-		controls.add_child(survival_label)
-		var label := Label.new()
-		label.name = "Label"
-		label.add_theme_font_size_override("font_size", 13)
-		label.add_theme_color_override("font_color", Color(0.86, 0.91, 0.82, 0.92))
-		label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		survival_label.add_child(label)
 
 func get_resonance() -> float:
 	return resonance_charge
@@ -426,8 +284,6 @@ func get_save_state() -> Dictionary:
 		"tool_durability": clampf(tool_durability, 0.0, 100.0),
 		"resonance_charge": resonance_charge,
 		"resonance_discovered": resonance_discovered,
-		"hunger": clampf(hunger, 0.0, max_hunger),
-		"equipped_armor": equipped_armor.duplicate(true),
 		"position": [global_position.x, global_position.y, global_position.z],
 		"yaw": rotation.y,
 		"pitch": look_pitch
@@ -453,11 +309,6 @@ func load_save_state(state: Dictionary) -> void:
 	tool_durability = clampf(float(state.get("tool_durability", 100.0)), 0.0, 100.0)
 	resonance_charge = clampf(float(state.get("resonance_charge", 0.0)), 0.0, 100.0)
 	resonance_discovered = bool(state.get("resonance_discovered", resonance_charge > 0.0))
-	hunger = clampf(float(state.get("hunger", max_hunger)), 0.0, max_hunger)
-	var saved_armor = state.get("equipped_armor", {})
-	if saved_armor is Dictionary:
-		equipped_armor["head"] = str(saved_armor.get("head", "")) if str(saved_armor.get("head", "")) in VeyraItemCatalog.ARMOR_IDS else ""
-		equipped_armor["body"] = str(saved_armor.get("body", "")) if str(saved_armor.get("body", "")) in VeyraItemCatalog.ARMOR_IDS else ""
 	max_health = clampf(float(state.get("max_health", max_health)), 1.0, 1000.0)
 	health = clampf(float(state.get("health", max_health)), 0.0, max_health)
 	_respawn_position = global_position
@@ -468,7 +319,6 @@ func load_save_state(state: Dictionary) -> void:
 	tool_changed.emit(selected_tool_id, tool_durability)
 	_update_equipped_tool_visual()
 	_update_health_hud()
-	_update_survival_hud()
 
 func _update_equipped_tool_visual() -> void:
 	var tool_visual := equipped_tool_visual
@@ -494,8 +344,6 @@ func _update_equipped_tool_visual() -> void:
 	var pick_head := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickHead") as MeshInstance3D
 	var pick_spike_left := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickSpikeLeft") as MeshInstance3D
 	var pick_spike_right := get_node_or_null("Camera3D/ViewModel/ToolHolder/EquippedTool/PickSpikeRight") as MeshInstance3D
-	var knife_equipped := selected_tool_id == "I08_HUNTER_KNIFE"
-	var spear_equipped := selected_tool_id in ["I09_STONE_SPEAR", "I10_METAL_SPEAR"]
 	var axe_equipped := selected_tool_id in ["I01_STONE_AXE", "I04_METAL_AXE", "I06_ECHO_AXE"]
 	var pick_equipped := selected_tool_id in ["I02_STONE_PICK", "I05_METAL_PICK", "I07_ECHO_PICK"]
 	if axe_head:
@@ -515,9 +363,7 @@ func _update_equipped_tool_visual() -> void:
 	if pick_spike_left:
 		pick_spike_left.visible = pick_equipped
 	if pick_spike_right:
-		pick_spike_right.visible = pick_equipped or spear_equipped
-	if axe_blade:
-		axe_blade.visible = axe_equipped or knife_equipped
+		pick_spike_right.visible = pick_equipped
 	match selected_tool_id:
 		"I01_STONE_AXE", "I04_METAL_AXE", "I06_ECHO_AXE":
 			tool_visual.rotation_degrees = Vector3(0, 0, -12)
@@ -525,20 +371,11 @@ func _update_equipped_tool_visual() -> void:
 		"I02_STONE_PICK", "I05_METAL_PICK", "I07_ECHO_PICK":
 			tool_visual.rotation_degrees = Vector3(0, 0, 12)
 			tool_visual.scale = Vector3(0.76, 0.76, 0.76)
-		"I08_HUNTER_KNIFE":
-			tool_visual.rotation_degrees = Vector3(12, 0, -35)
-			tool_visual.scale = Vector3(0.52, 0.52, 0.52)
-		"I09_STONE_SPEAR":
-			tool_visual.rotation_degrees = Vector3(0, 0, 90)
-			tool_visual.scale = Vector3(0.62, 0.62, 0.62)
-		"I10_METAL_SPEAR":
-			tool_visual.rotation_degrees = Vector3(0, 0, 90)
-			tool_visual.scale = Vector3(0.68, 0.68, 0.68)
 		_:
 			tool_visual.visible = false
 
 func _apply_advanced_tool_materials() -> void:
-	var advanced := selected_tool_id in ["I04_METAL_AXE", "I05_METAL_PICK", "I06_ECHO_AXE", "I07_ECHO_PICK", "I10_METAL_SPEAR"]
+	var advanced := selected_tool_id in ["I04_METAL_AXE", "I05_METAL_PICK", "I06_ECHO_AXE", "I07_ECHO_PICK"]
 	if not advanced:
 		return
 	var metal := StandardMaterial3D.new()
@@ -591,7 +428,6 @@ func _ready() -> void:
 		interact_button.pressed.connect(_on_interact_pressed)
 	if jump_button and not jump_button.pressed.is_connected(_on_jump_pressed):
 		jump_button.pressed.connect(_on_jump_pressed)
-	_ensure_food_button()
 
 	if _network_local:
 		_configure_camera()
@@ -655,7 +491,6 @@ func _physics_process(delta: float) -> void:
 		if _respawn_timer <= 0.0:
 			respawn()
 		return
-	_process_survival_tick(delta)
 	if _is_modal_ui_open():
 		velocity.x = 0.0
 		velocity.z = 0.0
