@@ -132,6 +132,8 @@ func _sanitize_player_state(player_state: Dictionary) -> Dictionary:
         "tool_durability": clampf(float(player_state.get("tool_durability", 100.0)), 0.0, 100.0),
         "resonance_charge": resonance_charge,
         "resonance_discovered": resonance_discovered,
+        "hunger": clampf(float(player_state.get("hunger", 100.0)), 0.0, 100.0),
+        "equipped_armor": _sanitize_armor(player_state.get("equipped_armor", {})),
         "health": health,
         "max_health": max_health,
         "position": clean_position,
@@ -344,3 +346,16 @@ func _sanitize_resource_map(value: Dictionary) -> Dictionary:
         if amount > 0 and VeyraResourceCatalog.is_valid(resource_type):
             result[resource_type] = amount
     return result
+
+
+func _sanitize_armor(value) -> Dictionary:
+    var clean := {"head": "", "body": ""}
+    if not value is Dictionary:
+        return clean
+    var head := str(value.get("head", ""))
+    var body := str(value.get("body", ""))
+    if head == "A01_HIDE_CAP":
+        clean["head"] = head
+    if body in ["A02_HIDE_VEST", "A03_LEATHER_ARMOR"]:
+        clean["body"] = body
+    return clean
