@@ -4,7 +4,7 @@ const SAVE_PATH := "user://veyra_world.json"
 const BACKUP_PATH := "user://veyra_world.backup.json"
 const SAVE_VERSION := 7
 
-func save_world(world: Node, inventory: Dictionary, settlement: Dictionary = {}, player_state: Dictionary = {}, progression: Dictionary = {}) -> bool:
+func save_world(world: Node, inventory: Dictionary, settlement: Dictionary = {}, player_state: Dictionary = {}, progression: Dictionary = {}, logistics: Dictionary = {}) -> bool:
     if not world or not world.has_method("get_world_state"):
         return false
 
@@ -14,7 +14,8 @@ func save_world(world: Node, inventory: Dictionary, settlement: Dictionary = {},
         "inventory": _sanitize_inventory(inventory),
         "settlement": _sanitize_settlement(settlement),
         "player": _sanitize_player_state(player_state),
-        "progression": _sanitize_progression(progression)
+        "progression": _sanitize_progression(progression),
+        "logistics": _sanitize_logistics(logistics)
     }
     var json := JSON.stringify(payload)
 
@@ -53,6 +54,9 @@ func load_world() -> Dictionary:
     if not (data.get("progression", {}) is Dictionary):
         data["progression"] = {}
     data["progression"] = _sanitize_progression(data["progression"])
+    if not (data.get("logistics", {}) is Dictionary):
+        data["logistics"] = {}
+    data["logistics"] = _sanitize_logistics(data["logistics"])
     return data
 
 func _write_file(path: String, json: String) -> bool:
@@ -277,3 +281,66 @@ func _sanitize_settlement(settlement: Dictionary) -> Dictionary:
                 clean["productions"][str(production_id)] = clean_production
 
     return clean
+
+
+func _sanitize_logistics(logistics: Dictionary) -> Dictionary:
+    if logistics.is_empty():
+        return {}
+    var clean := {
+        "version": maxi(1, int(logistics.get("version", 1))),
+        "next_site_index": maxi(1, int(logistics.get("next_site_index", 1))),
+        "next_order_index": maxi(1, int(logistics.get("next_order_index", 1))),
+        "build_sites": {},
+        "delivery_orders": {}
+    }
+    var sites = logistics.get("build_sites", {})
+    if sites is Dictionary:
+        for site_id in sites.keys():
+            var site = sites[site_id]
+            if not site is Dictionary:
+                continue
+            var building_type := str(site.get("building_type", ""))
+            if not VeyraBuildingCatalog.exists(building_type):
+                continue
+            var position = site.get("position", [0.0, 0.0, 0.0])
+            if not position is Array or position.size() < 3:
+                continue
+            clean["build_sites"][str(site_id)] = {
+                "id": str(site.get("id", site_id)),
+                "building_id": str(site.get("building_id", "")),
+                "building_type": building_type,
+                "position": [float(position[0]), float(position[1]), float(position[2])],
+                "cost": _sanitize_resource_map(site.get("cost", {})),
+                "delivered": _sanitize_resource_map(site.get("delivered", {})),
+                "creator_peer_id": maxi(1, int(site.get("creator_peer_id", 1))),
+                "created_at": float(site.get("created_at", 0.0))
+            }
+    var orders = logistics.get("delivery_orders", {})
+    if orders is Dictionary:
+        for order_id in orders.keys():
+            var order = orders[order_id]
+            if not order is Dictionary:
+                continue
+            var cargo := _sanitize_resource_map(order.get("cargo", {}))
+            if cargo.is_empty():
+                continue
+            clean["delivery_orders"][str(order_id)] = {
+                "id": str(order.get("id", order_id)),
+                "site_id": str(order.get("site_id", "")),
+                "worker_id": str(order.get("worker_id", "")),
+                "cargo": cargo,
+                "remaining_time": clampf(float(order.get("remaining_time", 1.25)), 0.0, 1.25),
+                "source_building_id": str(order.get("source_building_id", ""))
+            }
+    return clean
+
+func _sanitize_resource_map(value: Dictionary) -> Dictionary:
+    var result := {}
+    if not value is Dictionary:
+        return result
+    for key in value.keys():
+        var resource_type := str(key)
+        var amount := maxi(0, int(value[key]))
+        if amount > 0 and VeyraResourceCatalog.is_valid(resource_type):
+            result[resource_type] = amount
+    return result
