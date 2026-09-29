@@ -235,6 +235,12 @@ func _tool_name(tool_id: String) -> String:
 			return "ECHO AXE"
 		"I07_ECHO_PICK":
 			return "ECHO PICK"
+		"I08_HUNTER_KNIFE":
+			return "HUNTER KNIFE"
+		"I09_STONE_SPEAR":
+			return "STONE SPEAR"
+		"I10_METAL_SPEAR":
+			return "METAL SPEAR"
 		_:
 			return "HANDS"
 
