@@ -49,11 +49,15 @@ jobs:
 
       - name: Run core regression tests
         timeout-minutes: 2
-        run: godot --headless --path . --script res://tests/core_test.gd
+        run: |
+          set -o pipefail
+          godot --headless --path . --script res://tests/core_test.gd 2>&1 | tee core-test.log
 
       - name: Run resonance regression test
         timeout-minutes: 2
-        run: godot --headless --path . --script res://tests/resonance_test.gd
+        run: |
+          set -o pipefail
+          godot --headless --path . --script res://tests/resonance_test.gd 2>&1 | tee resonance-test.log
 
       - name: Check for import/parser errors
         shell: bash
