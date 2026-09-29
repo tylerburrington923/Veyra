@@ -144,7 +144,7 @@ func confirm_build(player: Node3D, inventory: VeyraInventory) -> bool:
     var site_id := str(logistics.call("create_foundation", building_id, selected_building_id, placement_position, definition.get("cost", {}), multiplayer.get_unique_id() if multiplayer.has_multiplayer_peer() else 1))
     if site_id.is_empty():
         return false
-    building_completed.emit(selected_building_id, placement_position)
+    foundation_placed.emit(selected_building_id, placement_position)
     placement_valid = false
     placement_location_valid = false
     placement_active = false
