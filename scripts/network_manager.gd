@@ -150,6 +150,11 @@ func submit_local_merchant_trade(direction: String, item_id: String, amount: int
 		return
 	request_merchant_trade.rpc_id(1, direction.to_upper(), item_id, amount)
 
+func submit_local_building_action(building_id: String, action: String, argument: String = "") -> void:
+	if not session_active or is_host or building_id.is_empty():
+		return
+	request_building_action.rpc_id(1, building_id, action, argument)
+
 @rpc("any_peer", "unreliable")
 func send_input(input_vector: Vector2, yaw: float, pitch: float, jump: bool) -> void:
 	if not multiplayer.is_server():
@@ -388,6 +393,34 @@ func request_craft(recipe_id: String) -> void:
 	var inventory: VeyraInventory = player.get_inventory() if player and player.has_method("get_inventory") else null
 	if manager and inventory:
 		manager.craft(recipe_id, inventory)
+
+@rpc("any_peer", "reliable")
+func request_building_action(building_id: String, action: String, argument: String = "") -> void:
+	if not multiplayer.is_server():
+		return
+	if action not in ["TOWNHALL_CIVIC", "TOWNHALL_DEPOSIT", "STORAGE_DEPOSIT", "STORAGE_WITHDRAW", "CAMPFIRE_FUEL", "CAMPFIRE_COOK", "TANNERY_PROCESS", "BLACKSMITH_REFINE", "BLACKSMITH_FORGE"]:
+		return
+	var peer_id := multiplayer.get_remote_sender_id()
+	var player := players.get(peer_id) as Node3D
+	if not player:
+		return
+	var world := get_tree().current_scene
+	var building_root := world.get_node_or_null("PlacedBuildings") if world else null
+	var building: Node = null
+	if building_root:
+		for candidate in building_root.get_children():
+			if str(candidate.get("building_id")) == building_id:
+				building = candidate
+				break
+	if not building or not building is Node3D or player.global_position.distance_to((building as Node3D).global_position) > 6.0:
+		return
+	var ui := player.get_node_or_null("BuildingUI")
+	if not ui:
+		ui = load("res://scripts/building_ui.gd").new()
+		ui.name = "BuildingUI"
+		player.add_child(ui)
+	if ui.has_method("perform_remote_action"):
+		ui.perform_remote_action(building, player, action, argument)
 
 @rpc("any_peer", "reliable")
 func request_worker_delivery(site_id: String, requested: Dictionary) -> void:
