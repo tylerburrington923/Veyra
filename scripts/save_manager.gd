@@ -87,7 +87,8 @@ func _read_file(path: String) -> Dictionary:
 func _sanitize_inventory(inventory: Dictionary) -> Dictionary:
     var clean := {
         "resources": {},
-        "items": {}
+        "items": {},
+        "coins": maxi(0, int(inventory.get("coins", 0)))
     }
     if inventory.is_empty():
         return clean
