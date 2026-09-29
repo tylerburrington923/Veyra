@@ -1,7 +1,7 @@
 extends CanvasLayer
 
-const RESOURCE_TYPES: Array[String] = ["Stone", "Wood", "Metal", "Vitreous Lux", "Echo-Stone", "Meat", "Hide"]
-const TOOL_ORDER: Array[String] = ["T00_HANDS", "I01_STONE_AXE", "I02_STONE_PICK", "I04_METAL_AXE", "I05_METAL_PICK", "I06_ECHO_AXE", "I07_ECHO_PICK"]
+const RESOURCE_TYPES: Array[String] = ["Stone", "Wood", "Metal", "Refined Metal", "Vitreous Lux", "Echo-Stone", "Meat", "Hide", "Leather", "Food"]
+const TOOL_ORDER: Array[String] = ["T00_HANDS", "I01_STONE_AXE", "I02_STONE_PICK", "I08_HUNTER_KNIFE", "I09_STONE_SPEAR", "I04_METAL_AXE", "I05_METAL_PICK", "I10_METAL_SPEAR", "I06_ECHO_AXE", "I07_ECHO_PICK"]
 
 @onready var player: Node = get_parent()
 @onready var inventory: Node = player.get_node_or_null("Inventory") if player else null
@@ -243,12 +243,13 @@ func _format_hotbar(snapshot: Dictionary) -> String:
 	var parts: Array[String] = []
 	for resource_type in ["Stone", "Wood", "Metal", "Vitreous Lux"]:
 		parts.append("%s  %d" % [_short_name(resource_type), int(resources.get(resource_type, 0))])
+	parts.append("COINS  %d" % int(snapshot.get("coins", 0)))
 	return "  |  ".join(parts)
 
 func _format_inventory(snapshot: Dictionary) -> String:
 	var resources: Dictionary = snapshot.get("resources", snapshot)
 	var items: Dictionary = snapshot.get("items", {})
-	var lines: Array[String] = ["INVENTORY"]
+	var lines: Array[String] = ["INVENTORY", "Coins          %d" % int(snapshot.get("coins", 0))]
 	for resource_type in RESOURCE_TYPES:
 		lines.append("%-14s %d" % [resource_type, int(resources.get(resource_type, 0))])
 	for item_id in items.keys():
@@ -342,8 +343,9 @@ func _build_inventory_grid() -> void:
 			var kind := str(stack.get("kind", "resource"))
 			slot.text = _inventory_slot_text(id, amount)
 			slot.tooltip_text = _inventory_slot_tooltip(id, amount)
-			if kind == "item" and VeyraItemCatalog.is_valid_tool(id):
-				slot.pressed.connect(_equip_inventory_item.bind(id))
+			if kind == "item":
+				if VeyraItemCatalog.is_valid_tool(id) or id in VeyraItemCatalog.ARMOR_IDS:
+					slot.pressed.connect(_equip_inventory_item.bind(id))
 		else:
 			slot.text = ""
 		grid.add_child(slot)
@@ -371,7 +373,14 @@ func _inventory_slot_tooltip(id: String, amount: int) -> String:
 	return "%s x%d" % [id, amount]
 
 func _equip_inventory_item(item_id: String) -> void:
-	if player and player.has_method("set_tool") and player.set_tool(item_id):
+	if not player:
+		return
+	var equipped := false
+	if item_id in VeyraItemCatalog.ARMOR_IDS and player.has_method("equip_armor"):
+		equipped = bool(player.equip_armor(item_id))
+	elif player.has_method("set_tool"):
+		equipped = bool(player.set_tool(item_id))
+	if equipped:
 		_show_toast("Equipped %s" % VeyraItemCatalog.display_name(item_id))
 		_refresh()
 
