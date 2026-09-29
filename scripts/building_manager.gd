@@ -8,6 +8,7 @@ const BUILDING_VERSION := 1
 const MIN_BUILD_DISTANCE := 1.5
 const MAX_BUILD_DISTANCE := 8.0
 const GRID_SIZE := 1.0
+const MAX_BUILD_TERRAIN_VARIANCE := 1.75
 
 var selected_building_id: String = ""
 var placement_position := Vector3.ZERO
@@ -183,6 +184,25 @@ func _ground_height(position: Vector3, player: Node3D) -> float:
     if hit.is_empty():
         return position.y
     return float(hit.get("position", position).y)
+
+func _is_build_terrain_valid(position: Vector3, size: Vector2) -> bool:
+	var generator := get_tree().get_first_node_in_group("world_generator")
+	if not generator or not generator.has_method("get_height_at_world"):
+		return true
+	var half_x := maxf(0.5, size.x * 0.5)
+	var half_z := maxf(0.5, size.y * 0.5)
+	var heights := [
+		float(generator.get_height_at_world(position.x - half_x, position.z - half_z)),
+		float(generator.get_height_at_world(position.x - half_x, position.z + half_z)),
+		float(generator.get_height_at_world(position.x + half_x, position.z - half_z)),
+		float(generator.get_height_at_world(position.x + half_x, position.z + half_z))
+	]
+	var lowest := heights[0]
+	var highest := heights[0]
+	for height in heights:
+		lowest = minf(lowest, float(height))
+		highest = maxf(highest, float(height))
+	return highest - lowest <= MAX_BUILD_TERRAIN_VARIANCE
 
 func _is_space_clear(position: Vector3, size: Vector2, player: Node3D) -> bool:
     var state := get_viewport().get_world_3d().direct_space_state
