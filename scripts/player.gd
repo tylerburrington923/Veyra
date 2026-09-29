@@ -90,8 +90,86 @@ var tool_durability: float = 100.0
 var resonance_charge: float = 0.0
 var resonance_discovered: bool = false
 
+@export_category("Health / Respawn")
+@export var max_health: float = 100.0
+@export var respawn_delay: float = 1.25
+@export var fall_damage_threshold: float = 6.0
+@export var fall_damage_amount: float = 35.0
+var health: float = 100.0
+var _respawn_position: Vector3 = Vector3.ZERO
+var _respawn_yaw: float = 0.0
+var _death_active: bool = false
+var _respawn_timer: float = 0.0
+signal health_changed(current: float, maximum: float)
+signal player_died(source: String)
+signal player_respawned()
+
 signal resonance_changed(charge: float, discovered: bool)
 signal resonance_tier_changed(tier: int, tier_name: String)
+
+func get_health() -> float:
+	return health
+
+func is_alive() -> bool:
+	return not _death_active and health > 0.0
+
+func set_health(value: float) -> void:
+	health = clampf(value, 0.0, max_health)
+	health_changed.emit(health, max_health)
+	_update_health_hud()
+
+func heal(amount: float) -> void:
+	if amount <= 0.0 or _death_active:
+		return
+	set_health(health + amount)
+
+func take_damage(amount: float, source: String = "unknown") -> bool:
+	if amount <= 0.0 or _death_active:
+		return false
+	var network := get_tree().get_first_node_in_group("network_manager")
+	if _network_mode and network and bool(network.get("session_active")) and not multiplayer.is_server():
+		return false
+	set_health(health - amount)
+	if health <= 0.0:
+		_die(source)
+	return true
+
+func _die(source: String) -> void:
+	if _death_active:
+		return
+	_death_active = true
+	velocity = Vector3.ZERO
+	jump_requested = false
+	move_input = Vector2.ZERO
+	_clear_touch_state()
+	player_died.emit(source)
+	_update_health_hud()
+	_respawn_timer = respawn_delay
+	if _network_mode and multiplayer.is_server():
+		set_process(true)
+
+func respawn() -> void:
+	var position_value := _respawn_position
+	if position_value == Vector3.ZERO:
+		position_value = global_position
+	global_position = position_value
+	rotation.y = _respawn_yaw
+	target_yaw = _respawn_yaw
+	velocity = Vector3.ZERO
+	_death_active = false
+	_respawn_timer = 0.0
+	set_health(max_health)
+	_update_health_hud()
+	player_respawned.emit()
+
+func _update_health_hud() -> void:
+	var bar := get_node_or_null("MobileControls/HealthHUD/Bar") as ProgressBar
+	var label := get_node_or_null("MobileControls/HealthHUD/Label") as Label
+	if bar:
+		bar.max_value = max_health
+		bar.value = health
+	if label:
+		label.text = "%d / %d" % [int(round(health)), int(round(max_health))]
 
 func get_resonance() -> float:
 	return resonance_charge
@@ -200,6 +278,8 @@ func use_tool(durability_cost: float = 1.0) -> bool:
 
 func get_save_state() -> Dictionary:
 	return {
+		"health": clampf(health, 0.0, max_health),
+		"max_health": max_health,
 		"tool_id": selected_tool_id,
 		"tool_durability": clampf(tool_durability, 0.0, 100.0),
 		"resonance_charge": resonance_charge,
@@ -229,10 +309,15 @@ func load_save_state(state: Dictionary) -> void:
 	tool_durability = clampf(float(state.get("tool_durability", 100.0)), 0.0, 100.0)
 	resonance_charge = clampf(float(state.get("resonance_charge", 0.0)), 0.0, 100.0)
 	resonance_discovered = bool(state.get("resonance_discovered", resonance_charge > 0.0))
+	health = clampf(float(state.get("health", max_health)), 0.0, max_health)
+	_respawn_position = global_position
+	_respawn_yaw = rotation.y
+	_death_active = health <= 0.0
 	if selected_tool_id == "T00_HANDS":
 		tool_durability = 100.0
 	tool_changed.emit(selected_tool_id, tool_durability)
 	_update_equipped_tool_visual()
+	_update_health_hud()
 
 func _update_equipped_tool_visual() -> void:
 	var tool_visual := equipped_tool_visual
@@ -335,6 +420,7 @@ func _ready() -> void:
 	up_direction = Vector3.UP
 	floor_snap_length = ground_snap_distance
 	floor_max_angle = deg_to_rad(max_floor_angle_degrees)
+	health = max_health
 	call_deferred("_stabilize_spawn")
 
 	if interact_button and not interact_button.pressed.is_connected(_on_interact_pressed):
@@ -392,10 +478,18 @@ func _stabilize_spawn() -> void:
 	if world_generator and world_generator.has_method("is_generated") and world_generator.is_generated():
 		var terrain_y: float = world_generator.get_height_at_world(global_position.x, global_position.z)
 		global_position.y = maxf(global_position.y, terrain_y + 1.5)
+		_respawn_position = global_position
+		_respawn_yaw = rotation.y
 		velocity = Vector3.ZERO
 
 
 func _physics_process(delta: float) -> void:
+	if _death_active:
+		velocity = Vector3.ZERO
+		_respawn_timer -= delta
+		if _respawn_timer <= 0.0:
+			respawn()
+		return
 	if _is_modal_ui_open():
 		velocity.x = 0.0
 		velocity.z = 0.0
@@ -773,9 +867,12 @@ func _recover_from_fall() -> void:
 	if not world_generator or not world_generator.has_method("get_height_at_world"):
 		return
 	var terrain_y: float = world_generator.get_height_at_world(global_position.x, global_position.z)
-	if global_position.y < terrain_y - 6.0:
-		global_position.y = terrain_y + 1.5
-		velocity = Vector3.ZERO
+	if global_position.y < terrain_y - fall_damage_threshold:
+		var impact_damage := fall_damage_amount + minf(35.0, (terrain_y - global_position.y - fall_damage_threshold) * 4.0)
+		take_damage(impact_damage, "fall")
+		if not _death_active:
+			global_position = _respawn_position if _respawn_position != Vector3.ZERO else Vector3(global_position.x, terrain_y + 1.5, global_position.z)
+			velocity = Vector3.ZERO
 
 
 func _yaw_relative_direction(yaw: float, input_vector: Vector2) -> Vector3:
