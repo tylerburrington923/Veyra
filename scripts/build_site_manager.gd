@@ -369,11 +369,21 @@ func _find_available_worker() -> String:
 	var settlement := get_node_or_null("/root/SettlementManager")
 	if not settlement:
 		return ""
+	var busy_workers: Dictionary = {}
+	for order in delivery_orders.values():
+		busy_workers[str(order.get("worker_id", ""))] = true
 	for worker_id in settlement.villagers.keys():
 		var record = settlement.villagers[worker_id]
-		if not record is Dictionary or not bool(record.get("active", false)):
+		if busy_workers.has(str(worker_id)) or not record is Dictionary:
+			continue
+		var job := str(record.get("job", "")).to_upper()
+		if job in ["BUILDER", "BUILD", "WORKER"] and not bool(record.get("active", false)):
 			return str(worker_id)
-	return str(settlement.villagers.keys()[0]) if not settlement.villagers.is_empty() else ""
+	for worker_id in settlement.villagers.keys():
+		var record = settlement.villagers[worker_id]
+		if not busy_workers.has(str(worker_id)) and (not record is Dictionary or not bool(record.get("active", false))):
+			return str(worker_id)
+	return ""
 
 func _worker_has_reached_site(order: Dictionary) -> bool:
 	var npc_manager := get_tree().get_first_node_in_group("npc_manager")
