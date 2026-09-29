@@ -739,3 +739,19 @@ func receive_game_state(inventories: Dictionary, resonance_states: Dictionary, h
 		var building_manager := get_node_or_null("/root/BuildingManager")
 		if building_manager and building_manager.has_method("restore_from_settlement"):
 			building_manager.restore_from_settlement()
+
+
+func submit_local_worker_delivery(site_id: String, requested: Dictionary) -> void:
+	if not session_active or is_host:
+		return
+	request_worker_delivery.rpc_id(1, site_id, requested)
+
+@rpc("any_peer", "reliable")
+func request_worker_delivery(site_id: String, requested: Dictionary) -> void:
+	if not multiplayer.is_server():
+		return
+	if site_id.is_empty() or not (requested is Dictionary):
+		return
+	var logistics := get_node_or_null("/root/BuildSiteManager")
+	if logistics and logistics.has_method("dispatch_available_worker"):
+		logistics.dispatch_available_worker(site_id, requested)
