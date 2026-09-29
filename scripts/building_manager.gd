@@ -119,7 +119,8 @@ func server_build(player: Node3D, building_id: String, requested_position: Vecto
     var logistics := get_node_or_null("/root/BuildSiteManager")
     if not logistics or not logistics.has_method("create_foundation"):
         return false
-    var site_id := str(logistics.call("create_foundation", building_id_value, building_id, position, definition.get("cost", {}), multiplayer.get_unique_id() if multiplayer.has_multiplayer_peer() else 1))
+    var creator_peer_id := int(player.get_meta("network_peer_id", multiplayer.get_unique_id() if multiplayer.has_multiplayer_peer() else 1))
+	var site_id := str(logistics.call("create_foundation", building_id_value, building_id, position, definition.get("cost", {}), creator_peer_id))
     if site_id.is_empty():
         return false
     foundation_placed.emit(building_id, position)
