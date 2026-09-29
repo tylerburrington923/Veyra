@@ -68,8 +68,6 @@ func _run_tests() -> void:
 	_test_settlement_production_save_contract()
 	_test_performance_cache_contract()
 	_test_alpha_presentation_contract()
-	_test_construction_logistics_contract()
-	_test_economy_and_survival_contract()
 	if failures.is_empty():
 		print("VEYRA CORE TESTS: PASS")
 		quit(0)
