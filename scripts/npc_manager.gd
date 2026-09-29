@@ -60,9 +60,16 @@ func _register_default_definitions() -> void:
 
 func _ensure_beta_villager() -> void:
 	var settlement := _settlement_manager()
-	if not settlement or not settlement.villagers.is_empty():
+	if not settlement:
 		return
-	settlement.add_villager("villager_beta_01", "Aren")
+	if settlement.villagers.is_empty():
+		settlement.add_villager("villager_beta_01", "Aren")
+	for villager_id in settlement.villagers.keys():
+		var record = settlement.villagers[villager_id]
+		if record is Dictionary and str(record.get("job", "")).to_upper() == "TRADER":
+			return
+	var first_id := str(settlement.villagers.keys()[0])
+	settlement.assign_job(first_id, "TRADER")
 
 func spawn_npc(npc_id: String, definition_id: String, position: Vector3) -> NPCController:
 	if npc_id.is_empty() or states.has(npc_id) or not definitions.has(definition_id):
