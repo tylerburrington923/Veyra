@@ -9,24 +9,6 @@ signal inventory_changed(snapshot: Dictionary, changed_type: String, changed_amo
 var resources: Dictionary = {}
 var items: Dictionary = {}
 var total_weight: float = 0.0
-var coins: int = 0
-
-func get_coins() -> int:
-	return maxi(0, coins)
-
-func add_coins(amount: int) -> int:
-	if amount <= 0:
-		return 0
-	coins += amount
-	inventory_changed.emit(get_snapshot(), "Coins", amount)
-	return amount
-
-func spend_coins(amount: int) -> bool:
-	if amount <= 0 or coins < amount:
-		return false
-	coins -= amount
-	inventory_changed.emit(get_snapshot(), "Coins", -amount)
-	return true
 
 func add_resource(resource_type: String, amount: int) -> int:
     if amount <= 0 or not VeyraResourceCatalog.is_valid(resource_type):
@@ -97,8 +79,7 @@ func get_capacity_state() -> Dictionary:
 func get_snapshot() -> Dictionary:
     return {
         "resources": resources.duplicate(true),
-        "items": items.duplicate(true),
-        "coins": coins
+        "items": items.duplicate(true)
     }
 
 func load_snapshot(snapshot: Dictionary) -> void:
@@ -107,7 +88,6 @@ func load_snapshot(snapshot: Dictionary) -> void:
     total_weight = 0.0
 
     if snapshot is Dictionary:
-        coins = maxi(0, int(snapshot.get("coins", 0)))
         var resource_snapshot: Dictionary = snapshot.get("resources", snapshot)
         if resource_snapshot is Dictionary:
             for key in resource_snapshot.keys():
@@ -219,7 +199,6 @@ func clear() -> void:
     resources.clear()
     items.clear()
     total_weight = 0.0
-    coins = 0
     inventory_changed.emit(get_snapshot(), "", 0)
 
 func get_resource_types() -> Array[String]:
