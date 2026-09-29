@@ -1549,7 +1549,7 @@ func _test_player_health_and_respawn_contract() -> void:
 	if player_scene == null:
 		return
 	var player := player_scene.instantiate()
-	get_tree().root.add_child(player)
+	root.add_child(player)
 	_check(absf(player.get_health() - player.max_health) < 0.01, "player health must initialize to max")
 	_check(player.is_alive(), "fresh player must be alive")
 	player.take_damage(25.0, "test")
@@ -1569,10 +1569,10 @@ func _test_save_sanitization_preserves_health_and_discovery() -> void:
 	_check(save_script != null, "save manager must remain loadable")
 	if save_script == null:
 		return
-	var manager := save_script.new()
-	var player_state := manager._sanitize_player_state({"health": 42.0, "max_health": 125.0, "tool_id": "T00_HANDS"})
+	var manager: Object = save_script.new()
+	var player_state: Dictionary = manager.call("_sanitize_player_state", {"health": 42.0, "max_health": 125.0, "tool_id": "T00_HANDS"})
 	_check(absf(float(player_state.get("health", 0.0)) - 42.0) < 0.01, "save sanitization must preserve health")
 	_check(absf(float(player_state.get("max_health", 0.0)) - 125.0) < 0.01, "save sanitization must preserve max health")
-	var progression_state := manager._sanitize_progression({"version": 2, "discovered_events": {"ANCIENT_LANDMARK": {"explored": true}}})
+	var progression_state: Dictionary = manager.call("_sanitize_progression", {"version": 2, "discovered_events": {"ANCIENT_LANDMARK": {"explored": true}}})
 	_check(progression_state.get("discovered_events", {}).has("ANCIENT_LANDMARK"), "save sanitization must preserve discovered events")
 	manager.free()
