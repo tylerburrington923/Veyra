@@ -320,13 +320,13 @@ func _show_building() -> void:
 	cancel_button.visible = true
 	set_process(true)
 	_clear_options()
-	status.text = "Select a building, place its free foundation, then deliver the materials."
+	status.text = "Select a building, then find a clear location."
 	for building_id in VeyraBuildingCatalog.all_building_ids():
 		var definition := VeyraBuildingCatalog.get_building(building_id)
 		_add_recipe_option(
 			str(definition.get("name", building_id)),
-			_format_cost(definition.get("cost", {})) + "  •  FOUNDATION FREE",
-			true,
+			_format_cost(definition.get("cost", {})),
+			_has_cost(definition.get("cost", {})),
 			_select_building.bind(building_id),
 			definition.get("cost", {})
 		)
@@ -369,11 +369,8 @@ func _craft(recipe_id: String) -> void:
 	if crafting.craft(recipe_id, inventory):
 		var recipe := VeyraCraftingCatalog.get_recipe(recipe_id)
 		status.text = "Crafted %s." % recipe.get("name", recipe_id)
-		if player and player.has_method("set_tool") and recipe_id in VeyraItemCatalog.TOOL_IDS:
+		if player and player.has_method("set_tool") and recipe_id in ["I01_STONE_AXE", "I02_STONE_PICK"]:
 			player.set_tool(recipe_id)
-			status.text += " Equipped."
-		elif player and player.has_method("equip_armor") and recipe_id in VeyraItemCatalog.ARMOR_IDS:
-			player.equip_armor(recipe_id)
 			status.text += " Equipped."
 	else:
 		status.text = "Need materials or inventory space."
@@ -425,12 +422,18 @@ func _update_build_status() -> void:
 	if not building:
 		return
 	var can_afford := building.has_required_materials(inventory)
-	if building.placement_location_valid:
+	if building.placement_location_valid and can_afford:
 		status.text = "Location ready. Tap PLACE."
 		confirm_button.disabled = false
 		if placement_status:
 			placement_status.text = "Location ready. Tap PLACE."
 			placement_place.disabled = false
+	elif building.placement_location_valid:
+		status.text = "Gather the listed materials."
+		confirm_button.disabled = true
+		if placement_status:
+			placement_status.text = "Gather the listed materials."
+			placement_place.disabled = true
 	else:
 		status.text = "Move to a clear location."
 		confirm_button.disabled = true
@@ -456,11 +459,6 @@ func _on_inventory_changed(_snapshot: Dictionary, _changed_type: String, _change
 	_refresh_option_affordability()
 
 func _refresh_option_affordability() -> void:
-	if mode == "build":
-		for button in _option_buttons:
-			if button:
-				button.disabled = false
-		return
 	for index in range(_option_buttons.size()):
 		var button := _option_buttons[index]
 		if not button or not is_instance_valid(button):
