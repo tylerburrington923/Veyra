@@ -662,10 +662,15 @@ func _broadcast_game_state() -> void:
 		return
 	var inventories: Dictionary = {}
 	var resonance_states: Dictionary = {}
+	var health_states: Dictionary = {}
 	for peer_id in players.keys():
 		var player := players[peer_id] as Node
 		if player and player.has_method("get_inventory"):
 			inventories[int(peer_id)] = player.get_inventory().get_snapshot()
+		if player and player.has_method("get_health"):
+			health_states[int(peer_id)] = {
+				"health": float(player.get_health())
+			}
 		if player and player.has_method("get_resonance"):
 			resonance_states[int(peer_id)] = {
 				"charge": float(player.get_resonance()),
@@ -680,10 +685,10 @@ func _broadcast_game_state() -> void:
 	var progression := get_node_or_null("/root/ProgressionManager")
 	if progression and progression.has_method("get_save_state"):
 		progression_state = progression.get_save_state()
-	receive_game_state.rpc(inventories, resonance_states, resources, settlement_state, progression_state)
+	receive_game_state.rpc(inventories, resonance_states, health_states, resources, settlement_state, progression_state)
 
 @rpc("authority", "reliable")
-func receive_game_state(inventories: Dictionary, resonance_states: Dictionary, resources: Dictionary, settlement_state: Dictionary, progression_state: Dictionary) -> void:
+func receive_game_state(inventories: Dictionary, resonance_states: Dictionary, health_states: Dictionary, resources: Dictionary, settlement_state: Dictionary, progression_state: Dictionary) -> void:
 	if is_host:
 		return
 	var local_player := get_tree().current_scene.get_node_or_null("Player")
@@ -691,6 +696,9 @@ func receive_game_state(inventories: Dictionary, resonance_states: Dictionary, r
 	if local_player and local_player.has_method("get_inventory") and snapshot is Dictionary and snapshot != _last_client_inventory:
 		local_player.get_inventory().load_snapshot(snapshot)
 		_last_client_inventory = snapshot.duplicate(true)
+	var health_snapshot = health_states.get(local_peer_id, {})
+	if local_player and local_player.has_method("set_health") and health_snapshot is Dictionary:
+		local_player.set_health(float(health_snapshot.get("health", 100.0)))
 	var resonance_snapshot = resonance_states.get(local_peer_id, {})
 	if local_player and local_player.has_method("set_resonance_state") and resonance_snapshot is Dictionary and resonance_snapshot != _last_client_resonance:
 		local_player.set_resonance_state(
