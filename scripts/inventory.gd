@@ -97,7 +97,8 @@ func get_capacity_state() -> Dictionary:
 func get_snapshot() -> Dictionary:
     return {
         "resources": resources.duplicate(true),
-        "items": items.duplicate(true)
+        "items": items.duplicate(true),
+        "coins": coins
     }
 
 func load_snapshot(snapshot: Dictionary) -> void:
@@ -107,7 +108,7 @@ func load_snapshot(snapshot: Dictionary) -> void:
 
     if snapshot is Dictionary:
         coins = maxi(0, int(snapshot.get("coins", 0)))
-		var resource_snapshot: Dictionary = snapshot.get("resources", snapshot)
+        var resource_snapshot: Dictionary = snapshot.get("resources", snapshot)
         if resource_snapshot is Dictionary:
             for key in resource_snapshot.keys():
                 if key is not String or not VeyraResourceCatalog.is_valid(key):
