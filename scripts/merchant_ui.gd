@@ -93,12 +93,14 @@ func _refresh() -> void:
 		body.add_child(button)
 
 func _buy(item_id: String) -> void:
-	status.text = "Purchase request sent." if manager.request_buy(player, item_id) else "Purchase unavailable."
+	var ok := manager.request_buy(player, item_id)
 	_refresh()
+	status.text = "Purchase request sent." if ok else "Purchase unavailable."
 
 func _sell(item_id: String) -> void:
-	status.text = "Sale request sent." if manager.request_sell(player, item_id, 1) else "Nothing to sell."
+	var ok := manager.request_sell(player, item_id, 1)
 	_refresh()
+	status.text = "Sale request sent." if ok else "Nothing to sell."
 
 func _sellable_ids() -> Array[String]:
 	var result: Array[String] = []
