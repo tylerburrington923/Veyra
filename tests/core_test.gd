@@ -1638,6 +1638,25 @@ func _test_construction_logistics_contract() -> void:
 	var building_visual := root.get_tree().current_scene.get_node_or_null("PlacedBuildings/BUILD-LOGISTICS-TEST")
 	if building_visual:
 		building_visual.queue_free()
+
+	var building_manager := root.get_node_or_null("/root/BuildingManager") as VeyraBuildingManager
+	var prior_site_ids := logistics.get_all_sites().keys()
+	building_manager.selected_building_id = "B02_STORAGE"
+	building_manager.placement_position = Vector3(46.0, 0.0, 40.0)
+	building_manager.placement_location_valid = true
+	building_manager.placement_valid = true
+	building_manager.placement_active = true
+	_check(building_manager.confirm_build(player, inventory), "Building Manager must place a foundation without upfront materials")
+	_check(inventory.get_amount("Wood") == 12 and inventory.get_amount("Stone") == 4, "free foundation placement must preserve carried materials")
+	var created_site_id := ""
+	for candidate_id in logistics.get_all_sites().keys():
+		if candidate_id not in prior_site_ids:
+			created_site_id = str(candidate_id)
+	_check(not created_site_id.is_empty(), "Building Manager must route placement into persistent construction logistics")
+	if not created_site_id.is_empty():
+		var created_site := logistics.get_site(created_site_id)
+		_check(not settlement.buildings.has(str(created_site.get("building_id", ""))), "foundation must not become a completed building before delivery")
+		logistics.remove_site(created_site_id)
 	player.queue_free()
 
 	var townhall_id := "BUILD-LOGISTICS-TOWNHALL"
