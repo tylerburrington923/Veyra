@@ -272,11 +272,10 @@ func _ensure_food_button() -> void:
 		_food_button.name = "EatButton"
 		_food_button.text = "EAT"
 		_food_button.custom_minimum_size = Vector2(110, 58)
-		_food_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-		_food_button.offset_left = -300.0
-		_food_button.offset_top = -178.0
-		_food_button.offset_right = -190.0
-		_food_button.offset_bottom = -120.0
+		_food_button.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		var viewport_size := get_viewport().get_visible_rect().size
+		_food_button.position = Vector2(maxf(12.0, viewport_size.x - 300.0), maxf(120.0, viewport_size.y - 178.0))
+		_food_button.size = Vector2(110.0, 58.0)
 		_food_button.add_to_group("camera_blocking_ui")
 		controls.add_child(_food_button)
 	if not _food_button.pressed.is_connected(consume_food):
