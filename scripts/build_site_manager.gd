@@ -191,20 +191,25 @@ func dispatch_available_worker(site_id: String, requested: Dictionary) -> String
 	return queue_worker_delivery(site_id, worker_id, requested)
 
 func cancel_delivery(order_id: String) -> bool:
-	if not _is_authoritative():
-		return false
-	if not delivery_orders.has(order_id):
+	if not _is_authoritative() or not delivery_orders.has(order_id):
 		return false
 	var order: Dictionary = delivery_orders[order_id]
+	_return_cargo_to_townhall(order)
+	delivery_orders.erase(order_id)
+	_clear_worker_delivery_state(str(order.get("worker_id", "")))
+	return true
+
+func _return_cargo_to_townhall(order: Dictionary) -> void:
 	var townhall_id := str(order.get("source_building_id", ""))
+	if townhall_id.is_empty():
+		return
 	var storage := _get_building_storage(townhall_id)
 	var resources: Dictionary = storage.get("resources", {}).duplicate(true)
 	for resource_type in order.get("cargo", {}).keys():
-		resources[str(resource_type)] = int(resources.get(str(resource_type), 0)) + int(order["cargo"][resource_type])
+		var key := str(resource_type)
+		resources[key] = int(resources.get(key, 0)) + maxi(0, int(order["cargo"][resource_type]))
 	storage["resources"] = resources
 	_set_building_storage(townhall_id, storage)
-	delivery_orders.erase(order_id)
-	return true
 
 func get_pending_delivery_for_site(site_id: String) -> Array:
 	var result: Array = []
@@ -264,15 +269,29 @@ func _complete_delivery(order_id: String) -> void:
 	var order: Dictionary = delivery_orders[order_id]
 	var site_id := str(order.get("site_id", ""))
 	if not build_sites.has(site_id):
+		_return_cargo_to_townhall(order)
 		delivery_orders.erase(order_id)
+		_clear_worker_delivery_state(str(order.get("worker_id", "")))
 		return
 	var site: Dictionary = build_sites[site_id]
 	var delivered: Dictionary = site.get("delivered", {}).duplicate(true)
+	var remaining := get_remaining_materials(site_id)
+	var excess_cargo: Dictionary = {}
 	for resource_type in order.get("cargo", {}).keys():
-		delivered[str(resource_type)] = int(delivered.get(str(resource_type), 0)) + int(order["cargo"][resource_type])
+		var key := str(resource_type)
+		var cargo_amount := maxi(0, int(order["cargo"][resource_type]))
+		var accepted := mini(cargo_amount, maxi(0, int(remaining.get(key, 0))))
+		if accepted > 0:
+			delivered[key] = int(delivered.get(key, 0)) + accepted
+		if cargo_amount > accepted:
+			excess_cargo[key] = cargo_amount - accepted
 	site["delivered"] = delivered
 	build_sites[site_id] = site
 	delivery_orders.erase(order_id)
+	if not excess_cargo.is_empty():
+		var return_order := order.duplicate(true)
+		return_order["cargo"] = excess_cargo
+		_return_cargo_to_townhall(return_order)
 	delivery_completed.emit(order_id, site_id)
 	build_site_changed.emit(site_id)
 	_clear_worker_delivery_state(str(order.get("worker_id", "")))
@@ -291,6 +310,9 @@ func _complete_site(site_id: String) -> void:
 	var position := _site_position(site)
 	if not bool(settlement.call("add_building", building_id, building_type, position)):
 		return
+	for order_id in delivery_orders.keys().duplicate():
+		if str(delivery_orders[order_id].get("site_id", "")) == site_id:
+			cancel_delivery(str(order_id))
 	var visual := get_tree().current_scene.get_node_or_null("BuildSites/" + site_id)
 	if visual:
 		visual.queue_free()
