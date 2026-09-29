@@ -96,11 +96,17 @@ var resonance_discovered: bool = false
 @export var fall_damage_threshold: float = 6.0
 @export var fall_damage_amount: float = 35.0
 var health: float = 100.0
+const MAX_HUNGER := 100.0
+var hunger: float = MAX_HUNGER
+var equipped_armor: Dictionary = {"head": "", "body": ""}
+var _hunger_accumulator: float = 0.0
+var _starvation_accumulator: float = 0.0
 var _respawn_position: Vector3 = Vector3.ZERO
 var _respawn_yaw: float = 0.0
 var _death_active: bool = false
 var _respawn_timer: float = 0.0
 signal health_changed(current: float, maximum: float)
+signal survival_changed(hunger: float, maximum: float)
 signal player_died(source: String)
 signal player_respawned()
 
@@ -129,10 +135,98 @@ func take_damage(amount: float, source: String = "unknown") -> bool:
 	var network := get_tree().get_first_node_in_group("network_manager")
 	if _network_mode and network and bool(network.get("session_active")) and not multiplayer.is_server():
 		return false
-	set_health(health - amount)
+	var mitigated_damage := amount * (1.0 - get_armor_rating())
+	set_health(health - mitigated_damage)
 	if health <= 0.0:
 		_die(source)
 	return true
+
+func get_hunger() -> float:
+	return hunger
+
+func set_hunger(value: float) -> void:
+	hunger = clampf(value, 0.0, MAX_HUNGER)
+	survival_changed.emit(hunger, MAX_HUNGER)
+	_update_survival_hud()
+
+func get_armor_rating() -> float:
+	var rating := 0.0
+	if str(equipped_armor.get("head", "")) == "A01_HIDE_CAP":
+		rating += 0.04
+	match str(equipped_armor.get("body", "")):
+		"A02_HIDE_VEST":
+			rating += 0.18
+		"A03_LEATHER_ARMOR":
+			rating += 0.30
+	return clampf(rating, 0.0, 0.45)
+
+func equip_armor(item_id: String) -> bool:
+	if item_id not in VeyraItemCatalog.ARMOR_IDS:
+		return false
+	var inventory := get_inventory()
+	if not inventory or not inventory.has_item(item_id):
+		return false
+	var slot := "head" if item_id == "A01_HIDE_CAP" else "body"
+	var previous := str(equipped_armor.get(slot, ""))
+	if previous == item_id:
+		return true
+	if not previous.is_empty() and inventory.add_item(previous, 1) != 1:
+		return false
+	if inventory.remove_item(item_id, 1) != 1:
+		return false
+	equipped_armor[slot] = item_id
+	return true
+
+func consume_food() -> bool:
+	var inventory := get_inventory()
+	if not inventory:
+		return false
+	if inventory.has_resource("Food", 1) and inventory.remove_resource("Food", 1) == 1:
+		set_hunger(hunger + 35.0)
+		return true
+	if inventory.has_resource("Meat", 1) and inventory.remove_resource("Meat", 1) == 1:
+		set_hunger(hunger + 22.0)
+		return true
+	return false
+
+func _process(delta: float) -> void:
+	if delta <= 0.0 or _death_active:
+		return
+	var network := get_tree().get_first_node_in_group("network_manager")
+	if _network_mode and network and bool(network.get("session_active")) and not multiplayer.is_server():
+		return
+	_hunger_accumulator += delta
+	if _hunger_accumulator >= 1.0:
+		var elapsed := _hunger_accumulator
+		_hunger_accumulator = 0.0
+		set_hunger(hunger - elapsed * 0.20)
+	if hunger <= 0.0:
+		_starvation_accumulator += delta
+		if _starvation_accumulator >= 6.0:
+			_starvation_accumulator = 0.0
+			take_damage(2.0, "starvation")
+	else:
+		_starvation_accumulator = 0.0
+
+func _update_survival_hud() -> void:
+	var label := get_node_or_null("MobileControls/HungerHUD") as Label
+	if label:
+		label.text = "HUNGER  %d%%" % int(round(hunger))
+		label.modulate = Color(1.0, 0.45, 0.30, 1.0) if hunger <= 20.0 else Color(0.78, 0.91, 0.86, 1.0)
+
+func _ensure_survival_hud() -> void:
+	var controls := get_node_or_null("MobileControls") as CanvasLayer
+	if not controls or controls.get_node_or_null("HungerHUD"):
+		return
+	var label := Label.new()
+	label.name = "HungerHUD"
+	label.position = Vector2(24.0, 91.0)
+	label.size = Vector2(170.0, 24.0)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.add_theme_font_size_override("font_size", 13)
+	controls.add_child(label)
+	label.visible = _network_local
+	_update_survival_hud()
 
 func _die(source: String) -> void:
 	if _death_active:
@@ -284,6 +378,8 @@ func get_save_state() -> Dictionary:
 		"tool_durability": clampf(tool_durability, 0.0, 100.0),
 		"resonance_charge": resonance_charge,
 		"resonance_discovered": resonance_discovered,
+		"hunger": hunger,
+		"equipped_armor": equipped_armor.duplicate(true),
 		"position": [global_position.x, global_position.y, global_position.z],
 		"yaw": rotation.y,
 		"pitch": look_pitch
@@ -309,6 +405,14 @@ func load_save_state(state: Dictionary) -> void:
 	tool_durability = clampf(float(state.get("tool_durability", 100.0)), 0.0, 100.0)
 	resonance_charge = clampf(float(state.get("resonance_charge", 0.0)), 0.0, 100.0)
 	resonance_discovered = bool(state.get("resonance_discovered", resonance_charge > 0.0))
+	set_hunger(float(state.get("hunger", MAX_HUNGER)))
+	var saved_armor = state.get("equipped_armor", {})
+	equipped_armor = {"head": "", "body": ""}
+	if saved_armor is Dictionary:
+		if str(saved_armor.get("head", "")) == "A01_HIDE_CAP":
+			equipped_armor["head"] = "A01_HIDE_CAP"
+		if str(saved_armor.get("body", "")) in ["A02_HIDE_VEST", "A03_LEATHER_ARMOR"]:
+			equipped_armor["body"] = str(saved_armor.get("body", ""))
 	max_health = clampf(float(state.get("max_health", max_health)), 1.0, 1000.0)
 	health = clampf(float(state.get("health", max_health)), 0.0, max_health)
 	_respawn_position = global_position
@@ -426,6 +530,7 @@ func _ready() -> void:
 
 	if interact_button and not interact_button.pressed.is_connected(_on_interact_pressed):
 		interact_button.pressed.connect(_on_interact_pressed)
+	_ensure_survival_hud()
 	if jump_button and not jump_button.pressed.is_connected(_on_jump_pressed):
 		jump_button.pressed.connect(_on_jump_pressed)
 
