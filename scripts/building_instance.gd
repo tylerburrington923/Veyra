@@ -298,6 +298,12 @@ func refine_hide_to_leather(player: Node) -> bool:
     return true
 
 func get_campfire_heat() -> float:
+    var network := get_node_or_null("/root/NetworkManager")
+    if building_type == "B01_CAMPFIRE" and network and bool(network.get("session_active")) and not bool(network.get("is_host")):
+        var settlement := get_node_or_null("/root/SettlementManager")
+        if settlement and settlement.has_method("get_building_storage"):
+            var storage: Dictionary = settlement.get_building_storage(building_id)
+            campfire_heat_seconds = maxf(0.0, float(storage.get("campfire_heat", campfire_heat_seconds)))
     return maxf(0.0, campfire_heat_seconds)
 
 func _load_campfire_state() -> void:
