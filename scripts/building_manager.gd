@@ -79,7 +79,7 @@ func evaluate_placement(player: Node3D, position: Vector3, inventory: VeyraInven
         placement_changed.emit(selected_building_id, false, placement_position)
         return false
     placement_location_valid = _is_space_clear(placement_position, definition.get("size", Vector2.ONE), player)
-    placement_valid = placement_location_valid and has_required_materials(inventory)
+    placement_valid = placement_location_valid
     _update_preview(placement_location_valid)
     placement_changed.emit(selected_building_id, placement_valid, placement_position)
     return placement_valid
@@ -93,8 +93,9 @@ func has_required_materials(inventory: VeyraInventory) -> bool:
             return false
     return true
 
-func server_build(player: Node3D, building_id: String, requested_position: Vector3, inventory: VeyraInventory) -> bool:
-    if not player or not inventory or not VeyraBuildingCatalog.exists(building_id):
+
+func server_build(player: Node3D, building_id: String, requested_position: Vector3, _inventory: VeyraInventory) -> bool:
+    if not player or not VeyraBuildingCatalog.exists(building_id):
         return false
     var definition := VeyraBuildingCatalog.get_building(building_id)
     if definition.is_empty():
@@ -108,60 +109,50 @@ func server_build(player: Node3D, building_id: String, requested_position: Vecto
         return false
     if not _is_space_clear(position, definition.get("size", Vector2.ONE), player):
         return false
-    if building_id == "B05_TOWNHALL" and _has_townhall():
+    if building_id == "B05_TOWNHALL" and _has_townhall_or_reserved():
         return false
-    for resource_type in definition.get("cost", {}).keys():
-        var amount := int(definition["cost"][resource_type])
-        if not inventory.has_resource(str(resource_type), amount):
-            return false
-    var settlement := _get_settlement_manager()
-    if not settlement:
-        return false
-    var building_id_value := _next_building_id()
-    var cost: Dictionary = definition.get("cost", {})
-    for resource_type in cost.keys():
-        var amount := int(cost[resource_type])
-        if inventory.remove_resource(str(resource_type), amount) < amount:
-            for rollback_type in cost.keys():
-                inventory.add_resource(str(rollback_type), int(cost[rollback_type]))
-            return false
-    if not bool(settlement.call("add_building", building_id_value, building_id, position)):
-        for rollback_type in cost.keys():
-            inventory.add_resource(str(rollback_type), int(cost[rollback_type]))
-        return false
-    _spawn_building_visual(building_id_value, building_id, position)
-    building_completed.emit(building_id, position)
-    return true
+    return _create_foundation(player, building_id, position, definition)
 
-func confirm_build(player: Node3D, inventory: VeyraInventory) -> bool:
-    if not placement_valid or selected_building_id.is_empty():
+
+func confirm_build(player: Node3D, _inventory: VeyraInventory) -> bool:
+    if not placement_location_valid or selected_building_id.is_empty() or not player:
         return false
     var definition := get_selected_building()
-    if definition.is_empty() or not player or not inventory:
+    if definition.is_empty():
         return false
     if not _is_build_terrain_valid(placement_position, definition.get("size", Vector2.ONE)):
         return false
     if not _is_space_clear(placement_position, definition.get("size", Vector2.ONE), player):
         return false
-    if selected_building_id == "B05_TOWNHALL" and _has_townhall():
+    if selected_building_id == "B05_TOWNHALL" and _has_townhall_or_reserved():
         return false
-    var cost: Dictionary = definition.get("cost", {})
-    for resource_type in cost.keys():
-        if inventory.remove_resource(str(resource_type), int(cost[resource_type])) < int(cost[resource_type]):
-            return false
-    var building_id := _next_building_id()
-    var settlement := _get_settlement_manager()
-    if not settlement or not bool(settlement.call("add_building", building_id, selected_building_id, placement_position)):
-        for resource_type in cost.keys():
-            inventory.add_resource(str(resource_type), int(cost[resource_type]))
+    if not _create_foundation(player, selected_building_id, placement_position, definition):
         return false
-    _spawn_building_visual(building_id, selected_building_id, placement_position)
-    building_completed.emit(selected_building_id, placement_position)
     placement_valid = false
     placement_location_valid = false
     placement_active = false
     _clear_preview()
     return true
+
+func _create_foundation(player: Node3D, building_type: String, position: Vector3, definition: Dictionary) -> bool:
+    var logistics := get_node_or_null("/root/BuildSiteManager") as VeyraBuildSiteManager
+    if not logistics:
+        return false
+    var building_id := _next_building_id()
+    var creator_peer_id := maxi(1, int(player.get_meta("network_peer_id", 1)))
+    var site_id := logistics.create_foundation(building_id, building_type, position, definition.get("cost", {}), creator_peer_id)
+    return not site_id.is_empty()
+
+func _has_townhall_or_reserved() -> bool:
+    if _has_townhall():
+        return true
+    var logistics := get_node_or_null("/root/BuildSiteManager") as VeyraBuildSiteManager
+    if not logistics:
+        return false
+    for site in logistics.get_all_sites().values():
+        if site is Dictionary and str(site.get("building_type", "")) == "B05_TOWNHALL":
+            return true
+    return false
 
 func snap_position(position: Vector3) -> Vector3:
     return Vector3(snappedf(position.x, GRID_SIZE), position.y, snappedf(position.z, GRID_SIZE))
@@ -246,15 +237,25 @@ func _clear_preview() -> void:
         preview.queue_free()
         preview = null
 
+
 func _next_building_id() -> String:
     var settlement := _get_settlement_manager()
     var buildings: Dictionary = settlement.get("buildings") if settlement else {}
+    var logistics := get_node_or_null("/root/BuildSiteManager") as VeyraBuildSiteManager
     var index := buildings.size() + 1
     var candidate := "B-%04d" % index
-    while buildings.has(candidate):
+    while buildings.has(candidate) or _site_reserves_building_id(logistics, candidate):
         index += 1
         candidate = "B-%04d" % index
     return candidate
+
+func _site_reserves_building_id(logistics: VeyraBuildSiteManager, building_id: String) -> bool:
+    if not logistics:
+        return false
+    for site in logistics.get_all_sites().values():
+        if site is Dictionary and str(site.get("building_id", "")) == building_id:
+            return true
+    return false
 
 func _initialize_building_root() -> void:
     if building_root:
