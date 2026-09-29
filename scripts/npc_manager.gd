@@ -64,18 +64,33 @@ func _ensure_beta_villager() -> void:
 		return
 	if settlement.villagers.is_empty():
 		settlement.add_villager("villager_beta_01", "Aren")
+		settlement.assign_job("villager_beta_01", "TRADER")
 	var has_trader := false
+	var has_builder := false
 	for villager_id in settlement.villagers.keys():
 		var record = settlement.villagers[villager_id]
-		if record is Dictionary and str(record.get("job", "")).to_upper() == "TRADER":
+		if not record is Dictionary:
+			continue
+		var job := str(record.get("job", "")).to_upper()
+		if job == "TRADER":
 			has_trader = true
-			break
-	if not has_trader and not settlement.villagers.is_empty():
-		settlement.assign_job(str(settlement.villagers.keys()[0]), "TRADER")
-	if settlement.villagers.size() < 2:
+		if job in ["BUILDER", "BUILD", "WORKER"]:
+			has_builder = true
+	if not has_trader:
+		var trader_id := "villager_trader_01"
+		var suffix := 1
+		while settlement.villagers.has(trader_id):
+			suffix += 1
+			trader_id = "villager_trader_%02d" % suffix
+		settlement.add_villager(trader_id, "Aren")
+		settlement.assign_job(trader_id, "TRADER")
+	if not has_builder:
 		var worker_id := "villager_worker_01"
-		if not settlement.villagers.has(worker_id):
-			settlement.add_villager(worker_id, "Mira")
+		var suffix := 1
+		while settlement.villagers.has(worker_id):
+			suffix += 1
+			worker_id = "villager_worker_%02d" % suffix
+		settlement.add_villager(worker_id, "Mira")
 		settlement.assign_job(worker_id, "Builder")
 
 func spawn_npc(npc_id: String, definition_id: String, position: Vector3) -> NPCController:
