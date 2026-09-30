@@ -235,7 +235,7 @@ func clear_delivery_target(worker_id: String) -> void:
 func is_worker_at_site(worker_id: String, site_id: String) -> bool:
 	var state := states.get(worker_id) as NPCState
 	if not state:
-		return true
+		return false
 	var logistics := get_node_or_null("/root/BuildSiteManager") as VeyraBuildSiteManager
 	var site := logistics.get_site(site_id) if logistics else {}
 	if site.is_empty():
