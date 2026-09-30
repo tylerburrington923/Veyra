@@ -341,6 +341,9 @@ func _spawn_site_visual(site_id: String) -> void:
 	root.add_child(site)
 	site.setup(site_id, self)
 
+func restore_presentations() -> void:
+	_restore_presentations()
+
 func _restore_presentations() -> void:
 	for site_id in build_sites.keys():
 		_spawn_site_visual(str(site_id))
