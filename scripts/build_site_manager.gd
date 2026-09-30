@@ -350,6 +350,8 @@ func _spawn_site_visual(site_id: String) -> void:
 
 func restore_presentations() -> void:
 	_restore_presentations()
+	for order in delivery_orders.values():
+		_set_worker_delivery_state(str(order.get("worker_id", "")), str(order.get("site_id", "")))
 
 func _restore_presentations() -> void:
 	var scene := _presentation_scene()
