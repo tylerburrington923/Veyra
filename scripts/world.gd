@@ -29,6 +29,7 @@ func _ready() -> void:
 		lunar_cycle.configure(world_seed, world_time)
 
 	call_deferred("_restore_buildings")
+	call_deferred("_restore_build_sites")
 	call_deferred("_align_anomalies_to_terrain")
 	call_deferred("_ensure_wildlife_manager")
 	call_deferred("_ensure_discovery_manager")
@@ -147,6 +148,11 @@ func _align_anomalies_to_terrain() -> void:
 func _restore_buildings() -> void:
 	if BuildingManager and BuildingManager.has_method("restore_from_settlement"):
 		BuildingManager.restore_from_settlement()
+
+func _restore_build_sites() -> void:
+	var logistics := get_node_or_null("/root/BuildSiteManager")
+	if logistics and logistics.has_method("restore_presentations"):
+		logistics.restore_presentations()
 
 func _ensure_discovery_manager() -> void:
 	if get_node_or_null("DiscoveryManager"):
