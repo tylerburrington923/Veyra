@@ -1762,4 +1762,11 @@ func _test_economy_and_survival_contract() -> void:
 	_check(inventory.has_resource("Leather", 1), "tannery processing must produce Leather")
 	campfire.queue_free()
 	tannery.queue_free()
+	inventory.clear()
+	inventory.max_slots = 1
+	_check(inventory.add_resource("Food", 49) == 49, "merchant atomicity test must seed a nearly full food stack")
+	inventory.add_coins(10)
+	_check(not merchant.buy(player, "Food"), "merchant must reject purchases that cannot fit the full offer")
+	_check(inventory.get_amount("Food") == 49, "failed merchant purchase must roll back partial item delivery")
+	_check(inventory.get_coins() == 10, "failed merchant purchase must not spend coins")
 	player.queue_free()
