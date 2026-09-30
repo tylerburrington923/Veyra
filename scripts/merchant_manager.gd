@@ -6,12 +6,12 @@ signal trade_completed(direction: String, item_id: String, amount: int, coins: i
 const SAVE_VERSION := 1
 
 const BUY_OFFERS := {
-	"Food": {"price": 2, "amount": 3},
-	"Meat": {"price": 3, "amount": 3},
-	"Stone": {"price": 2, "amount": 5},
-	"Wood": {"price": 2, "amount": 5},
-	"Metal": {"price": 10, "amount": 2},
-	"Leather": {"price": 12, "amount": 2},
+	"Food": {"price": 12, "amount": 3},
+	"Meat": {"price": 8, "amount": 3},
+	"Stone": {"price": 7, "amount": 5},
+	"Wood": {"price": 7, "amount": 5},
+	"Metal": {"price": 12, "amount": 2},
+	"Leather": {"price": 16, "amount": 2},
 	"Refined Metal": {"price": 18, "amount": 1},
 	"I01_STONE_AXE": {"price": 24, "amount": 1},
 	"I02_STONE_PICK": {"price": 28, "amount": 1},
