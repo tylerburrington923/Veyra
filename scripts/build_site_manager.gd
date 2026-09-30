@@ -340,6 +340,7 @@ func _spawn_site_visual(site_id: String) -> void:
 	site.name = site_id
 	root.add_child(site)
 	site.setup(site_id, self)
+	site.global_position = _site_position(get_site(site_id))
 
 func restore_presentations() -> void:
 	_restore_presentations()
