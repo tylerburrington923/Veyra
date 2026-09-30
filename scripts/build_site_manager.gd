@@ -352,6 +352,13 @@ func restore_presentations() -> void:
 	_restore_presentations()
 
 func _restore_presentations() -> void:
+	var scene := _presentation_scene()
+	if scene:
+		var root := scene.get_node_or_null("BuildSites") as Node3D
+		if root:
+			for child in root.get_children():
+				if not build_sites.has(child.name):
+					child.queue_free()
 	for site_id in build_sites.keys():
 		_spawn_site_visual(str(site_id))
 
