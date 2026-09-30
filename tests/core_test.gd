@@ -1739,6 +1739,16 @@ func _test_economy_and_survival_contract() -> void:
 	var player := player_scene.instantiate()
 	root.add_child(player)
 	var inventory: VeyraInventory = player.get_inventory()
+	var merchant_ui := VeyraMerchantUI.new()
+	root.add_child(merchant_ui)
+	merchant_ui.open(player)
+	_check(merchant_ui.close_button.get_parent() == merchant_ui.panel, "merchant close control must stay outside the scrolling list")
+	_check(merchant_ui.scroll.offset_top >= 50.0, "merchant list must leave fixed space for its close control")
+	var food_offer_label_found := false
+	for child in merchant_ui.body.get_children():
+		if child is Button and str(child.text).begins_with("Food"):
+			food_offer_label_found = str(child.text).contains("×3")
+	_check(food_offer_label_found, "merchant bulk offers must display the purchase quantity")
 	inventory.add_resource("Meat", 2)
 	_check(merchant.sell(player, "Meat", 1), "merchant must buy huntable Meat")
 	_check(inventory.get_coins() == 2, "selling Meat must award deterministic coins")
@@ -1801,4 +1811,5 @@ func _test_economy_and_survival_contract() -> void:
 	_check(not merchant.buy(player, "Food"), "merchant must reject purchases that cannot fit the full offer")
 	_check(inventory.get_amount("Food") == 49, "failed merchant purchase must roll back partial item delivery")
 	_check(inventory.get_coins() == 10, "failed merchant purchase must not spend coins")
+	merchant_ui.queue_free()
 	player.queue_free()
