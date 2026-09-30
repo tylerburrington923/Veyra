@@ -210,7 +210,7 @@ func try_interact() -> void:
 			if handler.has_method("open_local_ui") and player:
 				handler.open_local_ui(player)
 		else:
-			handler.interact()
+			handler.interact(player)
 		if player and player.has_method("play_tool_use"):
 			player.play_tool_use()
 		_set_target_state(_classify_target(handler), handler.name, "interact()", collision_point)
