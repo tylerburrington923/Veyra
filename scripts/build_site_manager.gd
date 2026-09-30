@@ -328,6 +328,8 @@ func _complete_site(site_id: String) -> void:
 func _spawn_site_visual(site_id: String) -> void:
 	var scene := get_tree().current_scene
 	if not scene:
+		scene = get_tree().root
+	if not scene:
 		return
 	var root := scene.get_node_or_null("BuildSites") as Node3D
 	if not root:
