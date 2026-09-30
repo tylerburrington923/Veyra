@@ -253,7 +253,8 @@ func load_save_state(state: Dictionary) -> void:
 func remove_site(site_id: String) -> bool:
 	if not build_sites.has(site_id):
 		return false
-	var visual := get_tree().current_scene.get_node_or_null("BuildSites/" + site_id)
+	var scene := _presentation_scene()
+	var visual := scene.get_node_or_null("BuildSites/" + site_id) if scene else null
 	if visual:
 		visual.queue_free()
 	build_sites.erase(site_id)
@@ -313,7 +314,8 @@ func _complete_site(site_id: String) -> void:
 	for order_id in delivery_orders.keys().duplicate():
 		if str(delivery_orders[order_id].get("site_id", "")) == site_id:
 			cancel_delivery(str(order_id))
-	var visual := get_tree().current_scene.get_node_or_null("BuildSites/" + site_id)
+	var scene := _presentation_scene()
+	var visual := scene.get_node_or_null("BuildSites/" + site_id) if scene else null
 	if visual:
 		visual.queue_free()
 	build_sites.erase(site_id)
@@ -325,10 +327,12 @@ func _complete_site(site_id: String) -> void:
 		typed_building_manager.building_completed.emit(building_id, position)
 	build_site_completed.emit(site_id, building_type)
 
-func _spawn_site_visual(site_id: String) -> void:
+func _presentation_scene() -> Node:
 	var scene := get_tree().current_scene
-	if not scene:
-		scene = get_tree().root
+	return scene if scene else get_tree().root
+
+func _spawn_site_visual(site_id: String) -> void:
+	var scene := _presentation_scene()
 	if not scene:
 		return
 	var root := scene.get_node_or_null("BuildSites") as Node3D
