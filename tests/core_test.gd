@@ -1742,8 +1742,13 @@ func _test_economy_and_survival_contract() -> void:
 	inventory.add_resource("Meat", 2)
 	_check(merchant.sell(player, "Meat", 1), "merchant must buy huntable Meat")
 	_check(inventory.get_coins() == 2, "selling Meat must award deterministic coins")
+	inventory.add_coins(10)
 	_check(merchant.buy(player, "Food"), "merchant must sell Food for coins")
 	_check(inventory.get_coins() == 0, "buying Food must spend its listed coin price")
+	for commodity in ["Food", "Meat", "Stone", "Wood", "Metal", "Leather", "Refined Metal"]:
+		var offer: Dictionary = merchant.get_buy_offers()[commodity]
+		var resale_value := int(merchant.get_sell_offers().get(commodity, 0)) * int(offer.get("amount", 1))
+		_check(int(offer.get("price", 0)) >= resale_value, "merchant buy price must prevent immediate resale arbitrage for %s" % commodity)
 	_check(inventory.has_resource("Food", 3), "merchant purchase must deliver the advertised Food amount")
 	inventory.add_coins(7)
 	var coin_roundtrip := VeyraInventory.new()
