@@ -68,6 +68,8 @@ func _run_tests() -> void:
 	_test_settlement_production_save_contract()
 	_test_performance_cache_contract()
 	_test_alpha_presentation_contract()
+	_test_construction_logistics_contract()
+	_test_economy_and_survival_contract()
 	if failures.is_empty():
 		print("VEYRA CORE TESTS: PASS")
 		quit(0)
@@ -1639,7 +1641,7 @@ func _test_construction_logistics_contract() -> void:
 	_check(not logistics.has_site(site_id), "fully supplied foundation must complete into a building")
 	_check(settlement.buildings.has("BUILD-LOGISTICS-TEST"), "completed build site must create settlement building state")
 	settlement.buildings.erase("BUILD-LOGISTICS-TEST")
-	var building_visual := root.get_tree().current_scene.get_node_or_null("PlacedBuildings/BUILD-LOGISTICS-TEST")
+	var building_visual := root.get_node_or_null("PlacedBuildings/BUILD-LOGISTICS-TEST")
 	if building_visual:
 		building_visual.queue_free()
 
