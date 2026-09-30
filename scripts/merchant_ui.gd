@@ -6,6 +6,7 @@ var panel: Panel
 var body: VBoxContainer
 var scroll: ScrollContainer
 var status: Label
+var close_button: Button
 var manager: VeyraMerchantManager
 
 func _ready() -> void:
@@ -18,10 +19,30 @@ func _ready() -> void:
 
 func open(p_player: Node) -> void:
 	player = p_player
-	var viewport_size := get_viewport().get_visible_rect().size
-	panel.position = (viewport_size - panel.size) * 0.5
+	_layout_panel()
 	visible = true
 	_refresh()
+
+func _layout_panel() -> void:
+	if not panel:
+		return
+	var viewport_size := get_viewport().get_visible_rect().size
+	panel.size = Vector2(
+		minf(520.0, maxf(240.0, viewport_size.x - 24.0)),
+		minf(620.0, maxf(320.0, viewport_size.y - 32.0))
+	)
+	panel.position = (viewport_size - panel.size) * 0.5
+	if close_button:
+		close_button.size = Vector2(panel.size.x - 32.0, 36.0)
+	if scroll:
+		scroll.offset_left = 16.0
+		scroll.offset_top = 56.0
+		scroll.offset_right = -16.0
+		scroll.offset_bottom = -16.0
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_SIZE_CHANGED and panel:
+		_layout_panel()
 
 func _build() -> void:
 	panel = Panel.new()
@@ -42,9 +63,18 @@ func _build() -> void:
 	panel.size = Vector2(520, 620)
 	scroll = ScrollContainer.new()
 	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 16)
+	scroll.offset_top = 56.0
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	panel.add_child(scroll)
+	close_button = Button.new()
+	close_button.name = "CloseMerchant"
+	close_button.text = "CLOSE"
+	close_button.position = Vector2(16.0, 12.0)
+	close_button.size = Vector2(panel.size.x - 32.0, 36.0)
+	close_button.add_to_group("camera_blocking_ui")
+	close_button.pressed.connect(func(): visible = false)
+	panel.add_child(close_button)
 	body = VBoxContainer.new()
 	body.add_theme_constant_override("separation", 8)
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -64,12 +94,6 @@ func _refresh() -> void:
 	status.text = "Coins: %d" % player.get_inventory().get_coins()
 	status.add_theme_font_size_override("font_size", 15)
 	body.add_child(status)
-	var close := Button.new()
-	close.text = "CLOSE"
-	close.pressed.connect(func(): visible = false)
-	close.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.add_child(close)
-
 	var buy_label := Label.new()
 	buy_label.text = "BUY"
 	buy_label.add_theme_font_size_override("font_size", 17)
@@ -77,7 +101,7 @@ func _refresh() -> void:
 	for item_id in manager.get_buy_offers().keys():
 		var offer: Dictionary = manager.get_buy_offers()[item_id]
 		var button := Button.new()
-		button.text = "%s  •  %d coins" % [_display_name(str(item_id)), int(offer["price"])]
+		button.text = "%s  ×%d  •  %d coins" % [_display_name(str(item_id)), int(offer.get("amount", 1)), int(offer["price"])]
 		button.disabled = player.get_inventory().get_coins() < int(offer["price"])
 		button.pressed.connect(_buy.bind(str(item_id)))
 		body.add_child(button)
