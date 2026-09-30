@@ -76,6 +76,8 @@ func buy(player: Node, item_id: String) -> bool:
 		return false
 	var accepted := _add_item_or_resource(inventory, item_id, amount)
 	if accepted < amount:
+		if accepted > 0:
+			_remove_item_or_resource(inventory, item_id, accepted)
 		return false
 	if not inventory.spend_coins(price):
 		_remove_item_or_resource(inventory, item_id, amount)
@@ -95,7 +97,13 @@ func sell(player: Node, item_id: String, amount: int = 1) -> bool:
 	if removed < amount:
 		return false
 	var payout := int(SELL_OFFERS[item_id]) * amount
-	inventory.add_coins(payout)
+	var credited := inventory.add_coins(payout)
+	if credited < payout:
+		if credited > 0:
+			inventory.spend_coins(credited)
+			
+		_add_item_or_resource(inventory, item_id, removed)
+		return false
 	trade_completed.emit("SELL", item_id, amount, payout)
 	return true
 
