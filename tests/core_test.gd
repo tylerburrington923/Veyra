@@ -1692,6 +1692,7 @@ func _test_construction_logistics_contract() -> void:
 	_check(not worker_site.is_empty(), "worker logistics test foundation must be created")
 	var order_id := logistics.queue_worker_delivery(worker_site, worker_id, {"Wood": 6})
 	_check(not order_id.is_empty(), "Town Hall must dispatch stored materials to a build site")
+	_check(not logistics._worker_has_reached_site({"worker_id": worker_id, "site_id": worker_site}), "missing worker presentation must not count as an arrived delivery")
 	var townhall_storage := settlement.get_building_storage(townhall_id)
 	_check(int(townhall_storage.get("resources", {}).get("Wood", 0)) == 0, "Town Hall dispatch must reserve its cargo")
 	logistics._complete_delivery(order_id)
