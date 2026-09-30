@@ -1631,6 +1631,10 @@ func _test_construction_logistics_contract() -> void:
 	_check(inventory.get_amount("Wood") == 12, "foundation placement must not consume Wood")
 	_check(inventory.get_amount("Stone") == 4, "foundation placement must not consume Stone")
 	_check(logistics.get_completion_ratio(site_id) == 0.0, "new foundation must start at zero material progress")
+	var site_visual := root.get_node_or_null("BuildSites/" + site_id) as Node3D
+	_check(site_visual != null, "foundation must have a presentation node")
+	if site_visual:
+		_check(site_visual.global_position.distance_to(site_position) < 0.01, "foundation visual must match its authoritative world position")
 	_check(logistics.deposit_from_player(site_id, player), "player must be able to deposit materials at the build site")
 	_check(not logistics.has_site(site_id), "fully supplied foundation must complete into a building")
 	_check(settlement.buildings.has("BUILD-LOGISTICS-TEST"), "completed build site must create settlement building state")
