@@ -429,7 +429,7 @@ func _find_available_worker() -> String:
 func _worker_has_reached_site(order: Dictionary) -> bool:
 	var npc_manager := get_tree().get_first_node_in_group("npc_manager")
 	if not npc_manager or not npc_manager.has_method("is_worker_at_site"):
-		return true
+		return false
 	return bool(npc_manager.is_worker_at_site(str(order.get("worker_id", "")), str(order.get("site_id", ""))))
 
 func _set_worker_delivery_state(worker_id: String, site_id: String) -> void:
