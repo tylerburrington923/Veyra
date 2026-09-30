@@ -1615,6 +1615,16 @@ func _test_construction_logistics_contract() -> void:
 	if not logistics or not settlement:
 		return
 
+	var original_buildings: Dictionary = settlement.buildings.duplicate(true)
+	var original_villagers: Dictionary = settlement.villagers.duplicate(true)
+	var original_logistics: Dictionary = logistics.get_save_state()
+	var building_manager := root.get_node_or_null("/root/BuildingManager") as VeyraBuildingManager
+	settlement.buildings.clear()
+	settlement.villagers.clear()
+	logistics.load_save_state({})
+	if building_manager:
+		building_manager.restore_from_settlement()
+
 	var player_scene := load("res://scenes/player.tscn") as PackedScene
 	var player := player_scene.instantiate()
 	root.add_child(player)
@@ -1645,7 +1655,8 @@ func _test_construction_logistics_contract() -> void:
 	if building_visual:
 		building_visual.queue_free()
 
-	var building_manager := root.get_node_or_null("/root/BuildingManager") as VeyraBuildingManager
+	inventory.add_resource("Wood", 12)
+	inventory.add_resource("Stone", 4)
 	var prior_site_ids := logistics.get_all_sites().keys()
 	building_manager.selected_building_id = "B02_STORAGE"
 	building_manager.placement_position = Vector3(46.0, 0.0, 40.0)
@@ -1712,6 +1723,13 @@ func _test_construction_logistics_contract() -> void:
 	settlement.villagers.erase(refund_worker)
 	refund_player.queue_free()
 
+	logistics.load_save_state(original_logistics)
+	settlement.buildings = original_buildings
+	settlement.villagers = original_villagers
+	if building_manager:
+		building_manager.restore_from_settlement()
+	logistics.restore_presentations()
+
 func _test_economy_and_survival_contract() -> void:
 	var merchant := root.get_node_or_null("/root/MerchantManager") as VeyraMerchantManager
 	_check(merchant != null, "merchant manager must exist")
@@ -1755,9 +1773,10 @@ func _test_economy_and_survival_contract() -> void:
 	root.add_child(campfire)
 	campfire.setup("TEST-COOKING-FIRE", "B01_CAMPFIRE", Vector3(300.0, 0.0, 300.0))
 	campfire.campfire_heat_seconds = 12.0
+	var food_before_cooking := inventory.get_amount("Food")
 	inventory.add_resource("Meat", 2)
 	_check(campfire.cook_meat(player), "a fueled campfire must cook Meat into Food")
-	_check(inventory.has_resource("Food", 4), "cooking must add a Food ration")
+	_check(inventory.get_amount("Food") == food_before_cooking + 1, "cooking must add exactly one Food ration")
 	_check(campfire.campfire_heat_seconds <= 4.0, "cooking must consume campfire heat")
 
 	var tannery := VeyraBuildingInstance.new()
